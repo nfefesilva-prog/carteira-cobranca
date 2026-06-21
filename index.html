@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carteira de Cobrança — Leo Mato Grosso</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sidebar:#0d2818;
+  --sidebar2:#122e1d;
+  --accent:#FFD700;
+  --accent2:#e6b800;
+  --green-mid:#1a5c24;
+  --green-light:#27ae60;
+  --badge-ok:#dcfce7;
+  --badge-ok-text:#166534;
+  --badge-warn:#fef9c3;
+  --badge-warn-text:#854d0e;
+  --badge-red:#fee2e2;
+  --badge-red-text:#991b1b;
+  --badge-blue:#dbeafe;
+  --badge-blue-text:#1e40af;
+  --badge-gray:#f3f4f6;
+  --badge-gray-text:#374151;
+  --badge-orange:#ffedd5;
+  --badge-orange-text:#9a3412;
+  --badge-purple:#ede9fe;
+  --badge-purple-text:#5b21b6;
+  --body-bg:#f0f2f0;
+  --card-bg:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --text2:#6b7280;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--body-bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden}
+
+/* ===== LOGIN ===== */
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#0d2818 0%,#1a5c24 60%,#27ae60 100%)}
+.login-card{background:#fff;border-radius:16px;padding:48px 52px;min-width:360px;text-align:center;box-shadow:0 20px 60px #00000040}
+.login-icon-wrap{width:80px;height:80px;background:var(--sidebar);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 16px #0005}
+.login-icon{font-size:38px;line-height:1}
+.login-card h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.login-card p{color:var(--text2);font-size:13px;margin-bottom:28px}
+.login-field{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:.2s;color:var(--text)}
+.login-field:focus{border-color:#27ae60;box-shadow:0 0 0 3px #27ae6020}
+.login-btn{width:100%;padding:12px;background:var(--sidebar);color:var(--accent);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;transition:.15s;letter-spacing:.5px}
+.login-btn:hover{background:var(--green-mid)}
+.login-err{color:#dc2626;font-size:12px;margin-top:10px;min-height:16px}
+.login-hint{font-size:11px;color:var(--text2);margin-top:16px}
+
+/* ===== APP SHELL ===== */
+#app-screen{display:none;height:100vh;flex-direction:row}
+#app-screen.visible{display:flex}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:220px;min-width:220px;background:var(--sidebar);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid #ffffff18}
+.logo-icon-box{width:48px;height:48px;background:var(--green-mid);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:8px;border:2px solid var(--accent)}
+.logo-name{font-size:13px;font-weight:700;color:#fff;line-height:1.2}
+.logo-sub{font-size:10px;color:#ffffff80;letter-spacing:.5px}
+.sidebar-section{padding:16px 10px 4px;font-size:10px;font-weight:700;color:#ffffff50;letter-spacing:1.5px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 6px;border-radius:8px;cursor:pointer;color:#ffffffbb;font-size:13px;font-weight:500;transition:.15s;border:none;background:none;width:calc(100% - 12px);text-align:left}
+.nav-item:hover{background:#ffffff15;color:#fff}
+.nav-item.active{background:var(--green-mid);color:#fff;font-weight:700}
+.nav-item.active .nav-icon{color:var(--accent)}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid #ffffff18}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-avatar{width:34px;height:34px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:var(--sidebar);flex-shrink:0}
+.user-name{font-size:12px;color:#fff;font-weight:600;line-height:1.2}
+.user-role{font-size:10px;color:#ffffff60}
+.logout-link{font-size:11px;color:#ffffff50;cursor:pointer;margin-top:2px;background:none;border:none;padding:0;text-align:left}
+.logout-link:hover{color:#fff}
+
+/* ===== MAIN ===== */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:18px;font-weight:700;color:var(--text)}
+.topbar-date{font-size:12px;color:var(--text2)}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ===== PAGE HEADER ===== */
+.page-header{margin-bottom:18px}
+.page-header h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px}
+.page-header .page-sub{font-size:13px;color:var(--text2)}
+.page-divider{height:2px;background:linear-gradient(90deg,var(--green-light),transparent);margin-bottom:18px;border-radius:2px}
+
+/* ===== PANELS ===== */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ===== CARDS ===== */
+.card-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.kcard{background:#fff;border-radius:12px;padding:16px 20px;min-width:150px;flex:1;box-shadow:0 1px 4px #0001;border:1px solid var(--border)}
+.kcard .klabel{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.kcard .kvalue{font-size:20px;font-weight:800;color:var(--text)}
+.kcard.accent{background:var(--sidebar);border-color:var(--sidebar)}
+.kcard.accent .klabel{color:#ffffff80}
+.kcard.accent .kvalue{color:var(--accent)}
+.kcard.green{background:var(--green-light);border-color:var(--green-light)}
+.kcard.green .klabel{color:#ffffff90}
+.kcard.green .kvalue{color:#fff}
+
+/* ===== TOOLBAR ===== */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#fff;padding:10px 14px;border-radius:10px;border:1px solid var(--border)}
+.toolbar label{font-size:12px;font-weight:600;color:var(--text2)}
+.toolbar select,.toolbar input[type=text],.toolbar input[type=date]{padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:#fff;outline:none}
+.toolbar select:focus,.toolbar input:focus{border-color:#27ae60}
+
+/* ===== BUTTONS ===== */
+.btn{padding:7px 16px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;transition:.15s}
+.btn-primary{background:var(--sidebar);color:var(--accent)}
+.btn-primary:hover{background:var(--green-mid)}
+.btn-outline{background:#fff;color:var(--sidebar);border:1.5px solid var(--sidebar)}
+.btn-outline:hover{background:var(--body-bg)}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:var(--badge-ok);color:var(--badge-ok-text)}
+.btn-success:hover{background:#bbf7d0}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* ===== TABLE ===== */
+.tbl-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px #0001}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#f9fafb;border-bottom:2px solid var(--border)}
+thead th{color:var(--text2);font-weight:700;font-size:11px;padding:10px 12px;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:.1s}
+tbody tr:hover{background:#f9fafb}
+tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;vertical-align:middle}
+.tbl-empty{text-align:center;padding:40px;color:var(--text2);font-size:13px}
+
+/* ===== BADGES ===== */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.bg-ok{background:var(--badge-ok);color:var(--badge-ok-text)}
+.bg-warn{background:var(--badge-warn);color:var(--badge-warn-text)}
+.bg-red{background:var(--badge-red);color:var(--badge-red-text)}
+.bg-blue{background:var(--badge-blue);color:var(--badge-blue-text)}
+.bg-gray{background:var(--badge-gray);color:var(--badge-gray-text)}
+.bg-orange{background:var(--badge-orange);color:var(--badge-orange-text)}
+.bg-purple{background:var(--badge-purple);color:var(--badge-purple-text)}
+
+/* ===== IMPORT BOX ===== */
+.import-box{background:#f9fafb;border:1.5px dashed var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.import-box span{font-size:12px;color:var(--text2);font-weight:600}
+
+/* ===== MODAL ===== */
+.modal-bg{display:none;position:fixed;inset:0;background:#00000070;z-index:999;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:28px;min-width:360px;max-width:720px;width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px #0003}
+.modal h2{color:var(--sidebar);font-size:16px;margin-bottom:16px;border-bottom:2px solid var(--accent);padding-bottom:10px}
+.form-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px}
+.form-group label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#27ae60}
+.form-group textarea{min-height:72px;resize:vertical}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ===== CRM ===== */
+.gen-box{background:#f9fafb;border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.gen-box h4{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+.gen-field label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.gen-field select{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:#fff;outline:none}
+.crm-header{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+
+/* ATRASO */
+.atraso-ok{color:var(--green-light);font-weight:700}
+.atraso-leve{color:#d97706;font-weight:700}
+.atraso-grave{color:#dc2626;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon-wrap">
+      <span class="login-icon">💰</span>
+    </div>
+    <h2>Carteira de Cobrança</h2>
+    <p>Leo Mato Grosso — Acesso restrito</p>
+    <input class="login-field" id="login-name" type="text" placeholder="Digite seu nome ou e-mail Leo" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-hint">Informe seu nome: Bruna, Grécia, Nara, Kelly ou Paulo</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon-box">💰</div>
+      <div class="logo-name">Carteira de Cobrança</div>
+      <div class="logo-sub">LEO MATO GROSSO</div>
+    </div>
+
+    <div class="sidebar-section">Geral</div>
+    <button class="nav-item active" onclick="showTab('dashboard',this)">
+      <span class="nav-icon">⊞</span> Painel
+    </button>
+
+    <div class="sidebar-section">Carteira</div>
+    <button class="nav-item" onclick="showTab('boleto',this)">
+      <span class="nav-icon">📄</span> Boleto
+    </button>
+    <button class="nav-item" onclick="showTab('cheque',this)">
+      <span class="nav-icon">📋</span> Cheque
+    </button>
+    <button class="nav-item" onclick="showTab('caderneta',this)">
+      <span class="nav-icon">📒</span> Caderneta
+    </button>
+    <button class="nav-item" onclick="showTab('renegociacao',this)">
+      <span class="nav-icon">🤝</span> Renegociação
+    </button>
+    <button class="nav-item" onclick="showTab('chargeback',this)">
+      <span class="nav-icon">↩</span> Chargeback
+    </button>
+
+    <div class="sidebar-section">Cobrança</div>
+    <button class="nav-item" onclick="showTab('crm',this)">
+      <span class="nav-icon">📞</span> CRM de Cobrança
+    </button>
+    <button class="nav-item" onclick="showTab('retorno',this)">
+      <span class="nav-icon">📊</span> Retornos
+    </button>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="user-name" id="sb-name">—</div>
+          <div class="user-role" id="sb-role">—</div>
+          <button class="logout-link" onclick="doLogout()">Sair do sistema</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Painel</div>
+      <div class="topbar-date" id="hdrDate"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="panel active">
+        <div class="page-header"><h2>Painel Geral</h2><div class="page-sub">Visão consolidada da carteira de cobrança</div></div>
+        <div class="page-divider"></div>
+        <div class="card-row" id="dash-totais"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Acionamentos de hoje</div>
+        <div class="tbl-card"><div class="tbl-wrap"><div id="dash-acionamentos"></div></div></div>
+      </div>
+
+      <!-- BOLETO -->
+      <div id="panel-boleto" class="panel">
+        <div class="page-header"><h2>Boleto</h2><div class="page-sub">Carteira de cobrança — títulos de boleto</div></div>
+        <div class="page-divider"></div>
+        <div class="import-box">
+          <span>Importar / Exportar:</span>
+          <input type="file" id="imp-boleto" accept=".xlsx,.xls,.csv" onchange="importExcel('boleto',this)" style="display:none">
+          <button class="btn btn-primary" onclick="document.getElementById('imp-boleto').click()">📂 Importar Excel</button>
+          <button class="btn btn-outline" onclick="exportExcel('boleto')">⬇ Exportar</button>
+          <button class="btn btn-primary" onclick="openModal('boleto')">+ Novo Título</button>
+        </div>
+        <div class="card-row" id="cards-boleto"></div>
+        <div class="toolbar">
+          <label>Mês</label><select id="fil-boleto-mes" onchange="renderTable('boleto')"><option value="">Todos</option></select>
+          <label>Ano</label><select id="fil-boleto-ano" onchange="renderTable('boleto')"><option value="">Todos</option></select>
+          <label>Situação</label>
+          <select id="fil-boleto-sit" onchange="renderTable('boleto')">
+            <option value="">Todas</option><option>EM ABERTO</option><option>PAGO</option><option>VENCIDO</option>
+          </select>
+          <label>Atribuição</label>
+          <select id="fil-boleto-atrib" onchange="renderTable('boleto')">
+            <option value="">Todas</option><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option>
+          </select>
+          <input type="text" id="fil-boleto-q" oninput="renderTable('boleto')" placeholder="🔍 Buscar cliente, ID...">
+          <button class="btn btn-danger btn-sm" onclick="clearFilters('boleto')">Limpar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-boleto"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- CHEQUE -->
+      <div id="panel-cheque" class="panel">
+        <div class="page-header"><h2>Cheque</h2><div class="page-sub">Carteira de cheques devolvidos</div></div>
+        <div class="page-divider"></div>
+        <div class="import-box">
+          <span>Importar / Exportar:</span>
+          <input type="file" id="imp-cheque" accept=".xlsx,.xls,.csv" onchange="importExcel('cheque',this)" style="display:none">
+          <button class="btn btn-primary" onclick="document.getElementById('imp-cheque').click()">📂 Importar Excel</button>
+          <button class="btn btn-outline" onclick="exportExcel('cheque')">⬇ Exportar</button>
+          <button class="btn btn-primary" onclick="openModal('cheque')">+ Novo Título</button>
+        </div>
+        <div class="card-row" id="cards-cheque"></div>
+        <div class="toolbar">
+          <label>Mês</label><select id="fil-cheque-mes" onchange="renderTable('cheque')"><option value="">Todos</option></select>
+          <label>Ano</label><select id="fil-cheque-ano" onchange="renderTable('cheque')"><option value="">Todos</option></select>
+          <label>Situação</label>
+          <select id="fil-cheque-sit" onchange="renderTable('cheque')">
+            <option value="">Todas</option><option>EM ABERTO</option><option>PAGO</option><option>DEVOLVIDO</option>
+          </select>
+          <label>Atribuição</label>
+          <select id="fil-cheque-atrib" onchange="renderTable('cheque')">
+            <option value="">Todas</option><option>JURÍDICO</option><option>SEGURADORA</option><option>DEVOLVIDO</option>
+          </select>
+          <input type="text" id="fil-cheque-q" oninput="renderTable('cheque')" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearFilters('cheque')">Limpar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-cheque"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- CADERNETA -->
+      <div id="panel-caderneta" class="panel">
+        <div class="page-header"><h2>Caderneta</h2><div class="page-sub">Fechamento dia 15 de cada mês</div></div>
+        <div class="page-divider"></div>
+        <div class="import-box">
+          <span>Importar / Exportar:</span>
+          <input type="file" id="imp-caderneta" accept=".xlsx,.xls,.csv" onchange="importExcel('caderneta',this)" style="display:none">
+          <button class="btn btn-primary" onclick="document.getElementById('imp-caderneta').click()">📂 Importar Excel</button>
+          <button class="btn btn-outline" onclick="exportCadernetaNovos()">⬇ Exportar (em aberto)</button>
+          <button class="btn btn-primary" onclick="openModal('caderneta')">+ Novo Título</button>
+        </div>
+        <div class="card-row" id="cards-caderneta"></div>
+        <div class="toolbar">
+          <label>Mês</label><select id="fil-caderneta-mes" onchange="renderTable('caderneta')"><option value="">Todos</option></select>
+          <label>Ano</label><select id="fil-caderneta-ano" onchange="renderTable('caderneta')"><option value="">Todos</option></select>
+          <label>Situação</label>
+          <select id="fil-caderneta-sit" onchange="renderTable('caderneta')">
+            <option value="">Todas</option><option>EM ABERTO</option><option>PAGO</option><option>PARCIAL</option>
+          </select>
+          <input type="text" id="fil-caderneta-q" oninput="renderTable('caderneta')" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearFilters('caderneta')">Limpar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-caderneta"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- RENEGOCIAÇÃO -->
+      <div id="panel-renegociacao" class="panel">
+        <div class="page-header"><h2>Renegociação</h2><div class="page-sub">Acordos e parcelamentos ativos</div></div>
+        <div class="page-divider"></div>
+        <div class="card-row" id="cards-renegociacao"></div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('renegociacao')">+ Novo Acordo</button>
+          <label>Status</label>
+          <select id="fil-reneg-status" onchange="renderTable('renegociacao')">
+            <option value="">Todos</option><option>ATIVO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option>
+          </select>
+          <label>Ano</label><select id="fil-reneg-ano" onchange="renderTable('renegociacao')"><option value="">Todos</option></select>
+          <input type="text" id="fil-reneg-q" oninput="renderTable('renegociacao')" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearFilters('renegociacao')">Limpar</button>
+          <button class="btn btn-outline" onclick="exportExcel('renegociacao')">⬇ Exportar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-renegociacao"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- CHARGEBACK -->
+      <div id="panel-chargeback" class="panel">
+        <div class="page-header"><h2>Chargeback</h2><div class="page-sub">Leozinha</div></div>
+        <div class="page-divider"></div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('chargeback')">+ Novo Título</button>
+          <label>Status</label>
+          <select id="fil-cb-status" onchange="renderTable('chargeback')">
+            <option value="">Todos</option><option>EM ABERTO</option><option>PAGO</option>
+          </select>
+          <label>Ano</label><select id="fil-cb-ano" onchange="renderTable('chargeback')"><option value="">Todos</option></select>
+          <input type="text" id="fil-cb-q" oninput="renderTable('chargeback')" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearFilters('chargeback')">Limpar</button>
+          <button class="btn btn-outline" onclick="exportExcel('chargeback')">⬇ Exportar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-chargeback"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- CRM -->
+      <div id="panel-crm" class="panel">
+        <div class="page-header"><h2>CRM de Cobrança</h2><div class="page-sub">Registro de acionamentos e retornos</div></div>
+        <div class="page-divider"></div>
+
+        <div class="crm-header">
+          <span style="font-size:13px;font-weight:600;color:var(--text2)">Acessando como:</span>
+          <span id="crm-badge-user" style="font-weight:700;color:var(--sidebar)"></span>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" id="btn-novo-acionamento" onclick="openCobrancaModal()">+ Registrar Acionamento</button>
+        </div>
+
+        <div class="gen-box">
+          <h4>📋 Gerar Lista de Cobrança</h4>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="gen-field"><label>Tipo</label>
+              <select id="gen-tipo"><option value="">Todos</option><option>BOLETO</option><option>CHEQUE</option><option>CADERNETA</option></select>
+            </div>
+            <div class="gen-field"><label>Ano</label>
+              <select id="gen-ano"><option value="">Todos</option></select>
+            </div>
+            <div class="gen-field"><label>Mês</label>
+              <select id="gen-mes"><option value="">Todos</option><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+            </div>
+            <div class="gen-field"><label>Situação</label>
+              <select id="gen-sit"><option value="">Todas</option><option>EM ABERTO</option><option>VENCIDO</option></select>
+            </div>
+            <button class="btn btn-primary" onclick="gerarLista()">Gerar</button>
+            <button class="btn btn-outline" onclick="exportarLista()">⬇ Exportar</button>
+          </div>
+          <div id="gen-resultado" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div class="toolbar">
+          <label>Meio</label>
+          <select id="fil-crm-meio" onchange="renderCRM()">
+            <option value="">Todos</option><option>LIGAÇÃO</option><option>WHATSAPP</option><option>VISTA</option><option>MOTO BOY</option><option>LOJA</option>
+          </select>
+          <label>Status</label>
+          <select id="fil-crm-status" onchange="renderCRM()">
+            <option value="">Todos</option><option>PENDENTE</option><option>PROMETEU PAGAR</option><option>PAGO</option><option>SEM CONTATO</option><option>RECUSOU</option>
+          </select>
+          <label>Tipo</label>
+          <select id="fil-crm-tipo" onchange="renderCRM()">
+            <option value="">Todos</option><option>BOLETO</option><option>CHEQUE</option><option>CADERNETA</option>
+          </select>
+          <label id="lbl-crm-cob" style="display:none">Cobradora</label>
+          <select id="fil-crm-cob" onchange="renderCRM()" style="display:none">
+            <option value="">Todas</option><option>Bruna</option><option>Grécia</option><option>Nara</option>
+          </select>
+          <input type="text" id="fil-crm-q" oninput="renderCRM()" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearCRMFilters()">Limpar</button>
+          <button class="btn btn-outline" onclick="exportCRM()">⬇ Exportar</button>
+        </div>
+        <div class="card-row" id="cards-crm"></div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-crm"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- RETORNOS -->
+      <div id="panel-retorno" class="panel">
+        <div class="page-header"><h2>Retornos</h2><div class="page-sub">Histórico consolidado de acionamentos</div></div>
+        <div class="page-divider"></div>
+        <div class="card-row" id="dash-ret-cards"></div>
+        <div class="toolbar">
+          <label>Cobradora</label>
+          <select id="fil-ret-cob" onchange="renderRetorno()">
+            <option value="">Todas</option><option>Bruna</option><option>Grécia</option><option>Nara</option>
+          </select>
+          <label>Status</label>
+          <select id="fil-ret-status" onchange="renderRetorno()">
+            <option value="">Todos</option><option>PENDENTE</option><option>PROMETEU PAGAR</option><option>PAGO</option><option>SEM CONTATO</option><option>RECUSOU</option>
+          </select>
+          <label>Data</label><input type="date" id="fil-ret-data" onchange="renderRetorno()">
+          <input type="text" id="fil-ret-q" oninput="renderRetorno()" placeholder="🔍 Buscar...">
+          <button class="btn btn-danger btn-sm" onclick="clearRetornoFilters()">Limpar</button>
+        </div>
+        <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-retorno"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL BOLETO -->
+<div class="modal-bg" id="modal-boleto-bg">
+  <div class="modal">
+    <h2 id="modal-boleto-title">Novo Título — Boleto</h2>
+    <input type="hidden" id="boleto-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ID</label><input id="b-id" placeholder="Ex: 41526"></div>
+      <div class="form-group"><label>Cliente</label><input id="b-cliente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Atribuição</label>
+        <select id="b-atrib"><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option></select>
+      </div>
+      <div class="form-group"><label>Valor Título (R$)</label><input id="b-valor" type="number" step="0.01"></div>
+      <div class="form-group"><label>Vencimento</label><input id="b-venc" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Situação</label>
+        <select id="b-sit"><option>EM ABERTO</option><option>PAGO</option><option>VENCIDO</option></select>
+      </div>
+      <div class="form-group"><label>Data Pagamento</label><input id="b-dtpag" type="date"></div>
+      <div class="form-group"><label>Valor Pago (R$)</label><input id="b-vpago" type="number" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Mês</label>
+        <select id="b-mes"><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+      </div>
+      <div class="form-group"><label>Ano</label><input id="b-ano" type="number" value="2026"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('boleto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal('boleto')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHEQUE -->
+<div class="modal-bg" id="modal-cheque-bg">
+  <div class="modal">
+    <h2 id="modal-cheque-title">Novo Título — Cheque</h2>
+    <input type="hidden" id="cheque-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ID</label><input id="c-id"></div>
+      <div class="form-group"><label>Cliente</label><input id="c-cliente"></div>
+      <div class="form-group"><label>Nº Cheque</label><input id="c-num"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$)</label><input id="c-valor" type="number" step="0.01"></div>
+      <div class="form-group"><label>Vencimento</label><input id="c-venc" type="date"></div>
+      <div class="form-group"><label>Emitente</label><input id="c-emitente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Motivo Devolução</label><input id="c-motivo" placeholder="Ex: 11, 12..."></div>
+      <div class="form-group"><label>Atribuição</label>
+        <select id="c-atrib"><option></option><option>JURÍDICO</option><option>SEGURADORA</option><option>DEVOLVIDO</option></select>
+      </div>
+      <div class="form-group"><label>Limite Envio</label><input id="c-limite" type="number"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Situação</label>
+        <select id="c-sit"><option>EM ABERTO</option><option>PAGO</option><option>DEVOLVIDO</option></select>
+      </div>
+      <div class="form-group"><label>Valor Pago (R$)</label><input id="c-vpago" type="number" step="0.01"></div>
+      <div class="form-group"><label>Mês</label>
+        <select id="c-mes"><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+      </div>
+      <div class="form-group"><label>Ano</label><input id="c-ano" type="number" value="2026"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('cheque')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal('cheque')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CADERNETA -->
+<div class="modal-bg" id="modal-caderneta-bg">
+  <div class="modal">
+    <h2 id="modal-caderneta-title">Novo Título — Caderneta</h2>
+    <input type="hidden" id="caderneta-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ID</label><input id="cd-id"></div>
+      <div class="form-group"><label>Cliente</label><input id="cd-cliente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$)</label><input id="cd-valor" type="number" step="0.01"></div>
+      <div class="form-group"><label>Mês</label>
+        <select id="cd-mes"><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+      </div>
+      <div class="form-group"><label>Ano</label><input id="cd-ano" type="number" value="2026"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor Pago (R$)</label><input id="cd-vpago" type="number" step="0.01" placeholder="Preencher ao receber"></div>
+      <div class="form-group"><label>Situação</label>
+        <select id="cd-sit"><option>EM ABERTO</option><option>PAGO</option><option>PARCIAL</option></select>
+      </div>
+      <div class="form-group"><label>Forma PG</label>
+        <select id="cd-forma"><option></option><option>DINHEIRO</option><option>CARTÃO</option><option>PIX</option><option>BOLETO</option><option>CHEQUE</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Atraso (dias)</label><input id="cd-atraso" type="number"></div>
+      <div class="form-group"><label>Dia Fechamento</label><input id="cd-dia" type="number" value="15" max="31"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('caderneta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal('caderneta')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENEGOCIAÇÃO -->
+<div class="modal-bg" id="modal-renegociacao-bg">
+  <div class="modal">
+    <h2 id="modal-renegociacao-title">Novo Acordo — Renegociação</h2>
+    <input type="hidden" id="reneg-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ID</label><input id="rn-id"></div>
+      <div class="form-group"><label>Cliente</label><input id="rn-cliente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor Líquido (R$)</label><input id="rn-vliq" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01"></div>
+      <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data Acordo</label><input id="rn-data" type="date"></div>
+      <div class="form-group"><label>Valor Entrada (R$)</label><input id="rn-entrada" type="number" step="0.01"></div>
+      <div class="form-group"><label>Nº Parcelas</label><input id="rn-parcelas" type="number"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Total Pago (R$)</label><input id="rn-tpago" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Aberto (R$)</label><input id="rn-taberto" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total a Vencer (R$)</label><input id="rn-tvencer" type="number" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ano</label><input id="rn-ano" type="number" value="2026"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="rn-status"><option>ATIVO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:100%"><label>Observações</label><textarea id="rn-obs"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('renegociacao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal('renegociacao')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHARGEBACK -->
+<div class="modal-bg" id="modal-chargeback-bg">
+  <div class="modal">
+    <h2 id="modal-chargeback-title">Novo Título — Chargeback</h2>
+    <input type="hidden" id="cb-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ID</label><input id="cb-id"></div>
+      <div class="form-group"><label>Cliente</label><input id="cb-cliente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Total Aberto (R$)</label><input id="cb-taberto" type="number" step="0.01"></div>
+      <div class="form-group"><label>Ano</label><input id="cb-ano" type="number" value="2026"></div>
+      <div class="form-group"><label>Cento</label><input id="cb-cento" type="number"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label><select id="cb-status"><option>EM ABERTO</option><option>PAGO</option></select></div>
+      <div class="form-group"><label>Data Pagamento</label><input id="cb-dtpag" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:100%"><label>Observações</label><textarea id="cb-obs"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('chargeback')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal('chargeback')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ACIONAMENTO -->
+<div class="modal-bg" id="modal-cobranca-bg">
+  <div class="modal">
+    <h2 id="modal-cobranca-title">Registrar Acionamento</h2>
+    <input type="hidden" id="cob-edit-id">
+    <input type="hidden" id="cob-cobradora">
+    <div class="form-row">
+      <div class="form-group"><label>ID Título</label><input id="cob-id-titulo"></div>
+      <div class="form-group"><label>Cliente</label><input id="cob-cliente"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo Documento</label>
+        <select id="cob-tipo"><option>BOLETO</option><option>CHEQUE</option><option>CADERNETA</option></select>
+      </div>
+      <div class="form-group"><label>Valor (R$)</label><input id="cob-valor" type="number" step="0.01"></div>
+      <div class="form-group"><label>Vencimento</label><input id="cob-venc" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data Acionamento</label><input id="cob-data" type="date"></div>
+      <div class="form-group"><label>Meio de Contato</label>
+        <select id="cob-meio"><option>LIGAÇÃO</option><option>WHATSAPP</option><option>VISTA</option><option>MOTO BOY</option><option>LOJA</option></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="cob-status"><option>PENDENTE</option><option>PROMETEU PAGAR</option><option>PAGO</option><option>SEM CONTATO</option><option>RECUSOU</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:100%"><label>Retorno / Observação do Cliente</label>
+        <textarea id="cob-retorno" placeholder="O que o cliente disse, próxima ação..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data Promessa Pagto</label><input id="cob-dtpromessa" type="date"></div>
+      <div class="form-group"><label>Valor Prometido (R$)</label><input id="cob-vpromessa" type="number" step="0.01"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('cobranca')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCobranca()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== USERS — acesso por nome ou email Leo =====
+const USERS = {
+  'bruna':   { nome:'Bruna',  role:'cobradora' },
+  'grecia':  { nome:'Grécia', role:'cobradora' },
+  'grécia':  { nome:'Grécia', role:'cobradora' },
+  'nara':    { nome:'Nara',   role:'admin'     },
+  'kelly':   { nome:'Kelly',  role:'editor'    },
+  'paulo':   { nome:'Paulo',  role:'editor'    },
+};
+function resolveUser(input){
+  const s=input.trim().toLowerCase();
+  // match direto
+  if(USERS[s]) return USERS[s];
+  // email Leo: pegar parte antes do @
+  const emailMatch=s.match(/^([a-z]+)/);
+  if(emailMatch && USERS[emailMatch[1]]) return USERS[emailMatch[1]];
+  return null;
+}
+
+let currentUser=null;
+let listaGerada=[];
+
+function doLogin(){
+  const val=document.getElementById('login-name').value;
+  const err=document.getElementById('login-err');
+  const user=resolveUser(val);
+  if(!user){err.textContent='Nome não reconhecido. Tente: Bruna, Grécia, Nara, Kelly ou Paulo.';return;}
+  err.textContent='';
+  currentUser={...user};
+  sessionStorage.setItem('leoUser',JSON.stringify(currentUser));
+  initApp();
+}
+function doLogout(){
+  sessionStorage.removeItem('leoUser');
+  currentUser=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app-screen').classList.remove('visible');
+  document.getElementById('login-name').value='';
+}
+function initApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').classList.add('visible');
+  document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const u=currentUser;
+  document.getElementById('sb-name').textContent=u.nome;
+  document.getElementById('sb-role').textContent=u.role==='admin'?'Administrador':u.role==='cobradora'?'Cobradora':'Editor';
+  document.getElementById('sb-avatar').textContent=u.nome[0].toUpperCase();
+  document.getElementById('crm-badge-user').textContent=u.nome+(u.role==='admin'?' (Admin)':u.role==='editor'?' (Supervisor)':'');
+
+  const isCob=u.role==='cobradora';
+  document.getElementById('lbl-crm-cob').style.display=isCob?'none':'';
+  document.getElementById('fil-crm-cob').style.display=isCob?'none':'';
+  document.getElementById('btn-novo-acionamento').style.display=u.role==='editor'?'none':'inline-block';
+
+  populateFilters();
+  renderDashboard();
+}
+
+// ===== STORE =====
+const STORE_KEYS=['boleto','cheque','caderneta','renegociacao','chargeback','cobrancas'];
+let DB={};
+STORE_KEYS.forEach(k=>{try{DB[k]=JSON.parse(localStorage.getItem('leo_'+k)||'[]');}catch(e){DB[k]=[];}});
+function save(k){localStorage.setItem('leo_'+k,JSON.stringify(DB[k]));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+// ===== TABS =====
+const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',crm:'CRM de Cobrança',retorno:'Retornos'};
+function showTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent=TAB_TITLES[name]||name;
+  if(name==='dashboard') renderDashboard();
+  else if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(name)){populateFilters();renderTable(name);}
+  else if(name==='crm'){populateGenAnos();renderCRM();}
+  else if(name==='retorno') renderRetorno();
+}
+
+// ===== MESES =====
+const MESES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+function populateFilters(){
+  ['boleto','cheque','caderneta'].forEach(t=>{
+    const aEl=document.getElementById('fil-'+t+'-ano');
+    const mEl=document.getElementById('fil-'+t+'-mes');
+    if(!aEl||!mEl)return;
+    const curA=aEl.value,curM=mEl.value;
+    const anos=[...new Set(DB[t].map(r=>String(r.ano||'')).filter(Boolean))].sort();
+    aEl.innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option${a===curA?' selected':''}>${a}</option>`).join('');
+    mEl.innerHTML='<option value="">Todos</option>'+MESES.map(m=>`<option${m===curM?' selected':''}>${m}</option>`).join('');
+  });
+  const rEl=document.getElementById('fil-reneg-ano');
+  if(rEl){const a=[...new Set(DB.renegociacao.map(r=>String(r.ano||'')).filter(Boolean))].sort();rEl.innerHTML='<option value="">Todos</option>'+a.map(x=>`<option>${x}</option>`).join('');}
+  const cEl=document.getElementById('fil-cb-ano');
+  if(cEl){const a=[...new Set(DB.chargeback.map(r=>String(r.ano||'')).filter(Boolean))].sort();cEl.innerHTML='<option value="">Todos</option>'+a.map(x=>`<option>${x}</option>`).join('');}
+}
+function populateGenAnos(){
+  const anos=new Set();
+  ['boleto','cheque','caderneta'].forEach(t=>DB[t].forEach(r=>{if(r.ano)anos.add(String(r.ano));}));
+  const el=document.getElementById('gen-ano');
+  if(el){const cur=el.value;el.innerHTML='<option value="">Todos</option>'+[...anos].sort().map(a=>`<option${a===cur?' selected':''}>${a}</option>`).join('');}
+}
+
+// ===== FORMAT =====
+function fmtR(v){if(v===undefined||v===null||v==='')return '—';const n=parseFloat(v);if(isNaN(n))return '—';return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(d){if(!d)return '—';try{return new Date(d+'T00:00:00').toLocaleDateString('pt-BR');}catch(e){return d;}}
+function calcAtraso(venc){if(!venc)return 0;const v=new Date(venc+'T00:00:00'),h=new Date();h.setHours(0,0,0,0);return Math.max(0,Math.floor((h-v)/86400000));}
+function atrasoClass(a){const n=parseInt(a||0);return n<=0?'atraso-ok':n<=30?'atraso-leve':'atraso-grave';}
+
+function statusBadge(s){
+  const m={'EM ABERTO':'bg-warn','PAGO':'bg-ok','VENCIDO':'bg-red','DEVOLVIDO':'bg-red','ATIVO':'bg-blue','PAROU DE PAGAR':'bg-red','CANCELADO':'bg-gray','PENDENTE':'bg-warn','PROMETEU PAGAR':'bg-blue','SEM CONTATO':'bg-gray','RECUSOU':'bg-red','PARCIAL':'bg-orange'};
+  return `<span class="badge ${m[s]||'bg-gray'}">${s||'—'}</span>`;
+}
+function meioBadge(m){
+  const mp={'LIGAÇÃO':'bg-blue','WHATSAPP':'bg-ok','VISTA':'bg-orange','MOTO BOY':'bg-purple','LOJA':'bg-warn'};
+  return `<span class="badge ${mp[m]||'bg-gray'}">${m||'—'}</span>`;
+}
+function atribBadge(a){
+  const m={'PROTESTADO':'bg-red','CARTÓRIO':'bg-orange','RENEGOCIAÇÃO':'bg-blue','MÁQUINA':'bg-gray','JURÍDICO':'bg-purple','VENDA':'bg-ok','SEGURADORA':'bg-blue','DEVOLVIDO':'bg-red'};
+  return a?`<span class="badge ${m[a]||'bg-gray'}">${a}</span>`:'—';
+}
+
+// ===== COLUMNS =====
+const COLS={
+  boleto:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'atrib',l:'Atribuição',fmt:'atrib'},{k:'valor',l:'Valor Título',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'atraso',l:'Atraso',fmt:'atr'},{k:'dtpag',l:'Dt Pagamento',fmt:'d'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'}],
+  cheque:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'num',l:'Nº Cheque'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'emitente',l:'Emitente'},{k:'motivo',l:'Motivo'},{k:'atrib',l:'Atribuição',fmt:'atrib'},{k:'limite',l:'Lim.Envio'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'}],
+  caderneta:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'valor',l:'Valor',fmt:'r'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'forma',l:'Forma PG'},{k:'atraso',l:'Atraso'},{k:'dia',l:'Dia Fech.'}],
+  renegociacao:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'vliq',l:'VL Líq.',fmt:'r'},{k:'vneg',l:'Total Neg.',fmt:'r'},{k:'data',l:'Dt Acordo',fmt:'d'},{k:'entrada',l:'Entrada',fmt:'r'},{k:'parcelas',l:'Nº Parc.'},{k:'tpago',l:'Total Pago',fmt:'r'},{k:'taberto',l:'Total Aberto',fmt:'r'},{k:'ano',l:'Ano'},{k:'status',l:'Status',fmt:'s'}],
+  chargeback:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'taberto',l:'Total Aberto',fmt:'r'},{k:'ano',l:'Ano'},{k:'cento',l:'Cento'},{k:'status',l:'Status',fmt:'s'},{k:'dtpag',l:'Dt Pagamento',fmt:'d'}]
+};
+
+function getF(t,k){const el=document.getElementById('fil-'+t+'-'+k);return el?el.value:'';}
+function filterData(type){
+  let d=DB[type]||[];
+  const mes=getF(type,'mes'),ano=getF(type,'ano'),sit=getF(type,'sit')||getF(type,'status'),q=getF(type,'q'),atrib=getF(type,'atrib');
+  if(mes)d=d.filter(r=>(r.mes||'').toUpperCase()===mes);
+  if(ano)d=d.filter(r=>String(r.ano||'')===String(ano));
+  if(sit)d=d.filter(r=>(r.sit||r.status||'').toUpperCase()===sit);
+  if(atrib)d=d.filter(r=>(r.atrib||'').toUpperCase()===atrib);
+  if(q){const ql=q.toLowerCase();d=d.filter(r=>JSON.stringify(r).toLowerCase().includes(ql));}
+  return d;
+}
+
+function renderTable(type){
+  populateFilters();
+  const cols=COLS[type],data=filterData(type),tbl=document.getElementById('tbl-'+type);
+  if(!tbl)return;
+  tbl.querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.l}</th>`).join('')+'<th></th></tr>';
+  tbl.querySelector('tbody').innerHTML=data.length===0
+    ?`<tr><td colspan="${cols.length+1}" class="tbl-empty">Nenhum registro encontrado.</td></tr>`
+    :data.map(r=>{
+      const cells=cols.map(c=>{
+        const val=r[c.k];
+        if(c.fmt==='r')return`<td>${fmtR(val)}</td>`;
+        if(c.fmt==='d')return`<td>${fmtDate(val)}</td>`;
+        if(c.fmt==='s')return`<td>${statusBadge(val)}</td>`;
+        if(c.fmt==='atrib')return`<td>${atribBadge(val)}</td>`;
+        if(c.fmt==='atr'){const a=r.venc?calcAtraso(r.venc):parseInt(r.atraso||0);return`<td class="${atrasoClass(a)}">${a>0?a+'d':'—'}</td>`;}
+        return`<td>${val||'—'}</td>`;
+      }).join('');
+      const pago=type==='renegociacao'&&r.status!=='PAGO'?`<button class="btn btn-success btn-sm" onclick="markRenegPago('${r._uid}')">✔ Pago</button>`:'';
+      const cb=type==='chargeback'&&r.status!=='PAGO'?`<button class="btn btn-success btn-sm" onclick="markCBPago('${r._uid}')">✔ Pago</button>`:'';
+      return`<tr>${cells}<td style="white-space:nowrap;display:flex;gap:4px;padding:8px 12px">
+        <button class="btn btn-outline btn-sm" onclick="editRow('${type}','${r._uid}')">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRow('${type}','${r._uid}')">✕</button>
+        ${pago}${cb}
+      </td></tr>`;
+    }).join('');
+  renderCards(type,data);
+}
+
+function renderCards(type,data){
+  const el=document.getElementById('cards-'+type);if(!el)return;
+  const total=data.reduce((s,r)=>s+parseFloat(r.valor||r.taberto||r.vliq||0),0);
+  const pago=data.filter(r=>(r.sit||r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||r.taberto||0),0);
+  const aberto=data.filter(r=>(r.sit||r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||r.taberto||0),0);
+  el.innerHTML=`
+    <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
+    <div class="kcard"><div class="klabel">Total Geral</div><div class="kvalue" style="font-size:16px">${fmtR(total)}</div></div>
+    <div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(aberto)}</div></div>
+    <div class="kcard green"><div class="klabel">Total Pago</div><div class="kvalue" style="font-size:16px">${fmtR(pago)}</div></div>
+  `;
+}
+
+// ===== MODAL =====
+function openModal(type){clearModalFields(type);document.getElementById('modal-'+type+'-bg').classList.add('open');}
+function closeModal(type){document.getElementById('modal-'+type+'-bg').classList.remove('open');}
+function clearModalFields(type){
+  const bg=document.getElementById('modal-'+type+'-bg');if(!bg)return;
+  bg.querySelectorAll('input,select,textarea').forEach(el=>{if(el.type==='hidden')el.value='';else if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';});
+  const today=new Date().toISOString().split('T')[0];
+  bg.querySelectorAll('input[type=date]').forEach(el=>el.value=today);
+  if(type==='caderneta'){const d=bg.querySelector('#cd-dia');if(d)d.value=15;}
+}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+function sv(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val;}
+function upsert(type,obj,eid){
+  if(eid){const i=DB[type].findIndex(r=>r._uid===eid);if(i>=0){DB[type][i]=obj;}else{DB[type].push(obj);}}
+  else{DB[type].push(obj);}
+  save(type);
+}
+function saveModal(type){
+  let obj,eid;
+  if(type==='boleto'){eid=v('boleto-edit-id');obj={_uid:eid||uid(),id:v('b-id'),cliente:v('b-cliente'),atrib:v('b-atrib'),valor:v('b-valor'),venc:v('b-venc'),dtpag:v('b-dtpag'),vpago:v('b-vpago'),sit:v('b-sit'),mes:v('b-mes'),ano:v('b-ano')};upsert('boleto',obj,eid);renderTable('boleto');}
+  else if(type==='cheque'){eid=v('cheque-edit-id');obj={_uid:eid||uid(),id:v('c-id'),cliente:v('c-cliente'),num:v('c-num'),valor:v('c-valor'),venc:v('c-venc'),emitente:v('c-emitente'),motivo:v('c-motivo'),atrib:v('c-atrib'),limite:v('c-limite'),vpago:v('c-vpago'),sit:v('c-sit'),mes:v('c-mes'),ano:v('c-ano')};upsert('cheque',obj,eid);renderTable('cheque');}
+  else if(type==='caderneta'){eid=v('caderneta-edit-id');obj={_uid:eid||uid(),id:v('cd-id'),cliente:v('cd-cliente'),valor:v('cd-valor'),mes:v('cd-mes'),ano:v('cd-ano'),vpago:v('cd-vpago'),sit:v('cd-sit'),forma:v('cd-forma'),atraso:v('cd-atraso'),dia:v('cd-dia')||'15'};upsert('caderneta',obj,eid);renderTable('caderneta');}
+  else if(type==='renegociacao'){eid=v('reneg-edit-id');obj={_uid:eid||uid(),id:v('rn-id'),cliente:v('rn-cliente'),vliq:v('rn-vliq'),vneg:v('rn-vneg'),vparc:v('rn-vparc'),data:v('rn-data'),entrada:v('rn-entrada'),parcelas:v('rn-parcelas'),tpago:v('rn-tpago'),taberto:v('rn-taberto'),tvencer:v('rn-tvencer'),ano:v('rn-ano'),status:v('rn-status'),obs:v('rn-obs')};upsert('renegociacao',obj,eid);renderTable('renegociacao');}
+  else if(type==='chargeback'){eid=v('cb-edit-id');obj={_uid:eid||uid(),id:v('cb-id'),cliente:v('cb-cliente'),taberto:v('cb-taberto'),ano:v('cb-ano'),cento:v('cb-cento'),status:v('cb-status'),dtpag:v('cb-dtpag'),obs:v('cb-obs')};upsert('chargeback',obj,eid);renderTable('chargeback');}
+  closeModal(type);
+}
+function editRow(type,uid_val){
+  const r=DB[type].find(x=>x._uid===uid_val);if(!r)return;
+  if(type==='boleto'){sv('b-id',r.id);sv('b-cliente',r.cliente);sv('b-atrib',r.atrib);sv('b-valor',r.valor);sv('b-venc',r.venc);sv('b-dtpag',r.dtpag);sv('b-vpago',r.vpago);sv('b-sit',r.sit);sv('b-mes',r.mes);sv('b-ano',r.ano);document.getElementById('boleto-edit-id').value=r._uid;}
+  else if(type==='cheque'){sv('c-id',r.id);sv('c-cliente',r.cliente);sv('c-num',r.num);sv('c-valor',r.valor);sv('c-venc',r.venc);sv('c-emitente',r.emitente);sv('c-motivo',r.motivo);sv('c-atrib',r.atrib);sv('c-limite',r.limite);sv('c-vpago',r.vpago);sv('c-sit',r.sit);sv('c-mes',r.mes);sv('c-ano',r.ano);document.getElementById('cheque-edit-id').value=r._uid;}
+  else if(type==='caderneta'){sv('cd-id',r.id);sv('cd-cliente',r.cliente);sv('cd-valor',r.valor);sv('cd-mes',r.mes);sv('cd-ano',r.ano);sv('cd-vpago',r.vpago);sv('cd-sit',r.sit);sv('cd-forma',r.forma);sv('cd-atraso',r.atraso);sv('cd-dia',r.dia||'15');document.getElementById('caderneta-edit-id').value=r._uid;}
+  else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;}
+  else if(type==='chargeback'){sv('cb-id',r.id);sv('cb-cliente',r.cliente);sv('cb-taberto',r.taberto);sv('cb-ano',r.ano);sv('cb-cento',r.cento);sv('cb-status',r.status);sv('cb-dtpag',r.dtpag);sv('cb-obs',r.obs);document.getElementById('cb-edit-id').value=r._uid;}
+  openModal(type);
+}
+function deleteRow(type,uid_val){
+  if(!confirm('Excluir este registro?'))return;
+  DB[type]=DB[type].filter(r=>r._uid!==uid_val);save(type);renderTable(type);
+}
+function clearFilters(type){
+  ['mes','ano','sit','status','q','atrib'].forEach(k=>{const el=document.getElementById('fil-'+type+'-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});
+  renderTable(type);
+}
+function markRenegPago(uid_val){const r=DB.renegociacao.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.taberto=0;save('renegociacao');renderTable('renegociacao');}
+function markCBPago(uid_val){const r=DB.chargeback.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.dtpag=new Date().toISOString().split('T')[0];save('chargeback');renderTable('chargeback');}
+function exportCadernetaNovos(){const data=DB.caderneta.filter(r=>(r.sit||'').toUpperCase()!=='PAGO');if(!data.length){alert('Nenhum título em aberto.');return;}exportToXLSX(data.map(r=>{const o={...r};delete o._uid;return o;}),'Caderneta_EmAberto');}
+
+// ===== CRM =====
+function openCobrancaModal(){
+  clearModalFields('cobranca');
+  document.getElementById('cob-cobradora').value=currentUser.nome;
+  document.getElementById('cob-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('modal-cobranca-bg').classList.add('open');
+}
+function saveCobranca(){
+  const eid=v('cob-edit-id');
+  const obj={_uid:eid||uid(),cobradora:v('cob-cobradora'),idTitulo:v('cob-id-titulo'),cliente:v('cob-cliente'),tipo:v('cob-tipo'),valor:v('cob-valor'),venc:v('cob-venc'),data:v('cob-data'),meio:v('cob-meio'),status:v('cob-status'),retorno:v('cob-retorno'),dtpromessa:v('cob-dtpromessa'),vpromessa:v('cob-vpromessa')};
+  upsert('cobrancas',obj,eid);closeModal('cobranca');renderCRM();renderRetorno();
+}
+function filterCRM(){
+  const isCob=currentUser.role==='cobradora';
+  let data=isCob?DB.cobrancas.filter(r=>r.cobradora===currentUser.nome):[...DB.cobrancas];
+  const meio=document.getElementById('fil-crm-meio')?.value;
+  const status=document.getElementById('fil-crm-status')?.value;
+  const tipo=document.getElementById('fil-crm-tipo')?.value;
+  const cob=document.getElementById('fil-crm-cob')?.value;
+  const q=document.getElementById('fil-crm-q')?.value;
+  if(meio)data=data.filter(r=>r.meio===meio);
+  if(status)data=data.filter(r=>r.status===status);
+  if(tipo)data=data.filter(r=>r.tipo===tipo);
+  if(cob)data=data.filter(r=>r.cobradora===cob);
+  if(q){const ql=q.toLowerCase();data=data.filter(r=>JSON.stringify(r).toLowerCase().includes(ql));}
+  return data;
+}
+function renderCRM(){
+  if(!currentUser)return;
+  const data=filterCRM();
+  const isCob=currentUser.role==='cobradora';
+  const tbl=document.getElementById('tbl-crm');
+  const cols=[{k:'data',l:'Data',fmt:'d'},{k:'cliente',l:'Cliente'},{k:'idTitulo',l:'ID Título'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'meio',l:'Meio',fmt:'meio'},{k:'status',l:'Status',fmt:'s'},{k:'dtpromessa',l:'Dt Promessa',fmt:'d'},{k:'vpromessa',l:'Vl Prometido',fmt:'r'},{k:'retorno',l:'Retorno'}];
+  if(!isCob)cols.splice(1,0,{k:'cobradora',l:'Cobradora'});
+  tbl.querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.l}</th>`).join('')+'<th></th></tr>';
+  tbl.querySelector('tbody').innerHTML=data.length===0
+    ?`<tr><td colspan="${cols.length+1}" class="tbl-empty">Nenhum acionamento.</td></tr>`
+    :data.sort((a,b)=>new Date(b.data||0)-new Date(a.data||0)).map(r=>{
+      const cells=cols.map(c=>{const val=r[c.k];if(c.fmt==='r')return`<td>${fmtR(val)}</td>`;if(c.fmt==='d')return`<td>${fmtDate(val)}</td>`;if(c.fmt==='s')return`<td>${statusBadge(val)}</td>`;if(c.fmt==='meio')return`<td>${meioBadge(val)}</td>`;if(c.k==='retorno')return`<td style="max-width:200px;white-space:normal">${val||'—'}</td>`;return`<td>${val||'—'}</td>`;}).join('');
+      const canEdit=!isCob||r.cobradora===currentUser.nome;
+      return`<tr>${cells}<td style="white-space:nowrap;display:flex;gap:4px;padding:8px 12px">${canEdit?`<button class="btn btn-outline btn-sm" onclick="editCobranca('${r._uid}')">✏</button><button class="btn btn-danger btn-sm" onclick="deleteCobranca('${r._uid}')">✕</button>`:''}</td></tr>`;
+    }).join('');
+  const tot=data.length,pago=data.filter(r=>r.status==='PAGO').length,prom=data.filter(r=>r.status==='PROMETEU PAGAR').length,sem=data.filter(r=>r.status==='SEM CONTATO').length,vtot=data.reduce((s,r)=>s+parseFloat(r.valor||0),0);
+  document.getElementById('cards-crm').innerHTML=`
+    <div class="kcard"><div class="klabel">Acionamentos</div><div class="kvalue">${tot}</div></div>
+    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pago}</div></div>
+    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
+    <div class="kcard accent"><div class="klabel">Sem Contato</div><div class="kvalue">${sem}</div></div>
+    <div class="kcard"><div class="klabel">Valor Cobrado</div><div class="kvalue" style="font-size:15px">${fmtR(vtot)}</div></div>
+  `;
+}
+function editCobranca(uid_val){const r=DB.cobrancas.find(x=>x._uid===uid_val);if(!r)return;sv('cob-edit-id',r._uid);sv('cob-cobradora',r.cobradora);sv('cob-id-titulo',r.idTitulo);sv('cob-cliente',r.cliente);sv('cob-tipo',r.tipo);sv('cob-valor',r.valor);sv('cob-venc',r.venc);sv('cob-data',r.data);sv('cob-meio',r.meio);sv('cob-status',r.status);sv('cob-retorno',r.retorno);sv('cob-dtpromessa',r.dtpromessa);sv('cob-vpromessa',r.vpromessa);document.getElementById('modal-cobranca-bg').classList.add('open');}
+function deleteCobranca(uid_val){if(!confirm('Excluir acionamento?'))return;DB.cobrancas=DB.cobrancas.filter(r=>r._uid!==uid_val);save('cobrancas');renderCRM();renderRetorno();}
+function clearCRMFilters(){['meio','status','tipo','q','cob'].forEach(k=>{const el=document.getElementById('fil-crm-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});renderCRM();}
+function exportCRM(){const data=filterCRM();if(!data.length){alert('Nenhum dado.');return;}exportToXLSX(data.map(r=>{const o={...r};delete o._uid;return o;}),'CRM_Cobranca');}
+
+// ===== GERAR LISTA =====
+function gerarLista(){
+  const tipo=document.getElementById('gen-tipo').value;
+  const ano=document.getElementById('gen-ano').value;
+  const mes=document.getElementById('gen-mes').value;
+  const sit=document.getElementById('gen-sit').value;
+  listaGerada=[];
+  const tipos=tipo?[tipo.toLowerCase()]:['boleto','cheque','caderneta'];
+  tipos.forEach(t=>{
+    let rows=DB[t]||[];
+    if(ano)rows=rows.filter(r=>String(r.ano||'')===String(ano));
+    if(mes)rows=rows.filter(r=>(r.mes||'').toUpperCase()===mes);
+    if(sit)rows=rows.filter(r=>(r.sit||r.status||'').toUpperCase()===sit);
+    rows.forEach(r=>listaGerada.push({tipo:t.toUpperCase(),id:r.id,cliente:r.cliente,valor:parseFloat(r.valor||0),vencimento:fmtDate(r.venc),mes:r.mes,ano:r.ano,situacao:r.sit||r.status,atribuicao:r.atrib}));
+  });
+  const total=listaGerada.reduce((s,r)=>s+r.valor,0);
+  document.getElementById('gen-resultado').innerHTML=listaGerada.length===0
+    ?'<span style="color:#dc2626">Nenhum título encontrado.</span>'
+    :`<b style="color:#166534">${listaGerada.length} títulos encontrados</b> — Total: <b>${fmtR(total)}</b>`;
+}
+function exportarLista(){if(!listaGerada.length){alert('Gere a lista primeiro.');return;}exportToXLSX(listaGerada,'Lista_Cobranca');}
+
+// ===== RETORNO =====
+function renderRetorno(){
+  let data=[...DB.cobrancas];
+  const cob=document.getElementById('fil-ret-cob')?.value;
+  const status=document.getElementById('fil-ret-status')?.value;
+  const dt=document.getElementById('fil-ret-data')?.value;
+  const q=document.getElementById('fil-ret-q')?.value;
+  if(cob)data=data.filter(r=>r.cobradora===cob);
+  if(status)data=data.filter(r=>r.status===status);
+  if(dt)data=data.filter(r=>r.data===dt);
+  if(q){const ql=q.toLowerCase();data=data.filter(r=>JSON.stringify(r).toLowerCase().includes(ql));}
+  data.sort((a,b)=>new Date(b.data||0)-new Date(a.data||0));
+  const tbl=document.getElementById('tbl-retorno');
+  const cols=[{k:'data',l:'Data',fmt:'d'},{k:'cobradora',l:'Cobradora'},{k:'cliente',l:'Cliente'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor',fmt:'r'},{k:'meio',l:'Meio',fmt:'meio'},{k:'status',l:'Status',fmt:'s'},{k:'dtpromessa',l:'Dt Promessa',fmt:'d'},{k:'retorno',l:'Retorno do Cliente'}];
+  tbl.querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.l}</th>`).join('')+'</tr>';
+  tbl.querySelector('tbody').innerHTML=data.length===0
+    ?`<tr><td colspan="${cols.length}" class="tbl-empty">Nenhum retorno.</td></tr>`
+    :data.map(r=>`<tr>${cols.map(c=>{const val=r[c.k];if(c.fmt==='r')return`<td>${fmtR(val)}</td>`;if(c.fmt==='d')return`<td>${fmtDate(val)}</td>`;if(c.fmt==='s')return`<td>${statusBadge(val)}</td>`;if(c.fmt==='meio')return`<td>${meioBadge(val)}</td>`;if(c.k==='retorno')return`<td style="max-width:240px;white-space:normal">${val||'—'}</td>`;return`<td>${val||'—'}</td>`;}).join('')}</tr>`).join('');
+  const tot=data.length,pago=data.filter(r=>r.status==='PAGO').length,pend=data.filter(r=>r.status==='PENDENTE').length,prom=data.filter(r=>r.status==='PROMETEU PAGAR').length;
+  document.getElementById('dash-ret-cards').innerHTML=`
+    <div class="kcard"><div class="klabel">Total Retornos</div><div class="kvalue">${tot}</div></div>
+    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pago}</div></div>
+    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
+    <div class="kcard accent"><div class="klabel">Pendentes</div><div class="kvalue">${pend}</div></div>
+  `;
+}
+function clearRetornoFilters(){['cob','status','q'].forEach(k=>{const el=document.getElementById('fil-ret-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});document.getElementById('fil-ret-data').value='';renderRetorno();}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  populateFilters();
+  let totalAberto=0,totalPago=0,totalGeral=0;
+  let html='';
+  ['boleto','cheque','caderneta'].forEach(t=>{
+    const d=DB[t]||[];
+    const tot=d.reduce((s,r)=>s+parseFloat(r.valor||0),0);
+    const pg=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
+    const ab=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
+    totalGeral+=tot;totalAberto+=ab;totalPago+=pg;
+    const lbl={boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta'}[t];
+    html+=`<div class="kcard"><div class="klabel">${lbl}</div><div class="kvalue" style="font-size:16px">${fmtR(tot)}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">Aberto: ${fmtR(ab)} | Pago: ${fmtR(pg)}</div></div>`;
+  });
+  const cb=DB.chargeback||[];
+  const cbAb=cb.filter(r=>r.status!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
+  html+=`<div class="kcard accent"><div class="klabel">Chargeback</div><div class="kvalue" style="font-size:16px">${fmtR(cbAb)}</div><div style="font-size:11px;color:#ffffff80;margin-top:4px">${cb.filter(r=>r.status!=='PAGO').length} em aberto</div></div>`;
+  html+=`<div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(totalAberto)}</div></div>`;
+  html+=`<div class="kcard green"><div class="klabel">Total Recebido</div><div class="kvalue" style="font-size:16px">${fmtR(totalPago)}</div></div>`;
+  document.getElementById('dash-totais').innerHTML=html;
+
+  const hoje=new Date().toISOString().split('T')[0];
+  const acionHoje=DB.cobrancas.filter(r=>r.data===hoje).sort((a,b)=>(a.cobradora||'').localeCompare(b.cobradora||''));
+  const aTbl=document.getElementById('dash-acionamentos');
+  if(!acionHoje.length){aTbl.innerHTML='<div class="tbl-empty">Nenhum acionamento registrado hoje.</div>';return;}
+  aTbl.innerHTML=`<table><thead><tr><th>Cobradora</th><th>Cliente</th><th>Tipo</th><th>Valor</th><th>Meio</th><th>Status</th><th>Retorno</th></tr></thead><tbody>
+    ${acionHoje.map(r=>`<tr><td><b>${r.cobradora||'—'}</b></td><td>${r.cliente||'—'}</td><td>${r.tipo||'—'}</td><td>${fmtR(r.valor)}</td><td>${meioBadge(r.meio)}</td><td>${statusBadge(r.status)}</td><td style="max-width:200px;white-space:normal">${r.retorno||'—'}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ===== IMPORT =====
+function importExcel(type,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('Planilha vazia.');return;}
+      const mapped=rows.map(row=>{
+        const r={_uid:uid()};const rl={};Object.keys(row).forEach(k=>rl[k.toLowerCase().trim()]=row[k]);
+        if(type==='boleto'){r.id=rl['id']||rl['código']||rl['codigo']||'';r.cliente=rl['cliente']||rl['nome']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'VENDA';r.valor=parseNum(rl['valor título']||rl['valor titulo']||rl['valor']||0);r.venc=parseDate(rl['vencimento']||rl['dt vencimento']||'');r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'');r.sit=rl['situação']||rl['situacao']||rl['status']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        else if(type==='cheque'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.num=rl['nº cheque']||rl['numero cheque']||rl['cheque']||'';r.valor=parseNum(rl['valor']||0);r.venc=parseDate(rl['vencimento']||'');r.emitente=rl['emitente']||'';r.motivo=rl['motivo']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'';r.limite=rl['limite']||rl['limite envio']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        else if(type==='caderneta'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.valor=parseNum(rl['valor']||0);r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.forma=rl['forma pg']||rl['forma pagamento']||'';r.dia='15';}
+        return r;
+      });
+      let added=0,updated=0;
+      mapped.forEach(nr=>{const idx=DB[type].findIndex(er=>er.id&&er.id===nr.id);if(idx>=0){DB[type][idx]={...DB[type][idx],...nr,_uid:DB[type][idx]._uid};updated++;}else{DB[type].push(nr);added++;}});
+      save(type);renderTable(type);alert(`Importação concluída!\n${added} adicionados | ${updated} atualizados`);
+    }catch(err){alert('Erro: '+err.message);}
+  };
+  reader.readAsBinaryString(file);input.value='';
+}
+function parseNum(v){if(typeof v==='number')return v;const s=String(v).replace(/[R$\s.]/g,'').replace(',','.');return parseFloat(s)||0;}
+function parseDate(v){if(!v)return '';if(typeof v==='number'){return new Date((v-25569)*86400000).toISOString().split('T')[0];}const s=String(v).trim();const m1=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m1)return`${m1[3]}-${m1[2]}-${m1[1]}`;if(s.match(/^\d{4}-\d{2}-\d{2}/))return s.slice(0,10);return s;}
+function exportExcel(type){exportToXLSX(filterData(type).map(r=>{const o={...r};delete o._uid;return o;}),type.charAt(0).toUpperCase()+type.slice(1));}
+function exportToXLSX(data,name){if(!data.length){alert('Nenhum dado.');return;}const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,name);XLSX.writeFile(wb,`LeoMT_${name}_${new Date().toISOString().slice(0,10)}.xlsx`);}
+
+document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
+
+// AUTO LOGIN se sessão existir
+(function(){const s=sessionStorage.getItem('leoUser');if(s){try{currentUser=JSON.parse(s);initApp();}catch(e){}}})();
+</script>
+</body>
+</html>
