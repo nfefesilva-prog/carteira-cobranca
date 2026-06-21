@@ -1095,14 +1095,50 @@ function importExcel(type,input){
       if(!rows.length){alert('Planilha vazia.');return;}
       const mapped=rows.map(row=>{
         const r={_uid:uid()};const rl={};Object.keys(row).forEach(k=>rl[k.toLowerCase().trim()]=row[k]);
-        if(type==='boleto'){r.id=rl['id']||rl['código']||rl['codigo']||'';r.cliente=rl['cliente']||rl['nome']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'VENDA';r.valor=parseNum(rl['valor título']||rl['valor titulo']||rl['valor']||0);r.venc=parseDate(rl['vencimento']||rl['dt vencimento']||'')||null;r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'')||null;r.sit=rl['situação']||rl['situacao']||rl['status']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
-        else if(type==='cheque'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.num=rl['nº cheque']||rl['numero cheque']||rl['cheque']||'';r.valor=parseNum(rl['valor']||0);r.venc=parseDate(rl['vencimento']||'')||null;r.emitente=rl['emitente']||'';r.motivo=rl['motivo']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'';r.limite=rl['limite']||rl['limite envio']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        if(type==='boleto'){
+          r.id=rl['id']||rl['código']||rl['codigo']||'';
+          r.cliente=rl['cliente']||rl['nome']||'';
+          r.atrib=rl['atribuição']||rl['atribuicao']||'VENDA';
+          r.valor=parseNum(rl['valor título']||rl['valor titulo']||rl['valor']||0);
+          r.venc=parseDate(rl['vencimento']||rl['dt vencimento']||'')||null;
+          r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'')||null;
+          r.sit=rl['situação']||rl['situacao']||rl['status']||'EM ABERTO';
+          if(r.venc&&!(rl['mês']||rl['mes'])){const vd=new Date(r.venc+'T00:00:00');r.mes=String(vd.getMonth()+1).padStart(2,'0');r.ano=String(vd.getFullYear());}
+          else{r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        }
+        else if(type==='cheque'){
+          r.id=String(rl['id']||'');
+          r.cliente=rl['cliente']||rl['nome']||'';
+          r.num=String(rl['nº cheque']||rl['numero cheque']||rl['cheque']||rl['n° cheque']||'');
+          r.valor=parseNum(rl['valor']||0);
+          r.venc=parseDate(rl['vencimento']||'')||null;
+          r.emitente=rl['emitente']||'';
+          r.motivo=rl['motivo']||'';
+          r.atrib=rl['atribuição']||rl['atribuicao']||'';
+          // calcular limite = venc + 30 dias
+          if(r.venc){
+            const vd=new Date(r.venc+'T00:00:00');
+            const ld=new Date(vd);ld.setDate(ld.getDate()+30);
+            const hoje=new Date();hoje.setHours(0,0,0,0);
+            r.limite=ld<hoje?'PASSOU DO PRAZO':ld.toISOString().split('T')[0];
+            r.sit=rl['situação']||rl['situacao']||'EM ABERTO';
+            // calcular mês e ano pelo vencimento
+            r.mes=String(vd.getMonth()+1).padStart(2,'0');
+            r.ano=String(vd.getFullYear());
+          } else {
+            r.limite='';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';
+            r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';
+          }
+        }
         else if(type==='caderneta'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.valor=parseNum(rl['valor']||0);r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.forma=rl['forma pg']||rl['forma pagamento']||'';r.dia='15';}
         return r;
       });
       let added=0,updated=0;
       for(const nr of mapped){
-        const idx=DB[type].findIndex(er=>er.id&&er.id===nr.id);
+        const idx=DB[type].findIndex(er=>{
+          if(type==='cheque') return er.num&&nr.num&&er.num===nr.num;
+          return er.id&&er.id===nr.id;
+        });
         if(idx>=0){nr._uid=DB[type][idx]._uid;DB[type][idx]={...DB[type][idx],...nr};updated++;}
         else{DB[type].push(nr);added++;}
         await sbSave(type,nr);
