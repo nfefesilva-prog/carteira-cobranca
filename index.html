@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carteira de Cobrança — Leo Mato Grosso</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -686,22 +687,54 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
 </div>
 
 <script>
+// ===== API CLOUDFLARE WORKER =====
+// Após o deploy, substitua pela URL do seu Worker
+const API_URL='https://carteira-api.nfefe-silva.workers.dev';
+
+// ===== STORE =====
+const STORE_KEYS=['boleto','cheque','caderneta','renegociacao','chargeback','cobrancas'];
+let DB={};
+STORE_KEYS.forEach(k=>DB[k]=[]);
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+async function loadAll(){
+  for(const k of STORE_KEYS){
+    try{
+      const res=await fetch(`${API_URL}/api/${k}`);
+      const data=await res.json();
+      if(Array.isArray(data)) DB[k]=data;
+    }catch(e){console.error('Erro ao carregar',k,e);}
+  }
+}
+async function sbSave(table,obj){
+  try{
+    await fetch(`${API_URL}/api/${table}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(obj)
+    });
+  }catch(e){console.error(e);}
+}
+async function sbDel(table,uid_val){
+  try{
+    await fetch(`${API_URL}/api/${table}/${uid_val}`,{method:'DELETE'});
+  }catch(e){console.error(e);}
+}
+
 // ===== USERS — acesso por nome ou email Leo =====
-const USERS = {
-  'bruna':   { nome:'Bruna',  role:'cobradora' },
-  'grecia':  { nome:'Grécia', role:'cobradora' },
-  'grécia':  { nome:'Grécia', role:'cobradora' },
-  'nara':    { nome:'Nara',   role:'admin'     },
-  'kelly':   { nome:'Kelly',  role:'editor'    },
-  'paulo':   { nome:'Paulo',  role:'editor'    },
+const USERS={
+  'bruna':  {nome:'Bruna', role:'cobradora'},
+  'grecia': {nome:'Grécia',role:'cobradora'},
+  'grécia': {nome:'Grécia',role:'cobradora'},
+  'nara':   {nome:'Nara',  role:'admin'},
+  'kelly':  {nome:'Kelly', role:'editor'},
+  'paulo':  {nome:'Paulo', role:'editor'},
 };
 function resolveUser(input){
   const s=input.trim().toLowerCase();
-  // match direto
   if(USERS[s]) return USERS[s];
-  // email Leo: pegar parte antes do @
-  const emailMatch=s.match(/^([a-z]+)/);
-  if(emailMatch && USERS[emailMatch[1]]) return USERS[emailMatch[1]];
+  const m=s.match(/^([a-z]+)/);
+  if(m && USERS[m[1]]) return USERS[m[1]];
   return null;
 }
 
@@ -725,7 +758,7 @@ function doLogout(){
   document.getElementById('app-screen').classList.remove('visible');
   document.getElementById('login-name').value='';
 }
-function initApp(){
+async function initApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').classList.add('visible');
   document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
@@ -734,31 +767,25 @@ function initApp(){
   document.getElementById('sb-role').textContent=u.role==='admin'?'Administrador':u.role==='cobradora'?'Cobradora':'Editor';
   document.getElementById('sb-avatar').textContent=u.nome[0].toUpperCase();
   document.getElementById('crm-badge-user').textContent=u.nome+(u.role==='admin'?' (Admin)':u.role==='editor'?' (Supervisor)':'');
-
   const isCob=u.role==='cobradora';
   document.getElementById('lbl-crm-cob').style.display=isCob?'none':'';
   document.getElementById('fil-crm-cob').style.display=isCob?'none':'';
   document.getElementById('btn-novo-acionamento').style.display=u.role==='editor'?'none':'inline-block';
-
+  document.getElementById('dash-totais').innerHTML='<div style="color:#6b7280;font-size:13px;padding:20px">⏳ Carregando dados...</div>';
+  await loadAll();
   populateFilters();
   renderDashboard();
 }
 
-// ===== STORE =====
-const STORE_KEYS=['boleto','cheque','caderneta','renegociacao','chargeback','cobrancas'];
-let DB={};
-STORE_KEYS.forEach(k=>{try{DB[k]=JSON.parse(localStorage.getItem('leo_'+k)||'[]');}catch(e){DB[k]=[];}});
-function save(k){localStorage.setItem('leo_'+k,JSON.stringify(DB[k]));}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-
 // ===== TABS =====
 const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',crm:'CRM de Cobrança',retorno:'Retornos'};
-function showTab(name,btn){
+async function showTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
   document.getElementById('topbar-title').textContent=TAB_TITLES[name]||name;
+  await loadAll();
   if(name==='dashboard') renderDashboard();
   else if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(name)){populateFilters();renderTable(name);}
   else if(name==='crm'){populateGenAnos();renderCRM();}
@@ -883,18 +910,18 @@ function clearModalFields(type){
 }
 function v(id){const el=document.getElementById(id);return el?el.value:'';}
 function sv(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val;}
-function upsert(type,obj,eid){
+async function upsert(type,obj,eid){
   if(eid){const i=DB[type].findIndex(r=>r._uid===eid);if(i>=0){DB[type][i]=obj;}else{DB[type].push(obj);}}
   else{DB[type].push(obj);}
-  save(type);
+  await sbSave(type,obj);
 }
-function saveModal(type){
+async function saveModal(type){
   let obj,eid;
-  if(type==='boleto'){eid=v('boleto-edit-id');obj={_uid:eid||uid(),id:v('b-id'),cliente:v('b-cliente'),atrib:v('b-atrib'),valor:v('b-valor'),venc:v('b-venc'),dtpag:v('b-dtpag'),vpago:v('b-vpago'),sit:v('b-sit'),mes:v('b-mes'),ano:v('b-ano')};upsert('boleto',obj,eid);renderTable('boleto');}
-  else if(type==='cheque'){eid=v('cheque-edit-id');obj={_uid:eid||uid(),id:v('c-id'),cliente:v('c-cliente'),num:v('c-num'),valor:v('c-valor'),venc:v('c-venc'),emitente:v('c-emitente'),motivo:v('c-motivo'),atrib:v('c-atrib'),limite:v('c-limite'),vpago:v('c-vpago'),sit:v('c-sit'),mes:v('c-mes'),ano:v('c-ano')};upsert('cheque',obj,eid);renderTable('cheque');}
-  else if(type==='caderneta'){eid=v('caderneta-edit-id');obj={_uid:eid||uid(),id:v('cd-id'),cliente:v('cd-cliente'),valor:v('cd-valor'),mes:v('cd-mes'),ano:v('cd-ano'),vpago:v('cd-vpago'),sit:v('cd-sit'),forma:v('cd-forma'),atraso:v('cd-atraso'),dia:v('cd-dia')||'15'};upsert('caderneta',obj,eid);renderTable('caderneta');}
-  else if(type==='renegociacao'){eid=v('reneg-edit-id');obj={_uid:eid||uid(),id:v('rn-id'),cliente:v('rn-cliente'),vliq:v('rn-vliq'),vneg:v('rn-vneg'),vparc:v('rn-vparc'),data:v('rn-data'),entrada:v('rn-entrada'),parcelas:v('rn-parcelas'),tpago:v('rn-tpago'),taberto:v('rn-taberto'),tvencer:v('rn-tvencer'),ano:v('rn-ano'),status:v('rn-status'),obs:v('rn-obs')};upsert('renegociacao',obj,eid);renderTable('renegociacao');}
-  else if(type==='chargeback'){eid=v('cb-edit-id');obj={_uid:eid||uid(),id:v('cb-id'),cliente:v('cb-cliente'),taberto:v('cb-taberto'),ano:v('cb-ano'),cento:v('cb-cento'),status:v('cb-status'),dtpag:v('cb-dtpag'),obs:v('cb-obs')};upsert('chargeback',obj,eid);renderTable('chargeback');}
+  if(type==='boleto'){eid=v('boleto-edit-id');obj={_uid:eid||uid(),id:v('b-id'),cliente:v('b-cliente'),atrib:v('b-atrib'),valor:v('b-valor')||null,venc:v('b-venc')||null,dtpag:v('b-dtpag')||null,vpago:v('b-vpago')||null,sit:v('b-sit'),mes:v('b-mes'),ano:v('b-ano')};await upsert('boleto',obj,eid);renderTable('boleto');}
+  else if(type==='cheque'){eid=v('cheque-edit-id');obj={_uid:eid||uid(),id:v('c-id'),cliente:v('c-cliente'),num:v('c-num'),valor:v('c-valor')||null,venc:v('c-venc')||null,emitente:v('c-emitente'),motivo:v('c-motivo'),atrib:v('c-atrib'),limite:v('c-limite')||null,vpago:v('c-vpago')||null,sit:v('c-sit'),mes:v('c-mes'),ano:v('c-ano')};await upsert('cheque',obj,eid);renderTable('cheque');}
+  else if(type==='caderneta'){eid=v('caderneta-edit-id');obj={_uid:eid||uid(),id:v('cd-id'),cliente:v('cd-cliente'),valor:v('cd-valor')||null,mes:v('cd-mes'),ano:v('cd-ano'),vpago:v('cd-vpago')||null,sit:v('cd-sit'),forma:v('cd-forma'),atraso:v('cd-atraso')||null,dia:v('cd-dia')||'15'};await upsert('caderneta',obj,eid);renderTable('caderneta');}
+  else if(type==='renegociacao'){eid=v('reneg-edit-id');obj={_uid:eid||uid(),id:v('rn-id'),cliente:v('rn-cliente'),vliq:v('rn-vliq')||null,vneg:v('rn-vneg')||null,vparc:v('rn-vparc')||null,data:v('rn-data')||null,entrada:v('rn-entrada')||null,parcelas:v('rn-parcelas')||null,tpago:v('rn-tpago')||null,taberto:v('rn-taberto')||null,tvencer:v('rn-tvencer')||null,ano:v('rn-ano'),status:v('rn-status'),obs:v('rn-obs')};await upsert('renegociacao',obj,eid);renderTable('renegociacao');}
+  else if(type==='chargeback'){eid=v('cb-edit-id');obj={_uid:eid||uid(),id:v('cb-id'),cliente:v('cb-cliente'),taberto:v('cb-taberto')||null,ano:v('cb-ano'),cento:v('cb-cento')||null,status:v('cb-status'),dtpag:v('cb-dtpag')||null,obs:v('cb-obs')};await upsert('chargeback',obj,eid);renderTable('chargeback');}
   closeModal(type);
 }
 function editRow(type,uid_val){
@@ -906,16 +933,18 @@ function editRow(type,uid_val){
   else if(type==='chargeback'){sv('cb-id',r.id);sv('cb-cliente',r.cliente);sv('cb-taberto',r.taberto);sv('cb-ano',r.ano);sv('cb-cento',r.cento);sv('cb-status',r.status);sv('cb-dtpag',r.dtpag);sv('cb-obs',r.obs);document.getElementById('cb-edit-id').value=r._uid;}
   openModal(type);
 }
-function deleteRow(type,uid_val){
+async function deleteRow(type,uid_val){
   if(!confirm('Excluir este registro?'))return;
-  DB[type]=DB[type].filter(r=>r._uid!==uid_val);save(type);renderTable(type);
+  DB[type]=DB[type].filter(r=>r._uid!==uid_val);
+  await sbDel(type,uid_val);
+  renderTable(type);
 }
 function clearFilters(type){
   ['mes','ano','sit','status','q','atrib'].forEach(k=>{const el=document.getElementById('fil-'+type+'-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});
   renderTable(type);
 }
-function markRenegPago(uid_val){const r=DB.renegociacao.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.taberto=0;save('renegociacao');renderTable('renegociacao');}
-function markCBPago(uid_val){const r=DB.chargeback.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.dtpag=new Date().toISOString().split('T')[0];save('chargeback');renderTable('chargeback');}
+async function markRenegPago(uid_val){const r=DB.renegociacao.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.taberto=0;await sbSave('renegociacao',r);renderTable('renegociacao');}
+async function markCBPago(uid_val){const r=DB.chargeback.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.dtpag=new Date().toISOString().split('T')[0];await sbSave('chargeback',r);renderTable('chargeback');}
 function exportCadernetaNovos(){const data=DB.caderneta.filter(r=>(r.sit||'').toUpperCase()!=='PAGO');if(!data.length){alert('Nenhum título em aberto.');return;}exportToXLSX(data.map(r=>{const o={...r};delete o._uid;return o;}),'Caderneta_EmAberto');}
 
 // ===== CRM =====
@@ -925,10 +954,10 @@ function openCobrancaModal(){
   document.getElementById('cob-data').value=new Date().toISOString().split('T')[0];
   document.getElementById('modal-cobranca-bg').classList.add('open');
 }
-function saveCobranca(){
+async function saveCobranca(){
   const eid=v('cob-edit-id');
-  const obj={_uid:eid||uid(),cobradora:v('cob-cobradora'),idTitulo:v('cob-id-titulo'),cliente:v('cob-cliente'),tipo:v('cob-tipo'),valor:v('cob-valor'),venc:v('cob-venc'),data:v('cob-data'),meio:v('cob-meio'),status:v('cob-status'),retorno:v('cob-retorno'),dtpromessa:v('cob-dtpromessa'),vpromessa:v('cob-vpromessa')};
-  upsert('cobrancas',obj,eid);closeModal('cobranca');renderCRM();renderRetorno();
+  const obj={_uid:eid||uid(),cobradora:v('cob-cobradora'),idtitulo:v('cob-id-titulo'),cliente:v('cob-cliente'),tipo:v('cob-tipo'),valor:v('cob-valor')||null,venc:v('cob-venc')||null,data:v('cob-data')||null,meio:v('cob-meio'),status:v('cob-status'),retorno:v('cob-retorno'),dtpromessa:v('cob-dtpromessa')||null,vpromessa:v('cob-vpromessa')||null};
+  await upsert('cobrancas',obj,eid);closeModal('cobranca');renderCRM();renderRetorno();
 }
 function filterCRM(){
   const isCob=currentUser.role==='cobradora';
@@ -950,7 +979,7 @@ function renderCRM(){
   const data=filterCRM();
   const isCob=currentUser.role==='cobradora';
   const tbl=document.getElementById('tbl-crm');
-  const cols=[{k:'data',l:'Data',fmt:'d'},{k:'cliente',l:'Cliente'},{k:'idTitulo',l:'ID Título'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'meio',l:'Meio',fmt:'meio'},{k:'status',l:'Status',fmt:'s'},{k:'dtpromessa',l:'Dt Promessa',fmt:'d'},{k:'vpromessa',l:'Vl Prometido',fmt:'r'},{k:'retorno',l:'Retorno'}];
+  const cols=[{k:'data',l:'Data',fmt:'d'},{k:'cliente',l:'Cliente'},{k:'idtitulo',l:'ID Título'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'meio',l:'Meio',fmt:'meio'},{k:'status',l:'Status',fmt:'s'},{k:'dtpromessa',l:'Dt Promessa',fmt:'d'},{k:'vpromessa',l:'Vl Prometido',fmt:'r'},{k:'retorno',l:'Retorno'}];
   if(!isCob)cols.splice(1,0,{k:'cobradora',l:'Cobradora'});
   tbl.querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c.l}</th>`).join('')+'<th></th></tr>';
   tbl.querySelector('tbody').innerHTML=data.length===0
@@ -969,8 +998,8 @@ function renderCRM(){
     <div class="kcard"><div class="klabel">Valor Cobrado</div><div class="kvalue" style="font-size:15px">${fmtR(vtot)}</div></div>
   `;
 }
-function editCobranca(uid_val){const r=DB.cobrancas.find(x=>x._uid===uid_val);if(!r)return;sv('cob-edit-id',r._uid);sv('cob-cobradora',r.cobradora);sv('cob-id-titulo',r.idTitulo);sv('cob-cliente',r.cliente);sv('cob-tipo',r.tipo);sv('cob-valor',r.valor);sv('cob-venc',r.venc);sv('cob-data',r.data);sv('cob-meio',r.meio);sv('cob-status',r.status);sv('cob-retorno',r.retorno);sv('cob-dtpromessa',r.dtpromessa);sv('cob-vpromessa',r.vpromessa);document.getElementById('modal-cobranca-bg').classList.add('open');}
-function deleteCobranca(uid_val){if(!confirm('Excluir acionamento?'))return;DB.cobrancas=DB.cobrancas.filter(r=>r._uid!==uid_val);save('cobrancas');renderCRM();renderRetorno();}
+function editCobranca(uid_val){const r=DB.cobrancas.find(x=>x._uid===uid_val);if(!r)return;sv('cob-edit-id',r._uid);sv('cob-cobradora',r.cobradora);sv('cob-id-titulo',r.idtitulo);sv('cob-cliente',r.cliente);sv('cob-tipo',r.tipo);sv('cob-valor',r.valor);sv('cob-venc',r.venc);sv('cob-data',r.data);sv('cob-meio',r.meio);sv('cob-status',r.status);sv('cob-retorno',r.retorno);sv('cob-dtpromessa',r.dtpromessa);sv('cob-vpromessa',r.vpromessa);document.getElementById('modal-cobranca-bg').classList.add('open');}
+async function deleteCobranca(uid_val){if(!confirm('Excluir acionamento?'))return;DB.cobrancas=DB.cobrancas.filter(r=>r._uid!==uid_val);await sbDel('cobrancas',uid_val);renderCRM();renderRetorno();}
 function clearCRMFilters(){['meio','status','tipo','q','cob'].forEach(k=>{const el=document.getElementById('fil-crm-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});renderCRM();}
 function exportCRM(){const data=filterCRM();if(!data.length){alert('Nenhum dado.');return;}exportToXLSX(data.map(r=>{const o={...r};delete o._uid;return o;}),'CRM_Cobranca');}
 
@@ -1066,14 +1095,19 @@ function importExcel(type,input){
       if(!rows.length){alert('Planilha vazia.');return;}
       const mapped=rows.map(row=>{
         const r={_uid:uid()};const rl={};Object.keys(row).forEach(k=>rl[k.toLowerCase().trim()]=row[k]);
-        if(type==='boleto'){r.id=rl['id']||rl['código']||rl['codigo']||'';r.cliente=rl['cliente']||rl['nome']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'VENDA';r.valor=parseNum(rl['valor título']||rl['valor titulo']||rl['valor']||0);r.venc=parseDate(rl['vencimento']||rl['dt vencimento']||'');r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'');r.sit=rl['situação']||rl['situacao']||rl['status']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
-        else if(type==='cheque'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.num=rl['nº cheque']||rl['numero cheque']||rl['cheque']||'';r.valor=parseNum(rl['valor']||0);r.venc=parseDate(rl['vencimento']||'');r.emitente=rl['emitente']||'';r.motivo=rl['motivo']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'';r.limite=rl['limite']||rl['limite envio']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        if(type==='boleto'){r.id=rl['id']||rl['código']||rl['codigo']||'';r.cliente=rl['cliente']||rl['nome']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'VENDA';r.valor=parseNum(rl['valor título']||rl['valor titulo']||rl['valor']||0);r.venc=parseDate(rl['vencimento']||rl['dt vencimento']||'')||null;r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'')||null;r.sit=rl['situação']||rl['situacao']||rl['status']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
+        else if(type==='cheque'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.num=rl['nº cheque']||rl['numero cheque']||rl['cheque']||'';r.valor=parseNum(rl['valor']||0);r.venc=parseDate(rl['vencimento']||'')||null;r.emitente=rl['emitente']||'';r.motivo=rl['motivo']||'';r.atrib=rl['atribuição']||rl['atribuicao']||'';r.limite=rl['limite']||rl['limite envio']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';}
         else if(type==='caderneta'){r.id=rl['id']||'';r.cliente=rl['cliente']||rl['nome']||'';r.valor=parseNum(rl['valor']||0);r.mes=rl['mês']||rl['mes']||'';r.ano=rl['ano']||'';r.sit=rl['situação']||rl['situacao']||'EM ABERTO';r.forma=rl['forma pg']||rl['forma pagamento']||'';r.dia='15';}
         return r;
       });
       let added=0,updated=0;
-      mapped.forEach(nr=>{const idx=DB[type].findIndex(er=>er.id&&er.id===nr.id);if(idx>=0){DB[type][idx]={...DB[type][idx],...nr,_uid:DB[type][idx]._uid};updated++;}else{DB[type].push(nr);added++;}});
-      save(type);renderTable(type);alert(`Importação concluída!\n${added} adicionados | ${updated} atualizados`);
+      for(const nr of mapped){
+        const idx=DB[type].findIndex(er=>er.id&&er.id===nr.id);
+        if(idx>=0){nr._uid=DB[type][idx]._uid;DB[type][idx]={...DB[type][idx],...nr};updated++;}
+        else{DB[type].push(nr);added++;}
+        await sbSave(type,nr);
+      }
+      renderTable(type);alert(`Importação concluída!\n${added} adicionados | ${updated} atualizados`);
     }catch(err){alert('Erro: '+err.message);}
   };
   reader.readAsBinaryString(file);input.value='';
@@ -1086,7 +1120,7 @@ function exportToXLSX(data,name){if(!data.length){alert('Nenhum dado.');return;}
 document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
 
 // AUTO LOGIN se sessão existir
-(function(){const s=sessionStorage.getItem('leoUser');if(s){try{currentUser=JSON.parse(s);initApp();}catch(e){}}})();
+(function(){const s=sessionStorage.getItem('leoUser');if(s){try{currentUser=JSON.parse(s);initApp().catch(console.error);}catch(e){}}})();
 </script>
 </body>
 </html>
