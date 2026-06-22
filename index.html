@@ -398,21 +398,33 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <h4>📋 Gerar Lista de Cobrança</h4>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
             <div class="gen-field"><label>Tipo</label>
-              <select id="gen-tipo"><option value="">Todos</option><option>BOLETO</option><option>CHEQUE</option><option>CADERNETA</option></select>
+              <select id="gen-tipo"><option value="">Todos</option><option>BOLETO</option><option>CHEQUE</option><option>CADERNETA</option><option>CHARGEBACK</option></select>
             </div>
             <div class="gen-field"><label>Ano</label>
               <select id="gen-ano"><option value="">Todos</option></select>
             </div>
             <div class="gen-field"><label>Mês</label>
-              <select id="gen-mes"><option value="">Todos</option><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+              <select id="gen-mes"><option value="">Todos</option><option>01</option><option>02</option><option>03</option><option>04</option><option>05</option><option>06</option><option>07</option><option>08</option><option>09</option><option>10</option><option>11</option><option>12</option></select>
             </div>
             <div class="gen-field"><label>Situação</label>
-              <select id="gen-sit"><option value="">Todas</option><option>EM ABERTO</option><option>VENCIDO</option></select>
+              <select id="gen-sit"><option value="">Todas</option><option>EM ABERTO</option><option>VENCIDO</option><option>PASSOU DO PRAZO</option></select>
+            </div>
+            <div class="gen-field"><label>Cliente</label>
+              <input type="text" id="gen-cliente" placeholder="Buscar cliente..." style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;min-width:160px">
             </div>
             <button class="btn btn-primary" onclick="gerarLista()">Gerar</button>
+            <button class="btn btn-outline" onclick="document.getElementById('gen-cliente').value='';document.getElementById('gen-tipo').value='';document.getElementById('gen-ano').value='';document.getElementById('gen-mes').value='';document.getElementById('gen-sit').value='';document.getElementById('gen-lista-wrap').style.display='none';document.getElementById('gen-resultado').innerHTML=''">Limpar</button>
             <button class="btn btn-outline" onclick="exportarLista()">⬇ Exportar</button>
           </div>
           <div id="gen-resultado" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+          <div id="gen-lista-wrap" style="display:none;margin-top:12px">
+            <div class="tbl-wrap"><table id="tbl-gen-lista" style="width:100%">
+              <thead><tr>
+                <th>TIPO</th><th>ID</th><th>CLIENTE</th><th>VALOR</th><th>VENCIMENTO</th><th>SITUAÇÃO</th><th></th>
+              </tr></thead>
+              <tbody id="tbody-gen-lista"></tbody>
+            </table></div>
+          </div>
         </div>
 
         <div class="toolbar">
@@ -444,6 +456,21 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div id="panel-retorno" class="panel">
         <div class="page-header"><h2>Retornos</h2><div class="page-sub">Histórico consolidado de acionamentos</div></div>
         <div class="page-divider"></div>
+
+        <!-- RELATÓRIO DIÁRIO -->
+        <div class="gen-box" style="margin-bottom:16px">
+          <h4>📊 Relatório Diário</h4>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+            <div class="gen-field"><label>Data</label><input type="date" id="rel-data" onchange="renderRelatorioDiario()"></div>
+            <div class="gen-field"><label>Cobradora</label>
+              <select id="rel-cob" onchange="renderRelatorioDiario()">
+                <option value="">Todas</option><option>Bruna</option><option>Grécia</option><option>Nara</option>
+              </select>
+            </div>
+          </div>
+          <div id="rel-diario-cards" class="card-row"></div>
+        </div>
+
         <div class="card-row" id="dash-ret-cards"></div>
         <div class="toolbar">
           <label>Cobradora</label>
@@ -789,7 +816,7 @@ async function showTab(name,btn){
   if(name==='dashboard') renderDashboard();
   else if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(name)){populateFilters();renderTable(name);}
   else if(name==='crm'){populateGenAnos();renderCRM();}
-  else if(name==='retorno') renderRetorno();
+  else if(name==='retorno'){renderRetorno();document.getElementById('rel-data').value=new Date().toISOString().split('T')[0];renderRelatorioDiario();}
 }
 
 // ===== MESES =====
@@ -954,10 +981,22 @@ function openCobrancaModal(){
   document.getElementById('cob-data').value=new Date().toISOString().split('T')[0];
   document.getElementById('modal-cobranca-bg').classList.add('open');
 }
+function openCobrancaModalFromLista(i){
+  const r=listaGerada[i];if(!r)return;
+  clearModalFields('cobranca');
+  document.getElementById('cob-cobradora').value=currentUser.nome;
+  document.getElementById('cob-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('cob-id-titulo').value=r.id||'';
+  document.getElementById('cob-cliente').value=r.cliente||'';
+  document.getElementById('cob-tipo').value=r.tipo||'';
+  document.getElementById('cob-valor').value=r.valor||'';
+  document.getElementById('cob-venc').value=r.vencimento||'';
+  document.getElementById('modal-cobranca-bg').classList.add('open');
+}
 async function saveCobranca(){
   const eid=v('cob-edit-id');
   const obj={_uid:eid||uid(),cobradora:v('cob-cobradora'),idtitulo:v('cob-id-titulo'),cliente:v('cob-cliente'),tipo:v('cob-tipo'),valor:v('cob-valor')||null,venc:v('cob-venc')||null,data:v('cob-data')||null,meio:v('cob-meio'),status:v('cob-status'),retorno:v('cob-retorno'),dtpromessa:v('cob-dtpromessa')||null,vpromessa:v('cob-vpromessa')||null};
-  await upsert('cobrancas',obj,eid);closeModal('cobranca');renderCRM();renderRetorno();
+  await upsert('cobrancas',obj,eid);closeModal('cobranca');renderCRM();renderRetorno();if(listaGerada.length)renderListaGerada();
 }
 function filterCRM(){
   const isCob=currentUser.role==='cobradora';
@@ -1009,19 +1048,56 @@ function gerarLista(){
   const ano=document.getElementById('gen-ano').value;
   const mes=document.getElementById('gen-mes').value;
   const sit=document.getElementById('gen-sit').value;
+  const cli=(document.getElementById('gen-cliente').value||'').trim().toLowerCase();
   listaGerada=[];
-  const tipos=tipo?[tipo.toLowerCase()]:['boleto','cheque','caderneta'];
+  const tipos=tipo?[tipo.toLowerCase()]:['boleto','cheque','caderneta','chargeback'];
   tipos.forEach(t=>{
     let rows=DB[t]||[];
     if(ano)rows=rows.filter(r=>String(r.ano||'')===String(ano));
-    if(mes)rows=rows.filter(r=>(r.mes||'').toUpperCase()===mes);
+    if(mes)rows=rows.filter(r=>String(r.mes||'')===String(mes));
     if(sit)rows=rows.filter(r=>(r.sit||r.status||'').toUpperCase()===sit);
-    rows.forEach(r=>listaGerada.push({tipo:t.toUpperCase(),id:r.id,cliente:r.cliente,valor:parseFloat(r.valor||0),vencimento:fmtDate(r.venc),mes:r.mes,ano:r.ano,situacao:r.sit||r.status,atribuicao:r.atrib}));
+    if(cli)rows=rows.filter(r=>(r.cliente||'').toLowerCase().includes(cli));
+    if(t==='chargeback'){
+      rows.forEach(r=>listaGerada.push({tipo:'CHARGEBACK',id:r.id,cliente:r.cliente,valor:parseFloat(r.taberto||0),vencimento:'—',mes:r.ano,ano:r.ano,situacao:r.status,atribuicao:r.cento}));
+    } else {
+      rows.forEach(r=>listaGerada.push({tipo:t.toUpperCase(),id:r.id,cliente:r.cliente,valor:parseFloat(r.valor||0),vencimento:fmtDate(r.venc),mes:r.mes,ano:r.ano,situacao:r.sit||r.status,atribuicao:r.atrib}));
+    }
   });
+  renderListaGerada();
+}
+function renderListaGerada(){
+  const hoje=new Date().toISOString().split('T')[0];
+  // clientes já acionados hoje por qualquer cobradora
+  const acionadosHoje=new Set(DB.cobrancas.filter(c=>c.data===hoje).map(c=>(c.cliente||'').toLowerCase().trim()));
+  const pendentes=listaGerada.filter(r=>!acionadosHoje.has((r.cliente||'').toLowerCase().trim()));
   const total=listaGerada.reduce((s,r)=>s+r.valor,0);
+  const totalPend=pendentes.reduce((s,r)=>s+r.valor,0);
+  const acionados=listaGerada.length-pendentes.length;
   document.getElementById('gen-resultado').innerHTML=listaGerada.length===0
     ?'<span style="color:#dc2626">Nenhum título encontrado.</span>'
-    :`<b style="color:#166534">${listaGerada.length} títulos encontrados</b> — Total: <b>${fmtR(total)}</b>`;
+    :`<b style="color:#166534">${listaGerada.length} títulos</b> — Total: <b>${fmtR(total)}</b> &nbsp;|&nbsp; `+
+     `<b style="color:#b45309">Pendentes: ${pendentes.length}</b> (${fmtR(totalPend)}) &nbsp;|&nbsp; `+
+     `<b style="color:#166534">Acionados hoje: ${acionados}</b>`;
+  const wrap=document.getElementById('gen-lista-wrap');
+  const tbody=document.getElementById('tbody-gen-lista');
+  if(!pendentes.length){
+    wrap.style.display=listaGerada.length?'block':'none';
+    tbody.innerHTML=listaGerada.length?`<tr><td colspan="7" style="text-align:center;color:#166534;padding:18px;font-weight:600">✅ Todos os clientes foram acionados hoje!</td></tr>`:'';
+    return;
+  }
+  tbody.innerHTML=pendentes.map((r,i)=>{
+    const idx=listaGerada.indexOf(r);
+    return `<tr>
+      <td>${r.tipo}</td>
+      <td>${r.id||'—'}</td>
+      <td>${r.cliente||'—'}</td>
+      <td>${fmtR(r.valor)}</td>
+      <td>${r.vencimento||'—'}</td>
+      <td><span class="badge badge-warn">${r.situacao||'—'}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="openCobrancaModalFromLista(${idx})">Registrar</button></td>
+    </tr>`;
+  }).join('');
+  wrap.style.display='block';
 }
 function exportarLista(){if(!listaGerada.length){alert('Gere a lista primeiro.');return;}exportToXLSX(listaGerada,'Lista_Cobranca');}
 
@@ -1052,6 +1128,25 @@ function renderRetorno(){
   `;
 }
 function clearRetornoFilters(){['cob','status','q'].forEach(k=>{const el=document.getElementById('fil-ret-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});document.getElementById('fil-ret-data').value='';renderRetorno();}
+function renderRelatorioDiario(){
+  const data=document.getElementById('rel-data').value||new Date().toISOString().split('T')[0];
+  const cob=document.getElementById('rel-cob').value;
+  let acs=DB.cobrancas.filter(r=>r.data===data);
+  if(cob)acs=acs.filter(r=>r.cobradora===cob);
+  const total=acs.length;
+  const pagos=acs.filter(r=>(r.status||'').toUpperCase()==='PAGO').length;
+  const prom=acs.filter(r=>(r.status||'').toUpperCase()==='PROMETEU PAGAR').length;
+  const semContato=acs.filter(r=>(r.status||'').toUpperCase()==='SEM CONTATO').length;
+  const recusou=acs.filter(r=>(r.status||'').toUpperCase()==='RECUSOU').length;
+  const vPago=acs.filter(r=>(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpromessa||r.valor||0),0);
+  document.getElementById('rel-diario-cards').innerHTML=`
+    <div class="kcard"><div class="klabel">Acionados</div><div class="kvalue">${total}</div></div>
+    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pagos}<span style="font-size:12px;margin-left:6px">${fmtR(vPago)}</span></div></div>
+    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
+    <div class="kcard accent"><div class="klabel">Sem Contato</div><div class="kvalue">${semContato}</div></div>
+    <div class="kcard accent"><div class="klabel">Recusou</div><div class="kvalue">${recusou}</div></div>
+  `;
+}
 
 // ===== DASHBOARD =====
 function renderDashboard(){
