@@ -1429,10 +1429,10 @@ function getRenegSaldoCarteira(renegRecord){
   if(ent>0&&boletos.length<=(parseFloat(renegRecord.parcelas)||0))pago+=ent;
   return{aberto,avencer,pago};
 }
-// Valor digitado no acordo tem prioridade; a soma da aba Boleto só é usada quando o campo está em branco.
-function renegDigitado(v){return v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v));}
-function getRenegAbertoEfetivo(r){if(renegDigitado(r.taberto))return parseFloat(r.taberto);const s=getRenegSaldoCarteira(r);return s?s.aberto:0;}
-function getRenegPagoEfetivo(r){if(renegDigitado(r.tpago))return parseFloat(r.tpago);const s=getRenegSaldoCarteira(r);return s?s.pago:0;}
+// A aba Boleto é a fonte da verdade: quando há boletos do acordo, eles definem Pago/Aberto;
+// o valor digitado só vale quando não há boleto vinculado.
+function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
+function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.pago:parseFloat(r.tpago||0);}
 // A Vencer = o que falta do Total Negociado depois de descontar o Pago e o Aberto (sempre fecha com o negociado)
 function getRenegAVencerEfetivo(r){
   const vneg=parseFloat(r.vneg||0);
@@ -1955,13 +1955,13 @@ function renderRenegAnalytics(){
   inadEl.textContent=inadimplencia+'%';
 }
 
-// Grava em todos os acordos o Total a Vencer = Negociado − Pago − Aberto (corrige os valores digitados antigos)
+// Grava em todos os acordos Pago/Aberto (vindos dos boletos, quando houver) e A Vencer = Negociado − Pago − Aberto
 async function atualizarAVencerReneg(){
   const lista=(DB.renegociacao||[]).filter(r=>parseFloat(r.vneg||0)>0);
   let n=0;
   for(const r of lista){
-    const novo=getRenegAVencerEfetivo(r);
-    if(Math.abs(novo-parseFloat(r.tvencer||0))>=0.005){r.tvencer=novo;await sbSave('renegociacao',r);n++;}
+    const novo={tpago:getRenegPagoEfetivo(r),taberto:getRenegAbertoEfetivo(r),tvencer:getRenegAVencerEfetivo(r)};
+    if(Object.keys(novo).some(k=>Math.abs(novo[k]-parseFloat(r[k]||0))>=0.005)){Object.assign(r,novo);await sbSave('renegociacao',r);n++;}
   }
   renderTable('renegociacao');
   showToast(n?`${n} acordo(s) atualizado(s)`:'Todos os acordos já estavam corretos','ok');
