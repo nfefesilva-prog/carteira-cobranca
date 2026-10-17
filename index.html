@@ -1017,7 +1017,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     <div class="form-row">
       <div class="form-group"><label>Ano</label><input id="rn-ano" type="number" value="2026"></div>
       <div class="form-group"><label>Status</label>
-        <select id="rn-status"><option>EM ABERTO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option></select>
+        <select id="rn-status" onchange="calcRenegAVencer()"><option>EM ABERTO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option></select>
       </div>
     </div>
     <div class="form-row">
@@ -1432,13 +1432,14 @@ function getRenegSaldoCarteira(renegRecord){
 }
 // Aberto: vem sozinho dos boletos vencidos e não pagos do cliente (atualiza quando entram títulos na carteira);
 // sem boleto vinculado, vale o valor digitado.
-function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
+function getRenegAbertoEfetivo(r){if(renegEncerrado(r))return 0;const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
 // Total Pago = o que já está digitado (histórico) + novos pagamentos de boletos a partir da data de corte.
 function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return(parseFloat(r.tpago||0))+(s?s.pagoNovo:0);}
 // A Vencer = o que falta do Total Parcelado depois de descontar o Pago e o Aberto (sempre fecha com o parcelado)
 function getRenegAVencerEfetivo(r){
   const base=parseFloat(r.vparc||0);
-  if(renegEncerrado(r)||!(base>0))return parseFloat(r.tvencer||0);
+  if(renegEncerrado(r))return 0;
+  if(!(base>0))return parseFloat(r.tvencer||0);
   return Math.max(0,Math.round((base-getRenegPagoEfetivo(r)-getRenegAbertoEfetivo(r))*100)/100);
 }
 
@@ -1962,6 +1963,8 @@ function renderRenegAnalytics(){
 function calcRenegAVencer(){
   const n=id=>parseFloat(document.getElementById(id).value)||0;
   const el=document.getElementById('rn-tvencer');
+  const st=(document.getElementById('rn-status')||{}).value||'';
+  if(el&&(st==='PAGO'||st==='CANCELADO')){el.value=0;return;}
   if(el)el.value=Math.max(0,Math.round((n('rn-vparc')-n('rn-tpago')-n('rn-taberto'))*100)/100);
 }
 function openModal(type){clearModalFields(type);document.getElementById('modal-'+type+'-bg').classList.add('open');}
