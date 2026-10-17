@@ -1001,7 +1001,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     <div class="form-row">
       <div class="form-group"><label>Valor Líquido (R$)</label><input id="rn-vliq" type="number" step="0.01"></div>
       <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01"></div>
-      <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
+      <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Data Acordo</label><input id="rn-data" type="date"></div>
@@ -1010,14 +1010,14 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div class="form-group"><label>Valor da Parcela (R$)</label><input id="rn-vparcela" type="number" step="0.01" placeholder="Valor de 1 parcela mensal"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Total Pago (R$)</label><input id="rn-tpago" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
-      <div class="form-group"><label>Total Aberto (R$)</label><input id="rn-taberto" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
-      <div class="form-group"><label>Total a Vencer (R$) — automático</label><input id="rn-tvencer" type="number" step="0.01" readonly style="background:#f3f4f6"></div>
+      <div class="form-group"><label>Total Pago (R$)</label><input id="rn-tpago" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Aberto (R$)</label><input id="rn-taberto" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total a Vencer (R$)</label><input id="rn-tvencer" type="number" step="0.01"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Ano</label><input id="rn-ano" type="number" value="2026"></div>
       <div class="form-group"><label>Status</label>
-        <select id="rn-status" onchange="calcRenegAVencer()"><option>EM ABERTO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option></select>
+        <select id="rn-status"><option>EM ABERTO</option><option>PAGO</option><option>PAROU DE PAGAR</option><option>CANCELADO</option></select>
       </div>
     </div>
     <div class="form-row">
@@ -1385,63 +1385,20 @@ function getBoletosReneg(renegRecord){
   // exige ID + cliente batendo, para não puxar boleto de outro cliente que por acaso tenha o mesmo número de ID
   return DB.boleto.filter(b=>ids.includes(normalizeId(b.id))&&(b.cliente||'').trim().toUpperCase()===cliente);
 }
-// Vínculo pelas PARCELAS: os acordos geram novos boletos na aba Boleto (atribuição RENEGOCIAÇÃO).
-// Um boleto pertence ao acordo quando: mesmo cliente + atribuição RENEGOCIAÇÃO + valor igual ao
-// valor da parcela (ou da entrada) + vencimento a partir da data do acordo e antes do próximo
-// acordo do mesmo cliente (evita contar a mesma parcela em dois acordos).
-// Valor da parcela: usa o cadastrado; se estiver vazio, deduz por (Total Negociado − Entrada) ÷ Nº de parcelas.
-function getRenegVlParcela(r){
-  const vp=parseFloat(r.vparcela||0);
-  if(vp>0)return vp;
-  const n=parseFloat(r.parcelas||0),vneg=parseFloat(r.vneg||0),ent=parseFloat(r.entrada||0);
-  return n>0&&vneg>0?Math.round((vneg-ent)/n*100)/100:0;
-}
-function getParcelasReneg(r){
-  const vp=getRenegVlParcela(r);
-  if(!r||!vp)return[];
-  const cli=(r.cliente||'').trim().toUpperCase();
-  const dt=r.data||'';
-  const proxima=(DB.renegociacao||[]).filter(x=>x!==r&&(x.cliente||'').trim().toUpperCase()===cli&&x.data&&x.data>dt).map(x=>x.data).sort()[0]||'';
-  return DB.boleto.filter(b=>
-    (b.cliente||'').trim().toUpperCase()===cli&&
-    (b.atrib||'').trim().toUpperCase()==='RENEGOCIAÇÃO'&&
-    Math.abs(parseFloat(b.valor||0)-vp)<0.02&&
-    (!b.venc||(!dt||b.venc>=dt)&&(!proxima||b.venc<proxima)));
-}
-// Acordos quitados/cancelados mantêm o histórico digitado (a carteira atual pode não ter mais os boletos de anos anteriores).
-// Pagamentos de boletos com data a partir daqui são somados ao Total Pago digitado.
-const RENEG_CORTE_PAGOS='2026-10-18';
-function renegEncerrado(r){const st=(r&&r.status||'').toUpperCase();return st==='PAGO'||st==='CANCELADO';}
-// Retorna null quando não há vínculo com a carteira, para que os valores cadastrados
-// manualmente no acordo NUNCA sejam apagados/zerados sem base real.
+// Retorna null quando o ID do acordo não bate com nenhum título da carteira,
+// para que os valores originais cadastrados na renegociação NUNCA sejam apagados/zerados sem base real.
 function getRenegSaldoCarteira(renegRecord){
-  if(renegEncerrado(renegRecord))return null;
-  let boletos=getParcelasReneg(renegRecord);
-  if(!boletos.length)boletos=getBoletosReneg(renegRecord);
+  const boletos=getBoletosReneg(renegRecord);
   if(!boletos.length)return null;
-  const hoje=new Date().toISOString().split('T')[0];
-  let aberto=0,pagoNovo=0;
-  boletos.forEach(b=>{
-    const valor=parseFloat(b.valor||0),vpago=parseFloat(b.vpago||0);
-    const pagou=(b.sit||'').toUpperCase()==='PAGO';
-    // só conta pagamentos feitos a partir da data de corte; o que veio antes já está no Total Pago digitado
-    if((pagou||vpago>0)&&b.dtpag&&b.dtpag>=RENEG_CORTE_PAGOS)pagoNovo+=vpago||valor;
-    if(!pagou)aberto+=(b.venc&&b.venc>=hoje)?0:Math.max(0,valor-vpago);
-  });
-  return{aberto,pagoNovo};
+  const aberto=boletos.filter(b=>(b.sit||'').toUpperCase()!=='PAGO').reduce((s,b)=>s+Math.max(0,parseFloat(b.valor||0)-parseFloat(b.vpago||0)),0);
+  const pago=boletos.filter(b=>(b.sit||'').toUpperCase()==='PAGO').reduce((s,b)=>s+(parseFloat(b.vpago||0)||parseFloat(b.valor||0)),0);
+  return{aberto,pago};
 }
-// Aberto: vem sozinho dos boletos vencidos e não pagos do cliente (atualiza quando entram títulos na carteira);
-// sem boleto vinculado, vale o valor digitado.
-function getRenegAbertoEfetivo(r){if(renegEncerrado(r))return 0;const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
-// Total Pago = o que já está digitado (histórico) + novos pagamentos de boletos a partir da data de corte.
-function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return(parseFloat(r.tpago||0))+(s?s.pagoNovo:0);}
-// A Vencer = o que falta do Total Parcelado depois de descontar o Pago e o Aberto (sempre fecha com o parcelado)
-function getRenegAVencerEfetivo(r){
-  const base=parseFloat(r.vparc||0);
-  if(renegEncerrado(r))return 0;
-  if(!(base>0))return parseFloat(r.tvencer||0);
-  return Math.max(0,Math.round((base-getRenegPagoEfetivo(r)-getRenegAbertoEfetivo(r))*100)/100);
-}
+// Valores efetivos: usam a carteira (soma automática dos títulos por ID+situação RENEGOCIAÇÃO)
+// quando há vínculo real; senão preservam o que estava cadastrado manualmente no acordo.
+// Valores digitados manualmente no acordo; os cards somam exatamente o que está cadastrado.
+function getRenegAbertoEfetivo(r){return parseFloat(r.taberto||0);}
+function getRenegPagoEfetivo(r){return parseFloat(r.tpago||0);}
 
 // ===== VISÃO 360° DO CLIENTE — COMPORTAMENTO DE PAGAMENTO (baseado em Boleto) =====
 
@@ -1860,7 +1817,6 @@ function renderTable(type){
         let val=r[c.k];
         if(type==='renegociacao'&&c.k==='taberto')val=renegAberto;
         else if(type==='renegociacao'&&c.k==='tpago')val=renegPago;
-        else if(type==='renegociacao'&&c.k==='tvencer')val=getRenegAVencerEfetivo(r);
         if(c.k==='cliente'&&type==='renegociacao'&&renegAberto>0)return`<td>${val||'—'}<span class="badge-inadimplente">INADIMPLENTE</span></td>`;
         if(c.fmt==='r')return`<td>${fmtR(val)}</td>`;
         if(c.fmt==='d')return`<td>${fmtDate(val)}</td>`;
@@ -1896,7 +1852,7 @@ function renderCards(type,data){
     const vparc=data.reduce((s,r)=>s+parseFloat(r.vparc||0),0);
     const taberto=data.reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
     const tpago=data.reduce((s,r)=>s+getRenegPagoEfetivo(r),0);
-    const tvencer=data.reduce((s,r)=>s+getRenegAVencerEfetivo(r),0);
+    const tvencer=data.reduce((s,r)=>s+parseFloat(r.tvencer||0),0);
     el.innerHTML=`
       <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
       <div class="kcard"><div class="klabel">Total Negociado</div><div class="kvalue" style="font-size:16px">${fmtR(vneg)}</div></div>
@@ -1959,14 +1915,6 @@ function renderRenegAnalytics(){
 }
 
 // ===== MODAL =====
-// Total a Vencer = Parcelado − Pago − Aberto (recalcula enquanto digita)
-function calcRenegAVencer(){
-  const n=id=>parseFloat(document.getElementById(id).value)||0;
-  const el=document.getElementById('rn-tvencer');
-  const st=(document.getElementById('rn-status')||{}).value||'';
-  if(el&&(st==='PAGO'||st==='CANCELADO')){el.value=0;return;}
-  if(el)el.value=Math.max(0,Math.round((n('rn-vparc')-n('rn-tpago')-n('rn-taberto'))*100)/100);
-}
 function openModal(type){clearModalFields(type);document.getElementById('modal-'+type+'-bg').classList.add('open');}
 function closeModal(type){document.getElementById('modal-'+type+'-bg').classList.remove('open');}
 function clearModalFields(type){
@@ -1998,7 +1946,7 @@ function editRow(type,uid_val){
   if(type==='boleto'){sv('b-id',r.id);sv('b-cliente',r.cliente);sv('b-atrib',r.atrib);sv('b-valor',r.valor);sv('b-venc',r.venc);sv('b-dtpag',r.dtpag);sv('b-vpago',r.vpago);sv('b-sit',r.sit);sv('b-mes',r.mes);sv('b-ano',r.ano);document.getElementById('boleto-edit-id').value=r._uid;}
   else if(type==='cheque'){sv('c-id',r.id);sv('c-cliente',r.cliente);sv('c-num',r.num);sv('c-valor',r.valor);sv('c-venc',r.venc);sv('c-emitente',r.emitente);sv('c-atrib',r.atrib);sv('c-limite',r.limite);sv('c-vpago',r.vpago);sv('c-sit',r.sit);sv('c-mes',r.mes);sv('c-ano',r.ano);document.getElementById('cheque-edit-id').value=r._uid;}
   else if(type==='caderneta'){sv('cd-id',r.id);sv('cd-cliente',r.cliente);sv('cd-valor',r.valor);sv('cd-mes',r.mes);sv('cd-ano',r.ano);sv('cd-vpago',r.vpago);sv('cd-sit',r.sit);sv('cd-forma',r.forma);sv('cd-atraso',r.atraso);sv('cd-dia',r.dia||'15');document.getElementById('caderneta-edit-id').value=r._uid;}
-  else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-vparcela',r.vparcela);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;calcRenegAVencer();}
+  else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-vparcela',r.vparcela);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;}
   else if(type==='chargeback'){sv('cb-id',r.id);sv('cb-cliente',r.cliente);sv('cb-taberto',r.taberto);sv('cb-ano',r.ano);sv('cb-cento',r.cento);sv('cb-status',r.status);sv('cb-dtpag',r.dtpag);sv('cb-obs',r.obs);document.getElementById('cb-edit-id').value=r._uid;}
 }
 async function deleteRow(type,uid_val){
