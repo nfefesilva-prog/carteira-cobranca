@@ -1389,8 +1389,15 @@ function getBoletosReneg(renegRecord){
 // Um boleto pertence ao acordo quando: mesmo cliente + atribuição RENEGOCIAÇÃO + valor igual ao
 // valor da parcela (ou da entrada) + vencimento a partir da data do acordo e antes do próximo
 // acordo do mesmo cliente (evita contar a mesma parcela em dois acordos).
+// Valor da parcela: usa o cadastrado; se estiver vazio, deduz por (Total Negociado − Entrada) ÷ Nº de parcelas.
+function getRenegVlParcela(r){
+  const vp=parseFloat(r.vparcela||0);
+  if(vp>0)return vp;
+  const n=parseFloat(r.parcelas||0),vneg=parseFloat(r.vneg||0),ent=parseFloat(r.entrada||0);
+  return n>0&&vneg>0?Math.round((vneg-ent)/n*100)/100:0;
+}
 function getParcelasReneg(r){
-  const vp=parseFloat(r.vparcela||r.vparc||0);
+  const vp=getRenegVlParcela(r);
   if(!r||!vp)return[];
   const cli=(r.cliente||'').trim().toUpperCase();
   const dt=r.data||'';
@@ -1416,6 +1423,9 @@ function getRenegSaldoCarteira(renegRecord){
     pago+=vpago;
     if(b.venc&&b.venc>=hoje)avencer+=saldo;else aberto+=saldo;
   });
+  // a entrada faz parte do Total Pago; só soma à parte se não sobrar boleto além do nº de parcelas (ou seja, a entrada não gerou boleto)
+  const ent=parseFloat(renegRecord.entrada||0);
+  if(ent>0&&boletos.length<=(parseFloat(renegRecord.parcelas)||0))pago+=ent;
   return{aberto,avencer,pago};
 }
 function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
@@ -1876,8 +1886,7 @@ function renderCards(type,data){
     const taberto=data.reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
     const tpago=data.reduce((s,r)=>s+getRenegPagoEfetivo(r),0);
     const tvencer=data.reduce((s,r)=>s+getRenegAVencerEfetivo(r),0);
-    const entrada=data.reduce((s,r)=>s+parseFloat(r.entrada||0),0);
-    const dif=vneg-entrada-tpago-taberto-tvencer;
+    const dif=vneg-tpago-taberto-tvencer;
     el.innerHTML=`
       <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
       <div class="kcard"><div class="klabel">Total Negociado</div><div class="kvalue" style="font-size:16px">${fmtR(vneg)}</div></div>
@@ -1885,7 +1894,7 @@ function renderCards(type,data){
       <div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(taberto)}</div></div>
       <div class="kcard accent" style="border-left:4px solid #f97316"><div class="klabel">Total a Vencer</div><div class="kvalue" style="font-size:16px">${fmtR(tvencer)}</div></div>
       <div class="kcard green"><div class="klabel">Total Pago</div><div class="kvalue" style="font-size:16px">${fmtR(tpago)}</div></div>
-      <div class="kcard" style="border-left:4px solid ${Math.abs(dif)<1?'#16a34a':'#dc2626'}"><div class="klabel">Diferença (Neg. − Entrada − Pago − Aberto − A Vencer)</div><div class="kvalue" style="font-size:16px">${fmtR(dif)}</div></div>
+      <div class="kcard" style="border-left:4px solid ${Math.abs(dif)<1?'#16a34a':'#dc2626'}"><div class="klabel">Diferença (Negociado − Pago − Aberto − A Vencer)</div><div class="kvalue" style="font-size:16px">${fmtR(dif)}</div></div>
     `;
     renderRenegAnalytics();
     return;
