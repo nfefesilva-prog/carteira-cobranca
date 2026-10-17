@@ -1000,7 +1000,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     </div>
     <div class="form-row">
       <div class="form-group"><label>Valor Líquido (R$)</label><input id="rn-vliq" type="number" step="0.01"></div>
-      <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
       <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01"></div>
     </div>
     <div class="form-row">
@@ -1010,9 +1010,9 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div class="form-group"><label>Valor da Parcela (R$)</label><input id="rn-vparcela" type="number" step="0.01" placeholder="Valor de 1 parcela mensal"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Total Pago (R$)</label><input id="rn-tpago" type="number" step="0.01"></div>
-      <div class="form-group"><label>Total Aberto (R$)</label><input id="rn-taberto" type="number" step="0.01"></div>
-      <div class="form-group"><label>Total a Vencer (R$)</label><input id="rn-tvencer" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Pago (R$)</label><input id="rn-tpago" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
+      <div class="form-group"><label>Total Aberto (R$)</label><input id="rn-taberto" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
+      <div class="form-group"><label>Total a Vencer (R$) — automático</label><input id="rn-tvencer" type="number" step="0.01" readonly style="background:#f3f4f6"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Ano</label><input id="rn-ano" type="number" value="2026"></div>
@@ -1428,8 +1428,10 @@ function getRenegSaldoCarteira(renegRecord){
   if(ent>0&&boletos.length<=(parseFloat(renegRecord.parcelas)||0))pago+=ent;
   return{aberto,avencer,pago};
 }
-function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
-function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.pago:parseFloat(r.tpago||0);}
+// Valor digitado no acordo tem prioridade; a soma da aba Boleto só é usada quando o campo está em branco.
+function renegDigitado(v){return v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v));}
+function getRenegAbertoEfetivo(r){if(renegDigitado(r.taberto))return parseFloat(r.taberto);const s=getRenegSaldoCarteira(r);return s?s.aberto:0;}
+function getRenegPagoEfetivo(r){if(renegDigitado(r.tpago))return parseFloat(r.tpago);const s=getRenegSaldoCarteira(r);return s?s.pago:0;}
 // A Vencer = o que falta do Total Negociado depois de descontar o Pago e o Aberto (sempre fecha com o negociado)
 function getRenegAVencerEfetivo(r){
   const vneg=parseFloat(r.vneg||0);
@@ -1953,6 +1955,12 @@ function renderRenegAnalytics(){
 }
 
 // ===== MODAL =====
+// Total a Vencer = Negociado − Pago − Aberto (recalcula enquanto digita)
+function calcRenegAVencer(){
+  const n=id=>parseFloat(document.getElementById(id).value)||0;
+  const el=document.getElementById('rn-tvencer');
+  if(el)el.value=Math.max(0,Math.round((n('rn-vneg')-n('rn-tpago')-n('rn-taberto'))*100)/100);
+}
 function openModal(type){clearModalFields(type);document.getElementById('modal-'+type+'-bg').classList.add('open');}
 function closeModal(type){document.getElementById('modal-'+type+'-bg').classList.remove('open');}
 function clearModalFields(type){
@@ -1984,7 +1992,7 @@ function editRow(type,uid_val){
   if(type==='boleto'){sv('b-id',r.id);sv('b-cliente',r.cliente);sv('b-atrib',r.atrib);sv('b-valor',r.valor);sv('b-venc',r.venc);sv('b-dtpag',r.dtpag);sv('b-vpago',r.vpago);sv('b-sit',r.sit);sv('b-mes',r.mes);sv('b-ano',r.ano);document.getElementById('boleto-edit-id').value=r._uid;}
   else if(type==='cheque'){sv('c-id',r.id);sv('c-cliente',r.cliente);sv('c-num',r.num);sv('c-valor',r.valor);sv('c-venc',r.venc);sv('c-emitente',r.emitente);sv('c-atrib',r.atrib);sv('c-limite',r.limite);sv('c-vpago',r.vpago);sv('c-sit',r.sit);sv('c-mes',r.mes);sv('c-ano',r.ano);document.getElementById('cheque-edit-id').value=r._uid;}
   else if(type==='caderneta'){sv('cd-id',r.id);sv('cd-cliente',r.cliente);sv('cd-valor',r.valor);sv('cd-mes',r.mes);sv('cd-ano',r.ano);sv('cd-vpago',r.vpago);sv('cd-sit',r.sit);sv('cd-forma',r.forma);sv('cd-atraso',r.atraso);sv('cd-dia',r.dia||'15');document.getElementById('caderneta-edit-id').value=r._uid;}
-  else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-vparcela',r.vparcela);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;}
+  else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-vparcela',r.vparcela);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;calcRenegAVencer();}
   else if(type==='chargeback'){sv('cb-id',r.id);sv('cb-cliente',r.cliente);sv('cb-taberto',r.taberto);sv('cb-ano',r.ano);sv('cb-cento',r.cento);sv('cb-status',r.status);sv('cb-dtpag',r.dtpag);sv('cb-obs',r.obs);document.getElementById('cb-edit-id').value=r._uid;}
 }
 async function deleteRow(type,uid_val){
