@@ -1001,8 +1001,8 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     </div>
     <div class="form-row">
       <div class="form-group"><label>Valor Líquido (R$)</label><input id="rn-vliq" type="number" step="0.01"></div>
-      <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
-      <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01"></div>
+      <div class="form-group"><label>Total Negociado (R$)</label><input id="rn-vneg" type="number" step="0.01"></div>
+      <div class="form-group"><label>VL Parcelamento (R$)</label><input id="rn-vparc" type="number" step="0.01" oninput="calcRenegAVencer()"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Data Acordo</label><input id="rn-data" type="date"></div>
@@ -1433,11 +1433,11 @@ function getRenegSaldoCarteira(renegRecord){
 // o valor digitado só vale quando não há boleto vinculado.
 function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
 function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.pago:parseFloat(r.tpago||0);}
-// A Vencer = o que falta do Total Negociado depois de descontar o Pago e o Aberto (sempre fecha com o negociado)
+// A Vencer = o que falta do Total Parcelado depois de descontar o Pago e o Aberto (sempre fecha com o parcelado)
 function getRenegAVencerEfetivo(r){
-  const vneg=parseFloat(r.vneg||0);
-  if(!(vneg>0))return parseFloat(r.tvencer||0);
-  return Math.max(0,Math.round((vneg-getRenegPagoEfetivo(r)-getRenegAbertoEfetivo(r))*100)/100);
+  const base=parseFloat(r.vparc||0);
+  if(!(base>0))return parseFloat(r.tvencer||0);
+  return Math.max(0,Math.round((base-getRenegPagoEfetivo(r)-getRenegAbertoEfetivo(r))*100)/100);
 }
 
 // ===== VISÃO 360° DO CLIENTE — COMPORTAMENTO DE PAGAMENTO (baseado em Boleto) =====
@@ -1955,9 +1955,9 @@ function renderRenegAnalytics(){
   inadEl.textContent=inadimplencia+'%';
 }
 
-// Grava em todos os acordos Pago/Aberto (vindos dos boletos, quando houver) e A Vencer = Negociado − Pago − Aberto
+// Grava em todos os acordos Pago/Aberto (vindos dos boletos, quando houver) e A Vencer = Parcelado − Pago − Aberto
 async function atualizarAVencerReneg(){
-  const lista=(DB.renegociacao||[]).filter(r=>parseFloat(r.vneg||0)>0);
+  const lista=(DB.renegociacao||[]).filter(r=>parseFloat(r.vparc||0)>0);
   let n=0;
   for(const r of lista){
     const novo={tpago:getRenegPagoEfetivo(r),taberto:getRenegAbertoEfetivo(r),tvencer:getRenegAVencerEfetivo(r)};
@@ -1968,11 +1968,11 @@ async function atualizarAVencerReneg(){
 }
 
 // ===== MODAL =====
-// Total a Vencer = Negociado − Pago − Aberto (recalcula enquanto digita)
+// Total a Vencer = Parcelado − Pago − Aberto (recalcula enquanto digita)
 function calcRenegAVencer(){
   const n=id=>parseFloat(document.getElementById(id).value)||0;
   const el=document.getElementById('rn-tvencer');
-  if(el)el.value=Math.max(0,Math.round((n('rn-vneg')-n('rn-tpago')-n('rn-taberto'))*100)/100);
+  if(el)el.value=Math.max(0,Math.round((n('rn-vparc')-n('rn-tpago')-n('rn-taberto'))*100)/100);
 }
 function openModal(type){clearModalFields(type);document.getElementById('modal-'+type+'-bg').classList.add('open');}
 function closeModal(type){document.getElementById('modal-'+type+'-bg').classList.remove('open');}
