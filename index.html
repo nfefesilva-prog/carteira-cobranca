@@ -1886,7 +1886,7 @@ function renderCards(type,data){
     const taberto=data.reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
     const tpago=data.reduce((s,r)=>s+getRenegPagoEfetivo(r),0);
     const tvencer=data.reduce((s,r)=>s+getRenegAVencerEfetivo(r),0);
-    const dif=vneg-tpago-taberto-tvencer;
+    const dif=vparc-tpago-taberto-tvencer;
     el.innerHTML=`
       <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
       <div class="kcard"><div class="klabel">Total Negociado</div><div class="kvalue" style="font-size:16px">${fmtR(vneg)}</div></div>
@@ -1894,7 +1894,7 @@ function renderCards(type,data){
       <div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(taberto)}</div></div>
       <div class="kcard accent" style="border-left:4px solid #f97316"><div class="klabel">Total a Vencer</div><div class="kvalue" style="font-size:16px">${fmtR(tvencer)}</div></div>
       <div class="kcard green"><div class="klabel">Total Pago</div><div class="kvalue" style="font-size:16px">${fmtR(tpago)}</div></div>
-      <div class="kcard" style="border-left:4px solid ${Math.abs(dif)<1?'#16a34a':'#dc2626'}"><div class="klabel">Diferença (Negociado − Pago − Aberto − A Vencer)</div><div class="kvalue" style="font-size:16px">${fmtR(dif)}</div></div>
+      <div class="kcard" style="border-left:4px solid ${Math.abs(dif)<1?'#16a34a':'#dc2626'}"><div class="klabel">Diferença (Parcelado − Pago − Aberto − A Vencer)</div><div class="kvalue" style="font-size:16px">${fmtR(dif)}</div></div>
     `;
     renderRenegAnalytics();
     return;
