@@ -914,6 +914,16 @@ function renderTable(type){
 
 function renderCards(type,data){
   const el=document.getElementById('cards-'+type);if(!el)return;
+  if(type==='renegociacao'){
+    const sum=k=>data.reduce((s,r)=>s+(parseFloat(r[k])||0),0);
+    el.innerHTML=`
+    <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
+    <div class="kcard"><div class="klabel">Total Negociado</div><div class="kvalue" style="font-size:16px">${fmtR(sum('vneg'))}</div></div>
+    <div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(sum('taberto'))}</div></div>
+    <div class="kcard green"><div class="klabel">Total Pago</div><div class="kvalue" style="font-size:16px">${fmtR(sum('tpago'))}</div></div>
+  `;
+    return;
+  }
   const total=data.reduce((s,r)=>s+parseFloat(r.valor||r.taberto||r.vliq||0),0);
   const pago=data.filter(r=>(r.sit||r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||r.taberto||0),0);
   const aberto=data.filter(r=>(r.sit||r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||r.taberto||0),0);
