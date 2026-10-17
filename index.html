@@ -656,6 +656,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <input type="text" id="fil-renegociacao-q" oninput="renderTable('renegociacao')" placeholder="🔍 Buscar...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('renegociacao')">Limpar</button>
           <button class="btn btn-outline" onclick="exportExcel('renegociacao')">⬇ Exportar</button>
+          <button class="btn btn-outline" onclick="atualizarAVencerReneg()">🔄 Atualizar A Vencer</button>
         </div>
         <div class="bulk-bar" id="bulk-renegociacao"></div>
         <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-renegociacao"><thead></thead><tbody></tbody></table></div></div>
@@ -1952,6 +1953,18 @@ function renderRenegAnalytics(){
   cumEl.textContent=cumprimento+'%';
   cumSub.textContent='das parcelas pagas em dia';
   inadEl.textContent=inadimplencia+'%';
+}
+
+// Grava em todos os acordos o Total a Vencer = Negociado − Pago − Aberto (corrige os valores digitados antigos)
+async function atualizarAVencerReneg(){
+  const lista=(DB.renegociacao||[]).filter(r=>parseFloat(r.vneg||0)>0);
+  let n=0;
+  for(const r of lista){
+    const novo=getRenegAVencerEfetivo(r);
+    if(Math.abs(novo-parseFloat(r.tvencer||0))>=0.005){r.tvencer=novo;await sbSave('renegociacao',r);n++;}
+  }
+  renderTable('renegociacao');
+  showToast(n?`${n} acordo(s) atualizado(s)`:'Todos os acordos já estavam corretos','ok');
 }
 
 // ===== MODAL =====
