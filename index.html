@@ -656,7 +656,6 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <input type="text" id="fil-renegociacao-q" oninput="renderTable('renegociacao')" placeholder="🔍 Buscar...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('renegociacao')">Limpar</button>
           <button class="btn btn-outline" onclick="exportExcel('renegociacao')">⬇ Exportar</button>
-          <button class="btn btn-outline" onclick="atualizarAVencerReneg()">🔄 Atualizar A Vencer</button>
         </div>
         <div class="bulk-bar" id="bulk-renegociacao"></div>
         <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-renegociacao"><thead></thead><tbody></tbody></table></div></div>
@@ -1410,6 +1409,8 @@ function getParcelasReneg(r){
     (!b.venc||(!dt||b.venc>=dt)&&(!proxima||b.venc<proxima)));
 }
 // Acordos quitados/cancelados mantêm o histórico digitado (a carteira atual pode não ter mais os boletos de anos anteriores).
+// Pagamentos de boletos com data a partir daqui são somados ao Total Pago digitado.
+const RENEG_CORTE_PAGOS='2026-10-18';
 function renegEncerrado(r){const st=(r&&r.status||'').toUpperCase();return st==='PAGO'||st==='CANCELADO';}
 // Retorna null quando não há vínculo com a carteira, para que os valores cadastrados
 // manualmente no acordo NUNCA sejam apagados/zerados sem base real.
@@ -1419,24 +1420,21 @@ function getRenegSaldoCarteira(renegRecord){
   if(!boletos.length)boletos=getBoletosReneg(renegRecord);
   if(!boletos.length)return null;
   const hoje=new Date().toISOString().split('T')[0];
-  let aberto=0,avencer=0,pago=0;
+  let aberto=0,pagoNovo=0;
   boletos.forEach(b=>{
     const valor=parseFloat(b.valor||0),vpago=parseFloat(b.vpago||0);
-    if((b.sit||'').toUpperCase()==='PAGO'){pago+=vpago||valor;return;}
-    const saldo=Math.max(0,valor-vpago);
-    pago+=vpago;
-    if(b.venc&&b.venc>=hoje)avencer+=saldo;else aberto+=saldo;
+    const pagou=(b.sit||'').toUpperCase()==='PAGO';
+    // só conta pagamentos feitos a partir da data de corte; o que veio antes já está no Total Pago digitado
+    if((pagou||vpago>0)&&b.dtpag&&b.dtpag>=RENEG_CORTE_PAGOS)pagoNovo+=vpago||valor;
+    if(!pagou)aberto+=(b.venc&&b.venc>=hoje)?0:Math.max(0,valor-vpago);
   });
-  // a entrada faz parte do Total Pago; só soma à parte se não sobrar boleto além do nº de parcelas (ou seja, a entrada não gerou boleto)
-  const ent=parseFloat(renegRecord.entrada||0);
-  if(ent>0&&boletos.length<=(parseFloat(renegRecord.parcelas)||0))pago+=ent;
-  return{aberto,avencer,pago};
+  return{aberto,pagoNovo};
 }
-// A aba Boleto é a fonte da verdade: quando há boletos do acordo, eles definem Pago/Aberto;
-// o valor digitado só vale quando não há boleto vinculado.
+// Aberto: vem sozinho dos boletos vencidos e não pagos do cliente (atualiza quando entram títulos na carteira);
+// sem boleto vinculado, vale o valor digitado.
 function getRenegAbertoEfetivo(r){const s=getRenegSaldoCarteira(r);return s?s.aberto:parseFloat(r.taberto||0);}
-// Pagamento nunca diminui: vale o maior entre o digitado (histórico) e o que a carteira atual mostra.
-function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);const man=parseFloat(r.tpago||0);return s?Math.max(s.pago,man):man;}
+// Total Pago = o que já está digitado (histórico) + novos pagamentos de boletos a partir da data de corte.
+function getRenegPagoEfetivo(r){const s=getRenegSaldoCarteira(r);return(parseFloat(r.tpago||0))+(s?s.pagoNovo:0);}
 // A Vencer = o que falta do Total Parcelado depois de descontar o Pago e o Aberto (sempre fecha com o parcelado)
 function getRenegAVencerEfetivo(r){
   const base=parseFloat(r.vparc||0);
@@ -1957,18 +1955,6 @@ function renderRenegAnalytics(){
   cumEl.textContent=cumprimento+'%';
   cumSub.textContent='das parcelas pagas em dia';
   inadEl.textContent=inadimplencia+'%';
-}
-
-// Grava em todos os acordos Pago/Aberto (vindos dos boletos, quando houver) e A Vencer = Parcelado − Pago − Aberto
-async function atualizarAVencerReneg(){
-  const lista=(DB.renegociacao||[]).filter(r=>parseFloat(r.vparc||0)>0&&!renegEncerrado(r));
-  let n=0;
-  for(const r of lista){
-    const novo={tpago:getRenegPagoEfetivo(r),taberto:getRenegAbertoEfetivo(r),tvencer:getRenegAVencerEfetivo(r)};
-    if(Object.keys(novo).some(k=>Math.abs(novo[k]-parseFloat(r[k]||0))>=0.005)){Object.assign(r,novo);await sbSave('renegociacao',r);n++;}
-  }
-  renderTable('renegociacao');
-  showToast(n?`${n} acordo(s) atualizado(s)`:'Todos os acordos já estavam corretos','ok');
 }
 
 // ===== MODAL =====
