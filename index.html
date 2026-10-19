@@ -171,6 +171,45 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
 .atraso-ok{color:var(--green-light);font-weight:700}
 .atraso-leve{color:#d97706;font-weight:700}
 .atraso-grave{color:#dc2626;font-weight:700}
+
+/* ===== FECHAMENTO ===== */
+.fech-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px}
+.fech-bar .gen-field select,.fech-bar input{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px}
+.fech-inputs{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px}
+.fech-inputs summary{cursor:pointer;font-weight:700;font-size:13px}
+.fech-inputs .hint{font-size:11px;color:var(--text2);margin:6px 0 10px}
+.fech-inputs .grid{display:flex;gap:12px;flex-wrap:wrap}
+.fech-inputs label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px}
+.fech-inputs input{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:170px}
+.fech-sec{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:16px}
+.fech-sec h3{font-size:15px;font-weight:800;color:var(--green-mid);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.fech-sec .headline{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+.fech-sub{font-size:11px;font-weight:700;color:var(--green-light);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.fech-grid{display:flex;gap:22px;flex-wrap:wrap}
+.fk{flex:1;min-width:170px}
+.fk .l{font-size:11px;color:var(--text2);font-weight:600}
+.fk .v{font-size:24px;font-weight:800;color:#0d2818;line-height:1.2}
+.fk .v.red{color:#e11d48}
+.fk .n{font-size:11px;color:var(--text2)}
+.fk .n.red{color:#e11d48}
+.fech-two{display:flex;gap:24px;flex-wrap:wrap}
+.fech-two>div{flex:1;min-width:300px}
+.fech-chart-t{font-size:12px;font-weight:700;color:#0d2818;margin:10px 0 2px}
+.fech-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.fech-tbl th{text-align:right;font-weight:600;color:var(--text2);padding:6px 8px;border-bottom:1px solid var(--border)}
+.fech-tbl td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)}
+.fech-tbl th:first-child,.fech-tbl td:first-child{text-align:left}
+.fech-tbl tr.tot td{font-weight:800;background:#f0f7e8}
+.fech-svg{width:100%;height:auto;display:block}
+.fech-warn{background:#fef9c3;color:#854d0e;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body,#app-screen,.main,.content{height:auto!important;overflow:visible!important;display:block!important}
+  .sidebar,.topbar,.fech-bar,.fech-inputs,.page-header,.page-divider,.no-print{display:none!important}
+  .panel{display:none!important}
+  #panel-fechamento{display:block!important}
+  .fech-sec{break-inside:avoid;page-break-inside:avoid;border:none;padding:6px 0}
+}
 </style>
 </head>
 <body>
@@ -230,6 +269,9 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     </button>
     <button class="nav-item" onclick="showTab('retorno',this)">
       <span class="nav-icon">📊</span> Retornos
+    </button>
+    <button class="nav-item" id="nav-fechamento" onclick="showTab('fechamento',this)">
+      <span class="nav-icon">🧾</span> Fechamento
     </button>
 
     <div class="sidebar-footer">
@@ -488,6 +530,31 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
         <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-retorno"><thead></thead><tbody></tbody></table></div></div>
       </div>
 
+
+      <!-- FECHAMENTO -->
+      <div id="panel-fechamento" class="panel">
+        <div class="page-header"><h2>Fechamento Mensal</h2><div class="page-sub">Resultado da cobrança gerado automaticamente a partir dos dados da carteira</div></div>
+        <div class="page-divider"></div>
+        <div class="fech-bar">
+          <div class="gen-field"><label>Mês</label><select id="fech-mes" onchange="renderFechamento()"></select></div>
+          <div class="gen-field"><label>Ano</label><select id="fech-ano" onchange="renderFechamento()"></select></div>
+          <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
+          <button class="btn btn-outline" onclick="exportFechamento()">⬇ Exportar Excel</button>
+        </div>
+        <details class="fech-inputs" id="fech-inputs-box">
+          <summary>✏ Dados complementares do mês (não vêm das planilhas)</summary>
+          <div class="hint">Recebível do mês: se ficar vazio, usa a soma dos títulos do mês já importados. Multicheck: informe o que consta na fatura do mês. Os valores ficam salvos neste navegador.</div>
+          <div class="grid">
+            <div><label>Recebível Cheque (R$)</label><input id="fech-in-recCheque" type="number" step="0.01"></div>
+            <div><label>Recebível Boleto (R$)</label><input id="fech-in-recBoleto" type="number" step="0.01"></div>
+            <div><label>Multicheck — valor depositado (R$)</label><input id="fech-in-mcDeposito" type="number" step="0.01"></div>
+            <div><label>Multicheck — fatura paga (R$)</label><input id="fech-in-mcFatura" type="number" step="0.01"></div>
+            <div><label>Multicheck — cheques ressarcidos (R$)</label><input id="fech-in-mcRessarc" type="number" step="0.01"></div>
+          </div>
+          <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="fechSaveInputs()">Salvar dados do mês</button></div>
+        </details>
+        <div id="fech-report"></div>
+      </div>
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -795,6 +862,7 @@ async function initApp(){
   document.getElementById('sb-avatar').textContent=u.nome[0].toUpperCase();
   document.getElementById('crm-badge-user').textContent=u.nome+(u.role==='admin'?' (Admin)':u.role==='editor'?' (Supervisor)':'');
   const isCob=u.role==='cobradora';
+  document.getElementById('nav-fechamento').style.display=isCob?'none':'';
   document.getElementById('lbl-crm-cob').style.display=isCob?'none':'';
   document.getElementById('fil-crm-cob').style.display=isCob?'none':'';
   document.getElementById('btn-novo-acionamento').style.display=u.role==='editor'?'none':'inline-block';
@@ -805,7 +873,7 @@ async function initApp(){
 }
 
 // ===== TABS =====
-const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',crm:'CRM de Cobrança',retorno:'Retornos'};
+const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',crm:'CRM de Cobrança',retorno:'Retornos',fechamento:'Fechamento Mensal'};
 async function showTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
@@ -816,6 +884,7 @@ async function showTab(name,btn){
   if(name==='dashboard') renderDashboard();
   else if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(name)){populateFilters();renderTable(name);}
   else if(name==='crm'){populateGenAnos();renderCRM();}
+  else if(name==='fechamento'){fechInit();renderFechamento();}
   else if(name==='retorno'){renderRetorno();document.getElementById('rel-data').value=new Date().toISOString().split('T')[0];renderRelatorioDiario();}
 }
 
@@ -1247,6 +1316,280 @@ function parseNum(v){if(typeof v==='number')return v;const s=String(v).replace(/
 function parseDate(v){if(!v)return '';if(typeof v==='number'){return new Date((v-25569)*86400000).toISOString().split('T')[0];}const s=String(v).trim();const m1=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m1)return`${m1[3]}-${m1[2]}-${m1[1]}`;if(s.match(/^\d{4}-\d{2}-\d{2}/))return s.slice(0,10);return s;}
 function exportExcel(type){exportToXLSX(filterData(type).map(r=>{const o={...r};delete o._uid;return o;}),type.charAt(0).toUpperCase()+type.slice(1));}
 function exportToXLSX(data,name){if(!data.length){alert('Nenhum dado.');return;}const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,name);XLSX.writeFile(wb,`LeoMT_${name}_${new Date().toISOString().slice(0,10)}.xlsx`);}
+
+// ===== FECHAMENTO MENSAL =====
+const FECH_KEY='leoFechInputs';
+const FECH_FIELDS=['recCheque','recBoleto','mcDeposito','mcFatura','mcRessarc'];
+const MESES_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const pad2=n=>String(n).padStart(2,'0');
+const num=x=>{const n=parseFloat(x);return isNaN(n)?0:n;};
+const isoDate=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const normNome=s=>(s||'').toLowerCase().trim();
+const fmtPct=v=>v==null?'—':v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const fmtPct1=v=>v==null?'—':v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const fmtMilR=v=>(v/1000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pctDe=(a,b)=>b>0?a/b*100:null;
+
+function fechInputsAll(){try{return JSON.parse(localStorage.getItem(FECH_KEY)||'{}');}catch(e){return {};}}
+function fechInputs(y,m){return fechInputsAll()[y+'-'+pad2(m)]||{};}
+function fechPeriodo(){return [parseInt(document.getElementById('fech-ano').value),parseInt(document.getElementById('fech-mes').value)];}
+function fechSaveInputs(){
+  const [y,m]=fechPeriodo();const all=fechInputsAll();const o={};
+  FECH_FIELDS.forEach(f=>{const val=document.getElementById('fech-in-'+f).value;if(val!=='')o[f]=parseFloat(val);});
+  all[y+'-'+pad2(m)]=o;
+  try{localStorage.setItem(FECH_KEY,JSON.stringify(all));}catch(e){alert('Não foi possível salvar neste navegador.');}
+  renderFechamento();
+}
+function fechInit(){
+  const mEl=document.getElementById('fech-mes'),aEl=document.getElementById('fech-ano');
+  const hoje=new Date();
+  if(!mEl.options.length){
+    mEl.innerHTML=MESES_FULL.map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');
+    mEl.value=hoje.getMonth()+1;
+  }
+  const anos=new Set([hoje.getFullYear()]);
+  ['boleto','cheque','caderneta','chargeback'].forEach(t=>DB[t].forEach(r=>{const a=t==='chargeback'?+r.ano:rowMY(r)[0];if(a)anos.add(a);}));
+  const cur=aEl.value||String(hoje.getFullYear());
+  aEl.innerHTML=[...anos].sort().map(a=>`<option>${a}</option>`).join('');
+  aEl.value=cur;
+}
+
+// [ano,mês] de um título: pelo vencimento; senão pelos campos mês/ano
+function rowMY(r){
+  if(r.venc){const d=String(r.venc).slice(0,10).split('-');if(d.length===3&&+d[0])return[+d[0],+d[1]];}
+  let m=r.mes;
+  if(typeof m==='string'&&isNaN(+m)){const i=MESES.indexOf(m.trim().toUpperCase().slice(0,3));m=i>=0?i+1:0;}else m=+m||0;
+  return[+r.ano||0,m];
+}
+
+// Cheque / Boleto de um mês: recebível, em atraso, recebido com atraso, em aberto
+function fechTitulos(tipo,y,m){
+  const rows=(DB[tipo]||[]).filter(r=>{const[a,b]=rowMY(r);return a===y&&b===m;});
+  const inp=fechInputs(y,m);
+  const ov=tipo==='cheque'?inp.recCheque:inp.recBoleto;
+  const soma=rows.reduce((s,r)=>s+num(r.valor),0);
+  const rec=ov!=null?ov:soma;
+  let atraso=0,recAtr=0;
+  rows.forEach(r=>{
+    const pago=(r.sit||'').toUpperCase()==='PAGO';
+    // boleto pago até o vencimento não entra em atraso
+    if(tipo==='boleto'&&pago&&r.dtpag&&r.venc&&String(r.dtpag).slice(0,10)<=String(r.venc).slice(0,10))return;
+    const recebido=Math.min(num(r.valor),num(r.vpago)||(pago?num(r.valor):0));
+    atraso+=num(r.valor);recAtr+=recebido;
+  });
+  const aberto=Math.max(0,atraso-recAtr);
+  return{rec,atraso,recAtr,aberto,pctAtraso:pctDe(atraso,rec),pctInad:pctDe(aberto,rec),n:rows.length,manual:ov!=null};
+}
+
+function fechCaderneta(y,m){
+  const rows=(DB.caderneta||[]).filter(r=>{const[a,b]=rowMY(r);return a===y&&b===m;});
+  const fat=rows.reduce((s,r)=>s+num(r.valor),0);
+  const pago=rows.reduce((s,r)=>s+Math.min(num(r.valor),num(r.vpago)||((r.sit||'').toUpperCase()==='PAGO'?num(r.valor):0)),0);
+  return{fat,pago,aberto:Math.max(0,fat-pago),n:rows.length};
+}
+
+function fechEquipe(y,m){
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const ini=y+'-'+pad2(m)+'-01',fimD=new Date(y,m,0),fim=isoDate(fimD);
+  const refD=fimD<hoje?fimD:hoje,ref=isoDate(refD);
+  const cob=DB.cobrancas||[];
+  const ac=cob.filter(c=>c.data&&c.data>=ini&&c.data<=fim);
+  const acion=new Set(ac.map(c=>normNome(c.cliente)).filter(Boolean));
+  const carteira=new Set();
+  ['boleto','cheque','caderneta'].forEach(t=>DB[t].forEach(r=>{if((r.sit||'').toUpperCase()!=='PAGO'&&normNome(r.cliente))carteira.add(normNome(r.cliente));}));
+  const base=new Set([...carteira,...acion]);
+  const ligacoes=ac.filter(c=>c.meio==='LIGAÇÃO').length;
+  const whats=ac.filter(c=>c.meio==='WHATSAPP').length;
+  const semContato=ac.filter(c=>c.status==='SEM CONTATO').length;
+  const efetivos=ac.length-semContato;
+  const pagouNoMes=r=>r.dtpag&&String(r.dtpag).slice(0,10)>=ini&&String(r.dtpag).slice(0,10)<=fim;
+  const recuperados=[...acion].filter(n=>ac.some(c=>normNome(c.cliente)===n&&c.status==='PAGO')||DB.boleto.some(r=>normNome(r.cliente)===n&&pagouNoMes(r))).length;
+  const proms=ac.filter(c=>c.dtpromessa&&c.dtpromessa>=ini&&c.dtpromessa<=fim&&c.dtpromessa<=isoDate(hoje));
+  const cumpridas=proms.filter(c=>{const n=normNome(c.cliente);
+    return cob.some(p=>normNome(p.cliente)===n&&p.status==='PAGO'&&p.data>=c.data)||DB.boleto.some(r=>normNome(r.cliente)===n&&r.dtpag&&String(r.dtpag).slice(0,10)>=c.data);}).length;
+  let dias15=0,nunca=0;
+  carteira.forEach(n=>{
+    const ds=cob.filter(c=>normNome(c.cliente)===n&&c.data&&c.data<=ref).map(c=>c.data).sort();
+    if(!ds.length){nunca++;return;}
+    if((refD-new Date(ds[ds.length-1]+'T00:00:00'))/86400000>15)dias15++;
+  });
+  return{acionados:acion.size,base:base.size,ligacoes,whats,tentativas:ac.length,efetivos,semContato,recuperados,
+    promVencidas:proms.length,promCumpridas:cumpridas,dias15,nunca,
+    pctCarteira:pctDe(acion.size,base.size),pctEfetivo:pctDe(efetivos,ac.length),pctEficiencia:pctDe(recuperados,acion.size),pctPromessas:pctDe(cumpridas,proms.length)};
+}
+
+function fechCalcular(y,m){
+  const cheque=fechTitulos('cheque',y,m),boleto=fechTitulos('boleto',y,m);
+  const tot={rec:cheque.rec+boleto.rec,atraso:cheque.atraso+boleto.atraso,recAtr:cheque.recAtr+boleto.recAtr,aberto:cheque.aberto+boleto.aberto};
+  const evol=[];let accAb=0,accRec=0;
+  for(let i=1;i<=12;i++){
+    const c=fechTitulos('cheque',y,i),b=fechTitulos('boleto',y,i);
+    if(i<=m){accAb+=c.aberto+b.aberto;accRec+=c.rec+b.rec;}
+    evol.push({i,c,b,has:c.n+b.n>0||c.manual||b.manual});
+  }
+  const cad=fechCaderneta(y,m);
+  const cadEvol=[];for(let i=1;i<=12;i++)cadEvol.push({i,...fechCaderneta(y,i)});
+  const mcAll=fechInputsAll();let acDep=0,acFat=0,acRes=0;
+  const mcEvol=[];
+  for(let i=1;i<=12;i++){const o=mcAll[y+'-'+pad2(i)]||{};
+    if(i<=m){acDep+=o.mcDeposito||0;acFat+=o.mcFatura||0;acRes+=o.mcRessarc||0;}
+    mcEvol.push({i,custo:o.mcDeposito>0?pctDe(o.mcFatura||0,o.mcDeposito):null});}
+  const mi=fechInputs(y,m);
+  const mc={dep:mi.mcDeposito||0,fat:mi.mcFatura||0,res:mi.mcRessarc||0,custo:pctDe(mi.mcFatura||0,mi.mcDeposito||0),
+    pctRes:pctDe(mi.mcRessarc||0,mi.mcDeposito||0),acCusto:pctDe(acFat,acDep),acDep,acFat,acRes,has:mi.mcDeposito>0,evol:mcEvol};
+  const cbRows=(DB.chargeback||[]).filter(r=>+r.ano===y);
+  const cbTotal=cbRows.reduce((s,r)=>s+num(r.taberto),0);
+  const cbPago=cbRows.filter(r=>(r.status||'').toUpperCase()==='PAGO');
+  const cb={rows:cbRows,total:cbTotal,seguro:cbTotal*0.8,pago:cbPago.reduce((s,r)=>s+num(r.taberto),0),nPago:cbPago.length};
+  return{y,m,cheque,boleto,tot,evol,cad,cadEvol,mc,cb,eq:fechEquipe(y,m),
+    inadGeral:{aberto:accAb,rec:accRec,pct:pctDe(accAb,accRec)}};
+}
+
+// ---- gráficos SVG ----
+function svgLine(pts,color,hiColor){
+  const W=520,H=190,pl=26,pr=30,pt=30,pb=26;
+  const vs=pts.filter(p=>p.v!=null).map(p=>p.v);
+  if(!vs.length)return'<div class="tbl-empty">Sem dados no período</div>';
+  const max=Math.max(...vs,1)*1.15;
+  const x=i=>pl+i*(W-pl-pr)/(pts.length-1);
+  const y=v=>pt+(H-pt-pb)*(1-v/max);
+  const ok=pts.map((p,i)=>p.v!=null?[x(i),y(p.v),p,i]:null).filter(Boolean);
+  const line=ok.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+  const area=line+` L${ok[ok.length-1][0].toFixed(1)},${H-pb} L${ok[0][0].toFixed(1)},${H-pb} Z`;
+  const last=ok[ok.length-1];
+  const labels=ok.map(q=>{const hi=q===last,c=hi?hiColor:'#0d3b1c',t=fmtPct(q[2].v),w=t.length*6+10;
+    return`<rect x="${(q[0]-w/2).toFixed(1)}" y="${(q[1]-24).toFixed(1)}" width="${w}" height="16" rx="3" fill="${c}"/><text x="${q[0].toFixed(1)}" y="${(q[1]-12.5).toFixed(1)}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${t}</text>`;}).join('');
+  const xs=pts.map((p,i)=>`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="10" fill="#6b7280" text-anchor="middle">${p.l}</text>`).join('');
+  return`<svg class="fech-svg" viewBox="0 0 ${W} ${H}"><path d="${area}" fill="${color}" opacity=".14"/><path d="${line}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round"/>
+    <line x1="${pl}" x2="${W-pr}" y1="${H-pb}" y2="${H-pb}" stroke="#e5e7eb"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="4" fill="${hiColor}"/>${labels}${xs}</svg>`;
+}
+// barras (opcionalmente empilhadas): items [{l,parts:[{v,c}]}]
+function svgBars(items,{unit=1000,height=210}={}){
+  const W=520,H=height,pl=34,pr=10,pt=18,pb=34;
+  const tot=it=>it.parts.reduce((s,p)=>s+p.v,0);
+  const max=Math.max(...items.map(tot),1)*1.12;
+  const bw=Math.min(54,(W-pl-pr)/items.length*0.62),step=(W-pl-pr)/items.length;
+  const y=v=>pt+(H-pt-pb)*(1-v/max);
+  let g='';
+  [0,.25,.5,.75,1].forEach(f=>{const v=max*f,yy=y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#e5e7eb"/><text x="${pl-4}" y="${yy+3}" font-size="9" fill="#6b7280" text-anchor="end">${Math.round(v/unit)}</text>`;});
+  items.forEach((it,i)=>{
+    const cx=pl+step*i+step/2;let acc=0;
+    it.parts.forEach(p=>{if(p.v<=0)return;const y1=y(acc+p.v),h=y(acc)-y1;
+      g+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${p.c}"/>`;
+      if(h>14&&items.length<=4)g+=`<text x="${cx.toFixed(1)}" y="${(y1+h/2+4).toFixed(1)}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${fmtMilR(p.v)}</text>`;
+      acc+=p.v;});
+    if(items.length>4)g+=`<text x="${cx.toFixed(1)}" y="${(y(acc)-4).toFixed(1)}" font-size="9" font-weight="700" fill="#0d3b1c" text-anchor="middle">${fmtMilR(acc)}</text>`;
+    g+=`<text x="${cx.toFixed(1)}" y="${H-pb+14}" font-size="10" fill="#374151" text-anchor="middle">${it.l}</text>`;
+  });
+  return`<svg class="fech-svg" viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+
+// ---- relatório ----
+const GREEN='#72b800',RED='#e11d48';
+function fk(l,v,n,red){return`<div class="fk"><div class="l">${l}</div><div class="v${red?' red':''}">${v}</div>${n?`<div class="n${red?' red':''}">${n}</div>`:''}</div>`;}
+function fechSec(t,body,head){return`<div class="fech-sec"><h3>${t}</h3>${head?`<div class="headline">${head}</div>`:''}${body}</div>`;}
+
+function fechRender(F){
+  const mesN=MESES_FULL[F.m-1],mesC=mesN.slice(0,3),{cheque:C,boleto:B,tot:T,cad,mc,cb,eq}=F;
+  const mCur=MESES.slice(0,F.m).map(x=>x[0]+x.slice(1).toLowerCase());
+  const red=v=>v!=null&&v>15;
+  let h='';
+  if(!C.n&&!B.n&&!C.manual&&!B.manual)h+=`<div class="fech-warn">Não há títulos de cheque/boleto com vencimento em ${mesN}/${F.y}. Importe as planilhas ou informe o recebível do mês em "Dados complementares".</div>`;
+  h+=`<div class="fech-sec" style="background:#0d2818;border:none"><div style="color:#b5e800;font-size:22px;font-weight:800">RESULTADO COBRANÇA MT</div><div style="color:#b5e800;font-style:italic;margin-top:4px">${mesN.toUpperCase()} ${F.y}</div></div>`;
+
+  // Resumo
+  const ig=F.inadGeral;
+  h+=fechSec('Resumo do mês',
+    `<div class="fech-sub">Onde estamos — situação da carteira</div><div class="fech-grid">`+
+      fk('Cheque — inadimplência',fmtPct(C.pctInad),fmtR(C.aberto)+' em aberto',red(C.pctInad))+
+      fk('Boleto — inadimplência',fmtPct(B.pctInad),fmtR(B.aberto)+' em aberto',red(B.pctInad))+
+      fk('Caderneta — acerto em aberto',fmtPct(pctDe(cad.aberto,cad.fat)),fmtR(cad.aberto)+' em aberto',red(pctDe(cad.aberto,cad.fat)))+
+      fk('Inadimplência geral da carteira',fmtPct(ig.pct),`${fmtR(ig.aberto)} de ${fmtR(ig.rec)} (acumulado do ano)`,red(ig.pct))+
+    `</div><div class="fech-sub">O que fizemos — resultado da cobrança</div><div class="fech-grid">`+
+      fk('Valor recuperado',fmtR(T.recAtr),'igual ao recebido com atraso (cheque + boleto)')+
+      fk('Clientes recuperados',eq.recuperados,`de ${eq.acionados} clientes acionados (${fmtPct1(eq.pctEficiencia)})`)+
+      fk('Promessas cumpridas',fmtPct1(eq.pctPromessas),`${eq.promCumpridas} de ${eq.promVencidas} promessas vencidas`)+
+    `</div>`);
+
+  // Cheque e boleto
+  const row=(n,o)=>`<tr><td>${n}</td><td>${fmtR(o.rec)}</td><td>${fmtR(o.atraso)}</td><td>${fmtR(o.recAtr)}</td><td>${fmtR(o.aberto)}</td></tr>`;
+  h+=fechSec(`Cheque e boleto — ${mesN}`,
+    `<div class="fech-two"><div><div class="fech-chart-t">Valor em atraso (R$ mil)</div>${svgBars([
+        {l:'Cheque',parts:[{v:C.recAtr,c:GREEN},{v:C.aberto,c:RED}]},
+        {l:'Boleto',parts:[{v:B.recAtr,c:GREEN},{v:B.aberto,c:RED}]}])}
+      <div style="font-size:11px;color:var(--text2);text-align:center"><span style="color:${GREEN}">■</span> Recebido com atraso &nbsp; <span style="color:${RED}">■</span> Em aberto</div></div>
+      <div><table class="fech-tbl"><thead><tr><th></th><th>Recebível do mês</th><th>Em atraso</th><th>Recebido com atraso</th><th>Em aberto</th></tr></thead><tbody>
+      ${row('Cheque',C)}${row('Boleto',B)}<tr class="tot"><td>Total</td><td>${fmtR(T.rec)}</td><td>${fmtR(T.atraso)}</td><td>${fmtR(T.recAtr)}</td><td>${fmtR(T.aberto)}</td></tr></tbody></table>
+      <div class="fech-grid" style="margin-top:16px">${fk('Cheque — atraso',fmtPct(C.pctAtraso),'devolvidos no mês')}${fk('Boleto — atraso',fmtPct(B.pctAtraso),'não pagos no vencimento')}</div>
+      <div class="fech-grid" style="margin-top:10px">${fk('Cheque — inadimplência',fmtPct(C.pctInad),C.pctInad==null?'':fmtPct(100-C.pctInad)+' já recebido',red(C.pctInad))}${fk('Boleto — inadimplência',fmtPct(B.pctInad),B.pctInad==null?'':fmtPct(100-B.pctInad)+' já recebido',red(B.pctInad))}</div>
+      </div></div>`);
+
+  // Evolução
+  const serie=(k,f)=>F.evol.filter(e=>e.i<=F.m).map(e=>({l:MESES[e.i-1][0]+MESES[e.i-1].slice(1).toLowerCase(),v:e.has?e[k][f]:null}));
+  h+=fechSec('Evolução da inadimplência',
+    `<div class="fech-two"><div><div class="fech-chart-t">Boleto — evolução da inadimplência</div>${svgLine(serie('b','pctInad'),GREEN,RED)}</div>
+      <div><div class="fech-chart-t">Cheque — evolução da inadimplência</div>${svgLine(serie('c','pctInad'),GREEN,RED)}</div></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:6px">Meses anteriores refletem a situação atual da carteira (pagamentos recebidos depois do fechamento reduzem o percentual).</div>`);
+  const prev=F.m>1?F.evol[F.m-2]:null;
+  const ant=(k)=>prev&&prev.has&&prev[k].pctAtraso!=null?prev[k].pctAtraso:null;
+  const dpp=(a,b)=>b==null||a==null?'':(a-b>=0?'+':'')+(a-b).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' p.p. sobre '+MESES_FULL[F.m-2].toLowerCase()+` (${fmtPct(b)})`;
+  h+=fechSec('Acompanhamento de atraso',
+    `<div class="fech-two"><div>${fk('Boleto — atraso em '+mesN.toLowerCase(),fmtPct(B.pctAtraso),prev?MESES_FULL[F.m-2].toLowerCase()+': '+fmtPct(ant('b')):'')}<div class="fech-chart-t">Boleto — evolução do atraso</div>${svgLine(serie('b','pctAtraso'),GREEN,RED)}</div>
+      <div>${fk('Cheque — atraso em '+mesN.toLowerCase(),fmtPct(C.pctAtraso),dpp(C.pctAtraso,ant('c')),ant('c')!=null&&C.pctAtraso>ant('c'))}<div class="fech-chart-t">Cheque — evolução do atraso</div>${svgLine(serie('c','pctAtraso'),GREEN,RED)}</div></div>`);
+
+  // Caderneta
+  const cadItems=F.cadEvol.filter(e=>e.i<=F.m).map(e=>({l:MESES[e.i-1][0]+MESES[e.i-1].slice(1).toLowerCase(),parts:[{v:e.aberto,c:e.i===F.m?RED:GREEN}]}));
+  h+=fechSec('Caderneta',
+    `<div class="fech-two"><div>${fk('Total faturado no mês',fmtR(cad.fat))}<br>${fk('Acerto pago',fmtR(cad.pago),cad.fat?fmtPct1(pctDe(cad.pago,cad.fat))+' do faturado':'')}<br>${fk('Acerto em aberto',fmtR(cad.aberto),cad.fat?fmtPct(pctDe(cad.aberto,cad.fat))+' do faturado':'',true)}</div>
+      <div><div class="fech-chart-t">Caderneta em aberto por mês de origem — ${F.y} (R$ mil)</div>${svgBars(cadItems)}</div></div>`);
+
+  // Multicheck
+  h+=fechSec('Multicheck — custo do serviço',
+    mc.has?`<div class="fech-grid">${fk('Valor depositado',fmtR(mc.dep),'no mês')}${fk('Fatura paga',fmtR(mc.fat),fmtPct(mc.custo)+' do depositado')}${fk('Cheques ressarcidos',fmtR(mc.res),'taxa de inadimplência '+fmtPct(mc.pctRes))}${fk('Custo efetivo',fmtPct(mc.custo),'acumulado do ano: '+fmtPct(mc.acCusto))}</div>
+      <div class="fech-chart-t">Evolução do custo efetivo (% do valor depositado)</div>${svgLine(mc.evol.filter(e=>e.i<=F.m).map(e=>({l:MESES[e.i-1][0]+MESES[e.i-1].slice(1).toLowerCase(),v:e.custo})),GREEN,RED)}
+      <div style="font-size:11px;font-style:italic;color:var(--text2)">Acumulado do ano: depositado ${fmtR(mc.acDep)} · fatura paga ${fmtR(mc.acFat)} · cheques ressarcidos ${fmtR(mc.acRes)}</div>`
+    :'<div class="fech-warn">Informe valor depositado e fatura do Multicheck em "Dados complementares do mês" para gerar este indicador.</div>');
+
+  // Chargeback
+  const cbRows=cb.rows.map(r=>`<tr><td>${r.id||'—'}</td><td>${r.cliente||'—'}</td><td>${fmtR(r.taberto)}</td><td>${r.ano||'—'}</td><td>${r.cento||'—'}</td><td>${statusBadge(r.status)}</td><td>${fmtDate(r.dtpag)}</td></tr>`).join('');
+  h+=fechSec(`Chargeback — ${F.y}`,
+    `<div class="fech-grid">${fk('Total chargeback',fmtR(cb.total),cb.rows.length+' títulos · Leozinha')}${fk('Valor do seguro',fmtR(cb.seguro),'80% do valor da venda')}${fk('Valor pago pelo cliente',fmtR(cb.pago),cb.nPago+' títulos pagos')}</div>
+     ${cb.rows.length?`<div class="tbl-wrap" style="margin-top:12px"><table class="fech-tbl"><thead><tr><th>ID</th><th>Cliente</th><th>Total aberto</th><th>Ano</th><th>Cento</th><th>Status</th><th>Dt pagamento</th></tr></thead><tbody>${cbRows}</tbody></table></div>`:''}`,
+    cb.rows.length?`Chargeback ${F.y}: ${fmtR(cb.total).replace(/,\d\d$/,'')} em ${cb.rows.length} títulos; o seguro cobriu ${fmtR(cb.seguro).replace(/,\d\d$/,'')} e os clientes já pagaram ${fmtR(cb.pago).replace(/,\d\d$/,'')}`:'');
+
+  // Equipe
+  h+=fechSec('Equipe de cobrança — atividade',
+    `<div class="fech-sub">Produtividade</div><div class="fech-grid">${fk('Clientes acionados',eq.acionados)}${fk('Ligações',eq.ligacoes)}${fk('WhatsApp',eq.whats)}${fk('Tentativas',eq.tentativas)}${fk('Contatos efetivos',eq.efetivos)}${fk('Sem contato',eq.semContato)}</div>
+     <div class="fech-sub">Eficiência</div><div class="fech-grid">${fk('% da carteira trabalhada',fmtPct1(eq.pctCarteira),`${eq.acionados} de ${eq.base} clientes`)}${fk('% de contato efetivo',fmtPct1(eq.pctEfetivo),`${eq.efetivos} de ${eq.tentativas} tentativas`)}${fk('Taxa de eficiência',fmtPct1(eq.pctEficiencia),`${eq.recuperados} recuperados de ${eq.acionados} acionados`)}${fk('Valor recuperado',fmtR(T.recAtr),'cheque + boleto')}</div>
+     <div class="fech-sub">Pontos de atenção</div><div class="fech-grid">${fk('+15 dias sem acionamento',eq.dias15+' clientes')}${fk('Nunca acionados',eq.nunca+' clientes','',eq.nunca>0)}</div>`,
+    eq.tentativas?`${eq.tentativas} tentativas no mês: ${fmtPct1(eq.pctEfetivo)} viraram contato efetivo, mas só ${fmtPct1(eq.pctCarteira)} da carteira foi trabalhada`:'Nenhum acionamento registrado no mês');
+  return h;
+}
+
+function renderFechamento(){
+  const[y,m]=fechPeriodo();
+  const inp=fechInputs(y,m);
+  FECH_FIELDS.forEach(f=>{const el=document.getElementById('fech-in-'+f);if(el)el.value=inp[f]!=null?inp[f]:'';});
+  document.getElementById('fech-report').innerHTML=fechRender(fechCalcular(y,m));
+}
+
+function exportFechamento(){
+  const[y,m]=fechPeriodo();const F=fechCalcular(y,m);const rows=[];
+  const add=(secao,ind,val)=>rows.push({Seção:secao,Indicador:ind,Valor:val==null?'':(typeof val==='number'?Math.round(val*100)/100:val)});
+  [['Cheque',F.cheque],['Boleto',F.boleto],['Total',F.tot]].forEach(([n,o])=>{
+    add('Cheque e Boleto',n+' — recebível do mês',o.rec);add('Cheque e Boleto',n+' — em atraso',o.atraso);
+    add('Cheque e Boleto',n+' — recebido com atraso',o.recAtr);add('Cheque e Boleto',n+' — em aberto',o.aberto);
+    if(o.pctInad!==undefined){add('Cheque e Boleto',n+' — % atraso',o.pctAtraso);add('Cheque e Boleto',n+' — % inadimplência',o.pctInad);}});
+  add('Resumo','Inadimplência geral da carteira (%)',F.inadGeral.pct);
+  add('Caderneta','Total faturado',F.cad.fat);add('Caderneta','Acerto pago',F.cad.pago);add('Caderneta','Acerto em aberto',F.cad.aberto);
+  add('Multicheck','Valor depositado',F.mc.dep);add('Multicheck','Fatura paga',F.mc.fat);add('Multicheck','Cheques ressarcidos',F.mc.res);add('Multicheck','Custo efetivo (%)',F.mc.custo);
+  add('Chargeback','Total',F.cb.total);add('Chargeback','Seguro (80%)',F.cb.seguro);add('Chargeback','Pago pelo cliente',F.cb.pago);
+  const e=F.eq;
+  [['Clientes acionados',e.acionados],['Ligações',e.ligacoes],['WhatsApp',e.whats],['Tentativas',e.tentativas],['Contatos efetivos',e.efetivos],['Sem contato',e.semContato],
+   ['% da carteira trabalhada',e.pctCarteira],['% de contato efetivo',e.pctEfetivo],['Clientes recuperados',e.recuperados],['Taxa de eficiência (%)',e.pctEficiencia],
+   ['Promessas vencidas',e.promVencidas],['Promessas cumpridas',e.promCumpridas],['+15 dias sem acionamento',e.dias15],['Nunca acionados',e.nunca]].forEach(([k,v])=>add('Equipe',k,v));
+  exportToXLSX(rows,`Fechamento_${y}_${pad2(m)}`);
+}
 
 document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
 
