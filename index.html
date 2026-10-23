@@ -3000,7 +3000,7 @@ function initRelatorio(){
 
 function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 // ===== FECHAMENTO MENSAL — formato "Resultado Cobrança MT" (slides + gráficos) =====
-// Tudo vem das planilhas/CRM. Manual: apenas o "recebido em dia" de boleto e cheque, o faturado da caderneta e (opcional) o Multicheck.
+// Tudo vem das planilhas/CRM. Manual: apenas o "recebido em dia" de boleto e cheque e o faturado da caderneta.
 const MESES_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const PERC_SEGURO=0.8; // chargeback: seguro cobre 80% do valor da venda
 const FS_ICONS={
@@ -3175,14 +3175,6 @@ function montarFechamentoHTML(mes,ano){
   // caderneta
   const cadMes=ms.map(m=>fsMesCad(m,ano).aberto);
   slides.push(fsSlide('CADERNETA',`<div class="fs-two"><div class="fs-col3">${fsKpi('file','teal','Total faturado no mês',fmtR(cad.total),'')}${fsKpi('notebook','teal','Acerto pago',fmtR(cad.pago),cad.total>0?fsPct1(cad.pago/cad.total*100)+' do faturado':'',{subneutral:1})}${fsKpi('notebook','red','Acerto em aberto',fmtR(cad.aberto),cad.total>0?fsPct(cad.pAberto)+' do faturado':'')}</div><div class="fs-chart">${fsBars(cadMes,lbl,mIdx,`Caderneta em aberto por mês de origem — ${ano} (R$ mil)`)}</div></div>`));
-  // multicheck (só se houver dado manual)
-  const mc=m=>{const f=fsFat(m,ano);return{dep:parseFloat(f.mcdep||0),fat:parseFloat(f.mcfat||0),res:parseFloat(f.mcres||0)};};
-  const mcAtual=mc(mes);
-  if(mcAtual.dep>0){
-    let aDep=0,aFat=0,aRes=0;ms.forEach(m=>{const x=mc(m);aDep+=x.dep;aFat+=x.fat;aRes+=x.res;});
-    const custo=ms.map(m=>{const x=mc(m);return x.dep>0?x.fat/x.dep*100:null;});
-    slides.push(fsSlide('MULTICHECK — CUSTO DO SERVIÇO',fsSec(mUp)+`<div class="fs-row4">${fsKpi('cash','green','Valor depositado',fmtR(mcAtual.dep),'no mês')}${fsKpi('file','green','Fatura paga',fmtR(mcAtual.fat),fsPct(mcAtual.fat/mcAtual.dep*100)+' do depositado')}${fsKpi('refresh','green','Cheques ressarcidos',fmtR(mcAtual.res),'taxa de inadimplência '+fsPct(mcAtual.res/mcAtual.dep*100))}${fsKpi('percent','teal','Custo efetivo',fsPct(mcAtual.fat/mcAtual.dep*100),aDep>0?'acumulado do ano: '+fsPct(aFat/aDep*100):'')}</div><div class="fs-ct2" style="margin-top:34px">Evolução do custo efetivo (% do valor depositado)</div>${fsArea(custo,lbl,{w:1040,h:250})}<div class="fs-note">Acumulado do ano: depositado ${fmtR(aDep)} · fatura paga ${fmtR(aFat)} · cheques ressarcidos ${fmtR(aRes)}</div>`));
-  }
   // chargeback
   const cb=(DB.chargeback||[]).filter(r=>String(r.ano||'')===String(ano));
   const cbTot=cb.reduce((s,r)=>s+parseFloat(r.taberto||0),0),cbPagos=cb.filter(r=>(r.status||'').toUpperCase()==='PAGO'),cbPago=cbPagos.reduce((s,r)=>s+parseFloat(r.taberto||0),0),seguro=cbTot*PERC_SEGURO;
@@ -3206,7 +3198,7 @@ function relManualHTML(mes,ano){
   const inp=(k,l)=>`<label class="fs-in"><span>${l}</span><input type="number" step="0.01" placeholder="0,00" value="${f[k]||''}" onchange="fsSetManual('${chave}','${k}',this.value)"></label>`;
   return `<div class="fs-manual"><div class="fs-mh">✍️ Lançamento manual — ${MESES_FULL[MESES.indexOf(mes)]}/${ano} <span>(todo o resto vem das planilhas e do CRM)</span></div>
     <div class="fs-minputs">${inp('boleto','Boleto — recebido em dia no mês (R$)')}${inp('cheque','Cheque — recebido em dia no mês (R$)')}${inp('caderneta','Caderneta — total faturado do mês (R$)')}</div>
-    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--text2)">Multicheck (opcional — só aparece no relatório se preencher)</summary><div class="fs-minputs" style="margin-top:8px">${inp('mcdep','Valor depositado (R$)')}${inp('mcfat','Fatura paga (R$)')}${inp('mcres','Cheques ressarcidos (R$)')}</div></details></div>`;
+</div>`;
 }
 function fsSetManual(chave,k,val){const f=JSON.parse(localStorage.getItem(chave)||'{}');f[k]=parseFloat(val)||0;localStorage.setItem(chave,JSON.stringify(f));renderRelatorio();}
 function fsFit(){
