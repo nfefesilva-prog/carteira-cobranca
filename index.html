@@ -29,7 +29,7 @@
   --badge-orange-text:#9a3412;
   --badge-purple:#ede9fe;
   --badge-purple-text:#5b21b6;
-  --body-bg:#f0f2f0;
+  --body-bg:#f4f6fb;
   --card-bg:#ffffff;
   --border:#e5e7eb;
   --text:#111827;
@@ -94,18 +94,36 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--body-bg);color:var
 
 /* ===== CARDS ===== */
 .card-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-.kcard{background:#fff;border-radius:12px;padding:16px 20px;min-width:150px;flex:1;box-shadow:0 1px 4px #0001;border:1px solid var(--border)}
-.kcard .klabel{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.kcard .kvalue{font-size:20px;font-weight:800;color:var(--text)}
-.kcard.accent{background:var(--sidebar);border-color:var(--sidebar)}
-.kcard.accent .klabel{color:#ffffff80}
-.kcard.accent .kvalue{color:var(--accent)}
-.kcard.green{background:var(--green-light);border-color:var(--green-light)}
-.kcard.green .klabel{color:#ffffff90}
-.kcard.green .kvalue{color:#fff}
+.kcard{display:flex;align-items:center;gap:14px;background:#fff;border-radius:16px;padding:16px 18px;min-width:210px;flex:1;box-shadow:0 4px 16px #1b2a5012}
+.kico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:0 3px 8px #0000000d}
+.t-green{background:#dcfce7}.t-blue{background:#dbeafe}.t-red{background:#fee2e2}.t-yellow{background:#fef9c3}.t-purple{background:#ede9fe}.t-orange{background:#ffedd5}.t-gray{background:#f3f4f6}.t-cyan{background:#cffafe}
+.kbody{min-width:0}
+.kcard .klabel{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:2px}
+.kcard .kvalue{font-size:20px;font-weight:700;color:var(--text);white-space:nowrap}
+.ksub{font-size:11px;color:var(--text2);margin-top:1px}
+.dash-grid{display:grid;grid-template-columns:minmax(250px,1fr) 2fr;gap:16px;margin-bottom:16px}
+.panel-card{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 4px 16px #1b2a5012;margin-bottom:16px}
+.panel-card h3{font-size:15px;font-weight:700;color:var(--text)}
+.hero{display:flex;flex-direction:column;justify-content:space-between;min-height:170px}
+.hero .hi{font-size:15px;font-weight:700}
+.hero .hint{font-size:12px;color:var(--text2);margin-top:2px}
+.hero .big{font-size:32px;font-weight:800;color:var(--green-light);margin-top:18px}
+.hero .biglbl{font-size:12px;color:var(--text2)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px 14px;margin-top:14px}
+.tile{display:flex;align-items:center;gap:12px}
+.tile .tl{font-size:12px;color:var(--text2)}
+.tile .tv{font-size:17px;font-weight:700}
+.aging-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.aging-head select{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:#fff;outline:none}
+.ag-row{display:grid;grid-template-columns:110px 1fr 130px 50px;align-items:center;gap:12px;margin-bottom:10px;font-size:12px}
+.ag-bar{height:10px;background:#f1f3f7;border-radius:6px;overflow:hidden}
+.ag-bar i{display:block;height:100%;border-radius:6px}
+.ag-val{font-weight:700;text-align:right}
+.ag-pct{color:var(--text2);text-align:right}
+@media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
 
 /* ===== TOOLBAR ===== */
-.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#fff;padding:10px 14px;border-radius:10px;border:1px solid var(--border)}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#fff;padding:10px 14px;border-radius:14px;box-shadow:0 4px 16px #1b2a5012}
 .toolbar label{font-size:12px;font-weight:600;color:var(--text2)}
 .toolbar select,.toolbar input[type=text],.toolbar input[type=date]{padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:#fff;outline:none}
 .toolbar select:focus,.toolbar input:focus{border-color:#27ae60}
@@ -123,7 +141,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--body-bg);color:var
 .btn-sm{padding:4px 10px;font-size:11px}
 
 /* ===== TABLE ===== */
-.tbl-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px #0001}
+.tbl-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px #1b2a5012}
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 thead tr{background:#f9fafb;border-bottom:2px solid var(--border)}
@@ -292,8 +310,15 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div id="panel-dashboard" class="panel active">
         <div class="page-header"><h2>Painel Geral</h2><div class="page-sub">Visão consolidada da carteira de cobrança</div></div>
         <div class="page-divider"></div>
-        <div class="card-row" id="dash-totais"></div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Acionamentos de hoje</div>
+        <div class="dash-grid" id="dash-totais"></div>
+        <div class="panel-card">
+          <div class="aging-head">
+            <h3>Aging da Carteira</h3>
+            <div style="display:flex;align-items:center;gap:8px"><label style="font-size:12px;color:var(--text2)">Ano</label><select id="aging-ano" onchange="renderAging()"><option value="">Todos</option></select></div>
+          </div>
+          <div id="dash-aging"></div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">Acionamentos de hoje</div>
         <div class="tbl-card"><div class="tbl-wrap"><div id="dash-acionamentos"></div></div></div>
       </div>
 
@@ -320,6 +345,8 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <select id="fil-boleto-atrib" onchange="renderTable('boleto')">
             <option value="">Todas</option><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option>
           </select>
+          <label>Pagamento de</label><input type="date" id="fil-boleto-pagde" onchange="renderTable('boleto')">
+          <label>até</label><input type="date" id="fil-boleto-pagate" onchange="renderTable('boleto')">
           <input type="text" id="fil-boleto-q" oninput="renderTable('boleto')" placeholder="🔍 Buscar cliente, ID...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('boleto')">Limpar</button>
         </div>
@@ -349,6 +376,8 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <select id="fil-cheque-atrib" onchange="renderTable('cheque')">
             <option value="">Todas</option><option>JURÍDICO</option><option>SEGURADORA</option><option>DEVOLVIDO</option>
           </select>
+          <label>Pagamento de</label><input type="date" id="fil-cheque-pagde" onchange="renderTable('cheque')">
+          <label>até</label><input type="date" id="fil-cheque-pagate" onchange="renderTable('cheque')">
           <input type="text" id="fil-cheque-q" oninput="renderTable('cheque')" placeholder="🔍 Buscar...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('cheque')">Limpar</button>
         </div>
@@ -592,7 +621,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div class="form-group"><label>Situação</label>
         <select id="b-sit"><option>EM ABERTO</option><option>PAGO</option><option>VENCIDO</option></select>
       </div>
-      <div class="form-group"><label>Data Pagamento</label><input id="b-dtpag" type="date"></div>
+      <div class="form-group"><label>Data Pagamento</label><input id="b-dtpag" type="date" data-blank="1"></div>
       <div class="form-group"><label>Valor Pago (R$)</label><input id="b-vpago" type="number" step="0.01"></div>
     </div>
     <div class="form-row">
@@ -634,6 +663,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div class="form-group"><label>Situação</label>
         <select id="c-sit"><option>EM ABERTO</option><option>PAGO</option><option>DEVOLVIDO</option></select>
       </div>
+      <div class="form-group"><label>Data Pagamento</label><input id="c-dtpag" type="date" data-blank="1"></div>
       <div class="form-group"><label>Valor Pago (R$)</label><input id="c-vpago" type="number" step="0.01"></div>
       <div class="form-group"><label>Mês</label>
         <select id="c-mes"><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
@@ -739,7 +769,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     </div>
     <div class="form-row">
       <div class="form-group"><label>Status</label><select id="cb-status"><option>EM ABERTO</option><option>PAGO</option></select></div>
-      <div class="form-group"><label>Data Pagamento</label><input id="cb-dtpag" type="date"></div>
+      <div class="form-group"><label>Data Pagamento</label><input id="cb-dtpag" type="date" data-blank="1"></div>
     </div>
     <div class="form-row">
       <div class="form-group" style="flex:100%"><label>Observações</label><textarea id="cb-obs"></textarea></div>
@@ -947,6 +977,7 @@ function populateGenAnos(){
 }
 
 // ===== FORMAT =====
+function kpi(ico,tone,label,value,sub){return `<div class="kcard"><div class="kico t-${tone}">${ico}</div><div class="kbody"><div class="klabel">${label}</div><div class="kvalue"${String(value).length>13?' style="font-size:16px"':''}>${value}</div>${sub?`<div class="ksub">${sub}</div>`:''}</div></div>`;}
 function fmtR(v){if(v===undefined||v===null||v==='')return '—';const n=parseFloat(v);if(isNaN(n))return '—';return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(d){if(!d)return '—';try{return new Date(d+'T00:00:00').toLocaleDateString('pt-BR');}catch(e){return d;}}
 function calcAtraso(venc){if(!venc)return 0;const v=new Date(venc+'T00:00:00'),h=new Date();h.setHours(0,0,0,0);return Math.max(0,Math.floor((h-v)/86400000));}
@@ -968,7 +999,7 @@ function atribBadge(a){
 // ===== COLUMNS =====
 const COLS={
   boleto:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'atrib',l:'Atribuição',fmt:'atrib'},{k:'valor',l:'Valor Título',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'atraso',l:'Atraso',fmt:'atr'},{k:'dtpag',l:'Dt Pagamento',fmt:'d'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'}],
-  cheque:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'num',l:'Nº Cheque'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'emitente',l:'Emitente'},{k:'motivo',l:'Motivo'},{k:'atrib',l:'Atribuição',fmt:'atrib'},{k:'limite',l:'Lim.Envio'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'}],
+  cheque:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'num',l:'Nº Cheque'},{k:'valor',l:'Valor',fmt:'r'},{k:'venc',l:'Vencimento',fmt:'d'},{k:'emitente',l:'Emitente'},{k:'motivo',l:'Motivo'},{k:'atrib',l:'Atribuição',fmt:'atrib'},{k:'limite',l:'Lim.Envio'},{k:'dtpag',l:'Dt Pagamento',fmt:'d'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'}],
   caderneta:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'valor',l:'Valor',fmt:'r'},{k:'mes',l:'Mês'},{k:'ano',l:'Ano'},{k:'vpago',l:'Valor Pago',fmt:'r'},{k:'sit',l:'Situação',fmt:'s'},{k:'forma',l:'Forma PG'},{k:'atraso',l:'Atraso'},{k:'dia',l:'Dia Fech.'}],
   renegociacao:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'vliq',l:'VL Líq.',fmt:'r'},{k:'vneg',l:'Total Neg.',fmt:'r'},{k:'data',l:'Dt Acordo',fmt:'d'},{k:'entrada',l:'Entrada',fmt:'r'},{k:'parcelas',l:'Nº Parc.'},{k:'tpago',l:'Total Pago',fmt:'r'},{k:'taberto',l:'Total Aberto',fmt:'r'},{k:'ano',l:'Ano'},{k:'status',l:'Status',fmt:'s'}],
   chargeback:[{k:'id',l:'ID'},{k:'cliente',l:'Cliente'},{k:'taberto',l:'Total Aberto',fmt:'r'},{k:'ano',l:'Ano'},{k:'cento',l:'Cento'},{k:'status',l:'Status',fmt:'s'},{k:'dtpag',l:'Dt Pagamento',fmt:'d'}]
@@ -982,6 +1013,8 @@ function filterData(type){
   if(ano)d=d.filter(r=>String(r.ano||'')===String(ano));
   if(sit)d=d.filter(r=>(r.sit||r.status||'').toUpperCase()===sit);
   if(atrib)d=d.filter(r=>(r.atrib||'').toUpperCase()===atrib);
+  const pagde=getF(type,'pagde'),pagate=getF(type,'pagate');
+  if(pagde||pagate)d=d.filter(r=>{const p=String(r.dtpag||'').slice(0,10);return p&&(!pagde||p>=pagde)&&(!pagate||p<=pagate);});
   if(q){const ql=q.toLowerCase();d=d.filter(r=>JSON.stringify(r).toLowerCase().includes(ql));}
   return d;
 }
@@ -1020,10 +1053,10 @@ function renderCards(type,data){
   const pago=data.filter(r=>(r.sit||r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||r.taberto||0),0);
   const aberto=data.filter(r=>(r.sit||r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||r.taberto||0),0);
   el.innerHTML=`
-    <div class="kcard"><div class="klabel">Registros</div><div class="kvalue">${data.length}</div></div>
-    <div class="kcard"><div class="klabel">Total Geral</div><div class="kvalue" style="font-size:16px">${fmtR(total)}</div></div>
-    <div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(aberto)}</div></div>
-    <div class="kcard green"><div class="klabel">Total Pago</div><div class="kvalue" style="font-size:16px">${fmtR(pago)}</div></div>
+    ${kpi('🗂','gray','Registros',`${data.length}`,``)}
+    ${kpi('🧾','blue','Total Geral',`${fmtR(total)}`,``)}
+    ${kpi('⏳','yellow','Total Aberto',`${fmtR(aberto)}`,``)}
+    ${kpi('✅','green','Total Pago',`${fmtR(pago)}`,``)}
   `;
 }
 
@@ -1034,7 +1067,7 @@ function clearModalFields(type){
   const bg=document.getElementById('modal-'+type+'-bg');if(!bg)return;
   bg.querySelectorAll('input,select,textarea').forEach(el=>{if(el.type==='hidden')el.value='';else if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';});
   const today=hojeISO();
-  bg.querySelectorAll('input[type=date]').forEach(el=>el.value=today);
+  bg.querySelectorAll('input[type=date]').forEach(el=>el.value=el.dataset.blank?'':today);
   if(type==='caderneta'){const d=bg.querySelector('#cd-dia');if(d)d.value=15;}
 }
 function v(id){const el=document.getElementById(id);return el?el.value:'';}
@@ -1047,7 +1080,7 @@ async function upsert(type,obj,eid){
 async function saveModal(type){
   let obj,eid;
   if(type==='boleto'){eid=v('boleto-edit-id');obj={_uid:eid||uid(),id:v('b-id'),cliente:v('b-cliente'),atrib:v('b-atrib'),valor:v('b-valor')||null,venc:v('b-venc')||null,dtpag:v('b-dtpag')||null,vpago:v('b-vpago')||null,sit:v('b-sit'),mes:v('b-mes'),ano:v('b-ano')};await upsert('boleto',obj,eid);renderTable('boleto');}
-  else if(type==='cheque'){eid=v('cheque-edit-id');obj={_uid:eid||uid(),id:v('c-id'),cliente:v('c-cliente'),num:v('c-num'),valor:v('c-valor')||null,venc:v('c-venc')||null,emitente:v('c-emitente'),motivo:v('c-motivo'),atrib:v('c-atrib'),limite:v('c-limite')||null,vpago:v('c-vpago')||null,sit:v('c-sit'),mes:v('c-mes'),ano:v('c-ano')};await upsert('cheque',obj,eid);renderTable('cheque');}
+  else if(type==='cheque'){eid=v('cheque-edit-id');obj={_uid:eid||uid(),id:v('c-id'),cliente:v('c-cliente'),num:v('c-num'),valor:v('c-valor')||null,venc:v('c-venc')||null,emitente:v('c-emitente'),motivo:v('c-motivo'),atrib:v('c-atrib'),limite:v('c-limite')||null,dtpag:v('c-dtpag')||null,vpago:v('c-vpago')||null,sit:v('c-sit'),mes:v('c-mes'),ano:v('c-ano')};await upsert('cheque',obj,eid);renderTable('cheque');}
   else if(type==='caderneta'){eid=v('caderneta-edit-id');obj={_uid:eid||uid(),id:v('cd-id'),cliente:v('cd-cliente'),valor:v('cd-valor')||null,mes:v('cd-mes'),ano:v('cd-ano'),vpago:v('cd-vpago')||null,sit:v('cd-sit'),forma:v('cd-forma'),atraso:v('cd-atraso')||null,dia:v('cd-dia')||'15'};await upsert('caderneta',obj,eid);renderTable('caderneta');}
   else if(type==='renegociacao'){eid=v('reneg-edit-id');obj={_uid:eid||uid(),id:v('rn-id'),cliente:v('rn-cliente'),vliq:v('rn-vliq')||null,vneg:v('rn-vneg')||null,vparc:v('rn-vparc')||null,data:v('rn-data')||null,entrada:v('rn-entrada')||null,parcelas:v('rn-parcelas')||null,tpago:v('rn-tpago')||null,taberto:v('rn-taberto')||null,tvencer:v('rn-tvencer')||null,ano:v('rn-ano'),status:v('rn-status'),obs:v('rn-obs')};await upsert('renegociacao',obj,eid);renderTable('renegociacao');}
   else if(type==='chargeback'){eid=v('cb-edit-id');obj={_uid:eid||uid(),id:v('cb-id'),cliente:v('cb-cliente'),taberto:v('cb-taberto')||null,ano:v('cb-ano'),cento:v('cb-cento')||null,status:v('cb-status'),dtpag:v('cb-dtpag')||null,obs:v('cb-obs')};await upsert('chargeback',obj,eid);renderTable('chargeback');}
@@ -1056,7 +1089,7 @@ async function saveModal(type){
 function editRow(type,uid_val){
   const r=DB[type].find(x=>x._uid===uid_val);if(!r)return;
   if(type==='boleto'){sv('b-id',r.id);sv('b-cliente',r.cliente);sv('b-atrib',r.atrib);sv('b-valor',r.valor);sv('b-venc',r.venc);sv('b-dtpag',r.dtpag);sv('b-vpago',r.vpago);sv('b-sit',r.sit);sv('b-mes',r.mes);sv('b-ano',r.ano);document.getElementById('boleto-edit-id').value=r._uid;}
-  else if(type==='cheque'){sv('c-id',r.id);sv('c-cliente',r.cliente);sv('c-num',r.num);sv('c-valor',r.valor);sv('c-venc',r.venc);sv('c-emitente',r.emitente);sv('c-motivo',r.motivo);sv('c-atrib',r.atrib);sv('c-limite',r.limite);sv('c-vpago',r.vpago);sv('c-sit',r.sit);sv('c-mes',r.mes);sv('c-ano',r.ano);document.getElementById('cheque-edit-id').value=r._uid;}
+  else if(type==='cheque'){sv('c-id',r.id);sv('c-cliente',r.cliente);sv('c-num',r.num);sv('c-valor',r.valor);sv('c-venc',r.venc);sv('c-emitente',r.emitente);sv('c-motivo',r.motivo);sv('c-atrib',r.atrib);sv('c-limite',r.limite);sv('c-dtpag',r.dtpag);sv('c-vpago',r.vpago);sv('c-sit',r.sit);sv('c-mes',r.mes);sv('c-ano',r.ano);document.getElementById('cheque-edit-id').value=r._uid;}
   else if(type==='caderneta'){sv('cd-id',r.id);sv('cd-cliente',r.cliente);sv('cd-valor',r.valor);sv('cd-mes',r.mes);sv('cd-ano',r.ano);sv('cd-vpago',r.vpago);sv('cd-sit',r.sit);sv('cd-forma',r.forma);sv('cd-atraso',r.atraso);sv('cd-dia',r.dia||'15');document.getElementById('caderneta-edit-id').value=r._uid;}
   else if(type==='renegociacao'){sv('rn-id',r.id);sv('rn-cliente',r.cliente);sv('rn-vliq',r.vliq);sv('rn-vneg',r.vneg);sv('rn-vparc',r.vparc);sv('rn-data',r.data);sv('rn-entrada',r.entrada);sv('rn-parcelas',r.parcelas);sv('rn-tpago',r.tpago);sv('rn-taberto',r.taberto);sv('rn-tvencer',r.tvencer);sv('rn-ano',r.ano);sv('rn-status',r.status);sv('rn-obs',r.obs);document.getElementById('reneg-edit-id').value=r._uid;}
   else if(type==='chargeback'){sv('cb-id',r.id);sv('cb-cliente',r.cliente);sv('cb-taberto',r.taberto);sv('cb-ano',r.ano);sv('cb-cento',r.cento);sv('cb-status',r.status);sv('cb-dtpag',r.dtpag);sv('cb-obs',r.obs);document.getElementById('cb-edit-id').value=r._uid;}
@@ -1069,7 +1102,7 @@ async function deleteRow(type,uid_val){
   renderTable(type);
 }
 function clearFilters(type){
-  ['mes','ano','sit','status','q','atrib'].forEach(k=>{const el=document.getElementById('fil-'+type+'-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});
+  ['mes','ano','sit','status','q','atrib','pagde','pagate'].forEach(k=>{const el=document.getElementById('fil-'+type+'-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});
   renderTable(type);
 }
 async function markRenegPago(uid_val){const r=DB.renegociacao.find(x=>x._uid===uid_val);if(!r)return;r.status='PAGO';r.taberto=0;await sbSave('renegociacao',r);renderTable('renegociacao');}
@@ -1132,11 +1165,11 @@ function renderCRM(){
     }).join('');
   const tot=data.length,pago=data.filter(r=>r.status==='PAGO').length,prom=data.filter(r=>r.status==='PROMETEU PAGAR').length,sem=data.filter(r=>r.status==='SEM CONTATO').length,vtot=data.reduce((s,r)=>s+parseFloat(r.valor||0),0);
   document.getElementById('cards-crm').innerHTML=`
-    <div class="kcard"><div class="klabel">Acionamentos</div><div class="kvalue">${tot}</div></div>
-    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pago}</div></div>
-    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
-    <div class="kcard accent"><div class="klabel">Sem Contato</div><div class="kvalue">${sem}</div></div>
-    <div class="kcard"><div class="klabel">Valor Cobrado</div><div class="kvalue" style="font-size:15px">${fmtR(vtot)}</div></div>
+    ${kpi('📞','blue','Acionamentos',`${tot}`,``)}
+    ${kpi('✅','green','Pagos',`${pago}`,``)}
+    ${kpi('🤝','yellow','Prometeram Pagar',`${prom}`,``)}
+    ${kpi('📵','gray','Sem Contato',`${sem}`,``)}
+    ${kpi('💰','purple','Valor Cobrado',`${fmtR(vtot)}`,``)}
   `;
 }
 function editCobranca(uid_val){const r=DB.cobrancas.find(x=>x._uid===uid_val);if(!r)return;sv('cob-edit-id',r._uid);sv('cob-cobradora',r.cobradora);sv('cob-id-titulo',r.idtitulo);sv('cob-cliente',r.cliente);sv('cob-tipo',r.tipo);sv('cob-valor',r.valor);sv('cob-venc',r.venc);sv('cob-data',r.data);sv('cob-meio',r.meio);sv('cob-status',r.status);sv('cob-retorno',r.retorno);sv('cob-dtpromessa',r.dtpromessa);sv('cob-vpromessa',r.vpromessa);document.getElementById('modal-cobranca-bg').classList.add('open');}
@@ -1227,10 +1260,10 @@ function renderRetorno(){
     :data.map(r=>`<tr>${cols.map(c=>{const val=r[c.k];if(c.fmt==='r')return`<td>${fmtR(val)}</td>`;if(c.fmt==='d')return`<td>${fmtDate(val)}</td>`;if(c.fmt==='s')return`<td>${statusBadge(val)}</td>`;if(c.fmt==='meio')return`<td>${meioBadge(val)}</td>`;if(c.k==='retorno')return`<td style="max-width:240px;white-space:normal">${val||'—'}</td>`;return`<td>${val||'—'}</td>`;}).join('')}</tr>`).join('');
   const tot=data.length,pago=data.filter(r=>r.status==='PAGO').length,pend=data.filter(r=>r.status==='PENDENTE').length,prom=data.filter(r=>r.status==='PROMETEU PAGAR').length;
   document.getElementById('dash-ret-cards').innerHTML=`
-    <div class="kcard"><div class="klabel">Total Retornos</div><div class="kvalue">${tot}</div></div>
-    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pago}</div></div>
-    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
-    <div class="kcard accent"><div class="klabel">Pendentes</div><div class="kvalue">${pend}</div></div>
+    ${kpi('📋','blue','Total Retornos',`${tot}`,``)}
+    ${kpi('✅','green','Pagos',`${pago}`,``)}
+    ${kpi('🤝','yellow','Prometeram Pagar',`${prom}`,``)}
+    ${kpi('⏳','yellow','Pendentes',`${pend}`,``)}
   `;
 }
 function clearRetornoFilters(){['cob','status','q'].forEach(k=>{const el=document.getElementById('fil-ret-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});document.getElementById('fil-ret-data').value='';renderRetorno();}
@@ -1246,36 +1279,49 @@ function renderRelatorioDiario(){
   const recusou=acs.filter(r=>(r.status||'').toUpperCase()==='RECUSOU').length;
   const vPago=acs.filter(r=>(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpromessa||r.valor||0),0);
   document.getElementById('rel-diario-cards').innerHTML=`
-    <div class="kcard"><div class="klabel">Acionados</div><div class="kvalue">${total}</div></div>
-    <div class="kcard green"><div class="klabel">Pagos</div><div class="kvalue">${pagos}<span style="font-size:12px;margin-left:6px">${fmtR(vPago)}</span></div></div>
-    <div class="kcard"><div class="klabel">Prometeram Pagar</div><div class="kvalue">${prom}</div></div>
-    <div class="kcard accent"><div class="klabel">Sem Contato</div><div class="kvalue">${semContato}</div></div>
-    <div class="kcard accent"><div class="klabel">Recusou</div><div class="kvalue">${recusou}</div></div>
+    ${kpi('📞','blue','Acionados',`${total}`,``)}
+    ${kpi('✅','green','Pagos',`${pagos}`,`${fmtR(vPago)}`)}
+    ${kpi('🤝','yellow','Prometeram Pagar',`${prom}`,``)}
+    ${kpi('📵','gray','Sem Contato',`${semContato}`,``)}
+    ${kpi('🚫','red','Recusou',`${recusou}`,``)}
   `;
 }
 
 // ===== DASHBOARD =====
 function renderDashboard(){
   populateFilters();
-  let totalAberto=0,totalPago=0,totalGeral=0;
-  let html='';
+  let totalAberto=0,totalPago=0;const ab={};
   ['boleto','cheque','caderneta'].forEach(t=>{
     const d=DB[t]||[];
-    const tot=d.reduce((s,r)=>s+parseFloat(r.valor||0),0);
-    const pg=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-    const ab=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
-    totalGeral+=tot;totalAberto+=ab;totalPago+=pg;
-    const lbl={boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta'}[t];
-    html+=`<div class="kcard"><div class="klabel">${lbl}</div><div class="kvalue" style="font-size:16px">${fmtR(tot)}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">Aberto: ${fmtR(ab)} | Pago: ${fmtR(pg)}</div></div>`;
+    totalPago+=d.filter(r=>boletoPago(r)||(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
+    ab[t]=d.filter(r=>!((r.sit||'').toUpperCase()==='PAGO')).reduce((s,r)=>s+parseFloat(r.valor||0),0);
+    totalAberto+=ab[t];
   });
-  const cb=DB.chargeback||[];
-  const cbAb=cb.filter(r=>r.status!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
-  html+=`<div class="kcard accent"><div class="klabel">Chargeback</div><div class="kvalue" style="font-size:16px">${fmtR(cbAb)}</div><div style="font-size:11px;color:#ffffff80;margin-top:4px">${cb.filter(r=>r.status!=='PAGO').length} em aberto</div></div>`;
-  html+=`<div class="kcard accent"><div class="klabel">Total Aberto</div><div class="kvalue" style="font-size:16px">${fmtR(totalAberto)}</div></div>`;
-  html+=`<div class="kcard green"><div class="klabel">Total Recebido</div><div class="kvalue" style="font-size:16px">${fmtR(totalPago)}</div></div>`;
-  document.getElementById('dash-totais').innerHTML=html;
-
+  const cbAb=(DB.chargeback||[]).filter(r=>r.status!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
   const hoje=hojeISO();
+  const nHoje=DB.cobrancas.filter(r=>r.data===hoje).length;
+  const tile=(i,t,l,val)=>`<div class="tile"><div class="kico t-${t}">${i}</div><div><div class="tl">${l}</div><div class="tv">${val}</div></div></div>`;
+  document.getElementById('dash-totais').innerHTML=`
+    <div class="panel-card hero" style="margin:0">
+      <div><div class="hi">Olá ${esc(currentUser?currentUser.nome:'')} 👋</div><div class="hint">Resumo da carteira de cobrança</div></div>
+      <div><div class="biglbl">Total em aberto</div><div class="big">${fmtR(totalAberto)}</div></div>
+    </div>
+    <div class="panel-card" style="margin:0">
+      <h3>Resumo</h3>
+      <div class="tiles">
+        ${tile('📄','green','Boleto em aberto',fmtR(ab.boleto))}
+        ${tile('📋','blue','Cheque em aberto',fmtR(ab.cheque))}
+        ${tile('📒','purple','Caderneta em aberto',fmtR(ab.caderneta))}
+        ${tile('↩️','red','Chargeback em aberto',fmtR(cbAb))}
+        ${tile('✅','cyan','Total recebido',fmtR(totalPago))}
+        ${tile('📞','orange','Acionamentos hoje',nHoje)}
+      </div>
+    </div>`;
+  // anos disponíveis no filtro do aging
+  const sel=document.getElementById('aging-ano');
+  if(sel){const cur=sel.value;const anos=new Set();['boleto','cheque','caderneta'].forEach(t=>DB[t].forEach(r=>{if(r.ano)anos.add(String(r.ano));}));
+    sel.innerHTML='<option value="">Todos</option>'+[...anos].sort().map(a=>`<option${a===cur?' selected':''}>${a}</option>`).join('');}
+  renderAging();
   const acionHoje=DB.cobrancas.filter(r=>r.data===hoje).sort((a,b)=>(a.cobradora||'').localeCompare(b.cobradora||''));
   const aTbl=document.getElementById('dash-acionamentos');
   if(!acionHoje.length){aTbl.innerHTML='<div class="tbl-empty">Nenhum acionamento registrado hoje.</div>';return;}
@@ -1493,14 +1539,15 @@ function render360(){
   const cnt=c=>all.filter(r=>r.classe===c).length;
   const limTot=all.reduce((s,r)=>s+r.limite,0),abTot=all.reduce((s,r)=>s+r.aberto,0);
   document.getElementById('cards-o360').innerHTML=`
-    <div class="kcard"><div class="klabel">Clientes de boleto</div><div class="kvalue">${all.length}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">${cnt('SEM HISTÓRICO')} sem boleto lançado</div></div>
-    <div class="kcard"><div class="klabel">Limite total</div><div class="kvalue" style="font-size:16px">${fmtR(limTot)}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">Em aberto: ${fmtR(abTot)}</div></div>
-    <div class="kcard green"><div class="klabel">Pagam em dia</div><div class="kvalue">${cnt('PAGA EM DIA')}</div></div>
-    <div class="kcard"><div class="klabel">Atrasam até 2 dias</div><div class="kvalue">${cnt('ATRASA ATÉ 2 DIAS')}</div></div>
-    <div class="kcard"><div class="klabel">Atrasam 3 dias ou mais</div><div class="kvalue">${cnt('ATRASA 3 A 15 DIAS')+cnt('ATRASA +15 DIAS')}</div></div>
-    <div class="kcard accent"><div class="klabel">Inadimplentes</div><div class="kvalue">${cnt('INADIMPLENTE')}</div></div>
-    <div class="kcard accent"><div class="klabel">⚖ Enviar ao jurídico</div><div class="kvalue">${all.filter(r=>r.juridico).length}</div><div style="font-size:11px;color:#ffffff80;margin-top:4px">${fmtR(all.reduce((s,r)=>s+r.jurV,0))}</div></div>
-    <div class="kcard accent"><div class="klabel">Risco alto / crítico</div><div class="kvalue">${all.filter(r=>r.risco==='ALTO'||r.risco==='CRÍTICO').length}</div></div>`;
+    ${kpi('👥','blue','Clientes de boleto',`${all.length}`,`${cnt('SEM HISTÓRICO')} sem boleto lançado`)}
+    ${kpi('💳','purple','Limite total',`${fmtR(limTot)}`,``)}
+    ${kpi('✅','green','Pagam em dia',`${cnt('PAGA EM DIA')}`,``)}
+    ${kpi('🕑','cyan','Atrasam até 2 dias',`${cnt('ATRASA ATÉ 2 DIAS')}`,``)}
+    ${kpi('⏳','yellow','Atrasam 3 dias ou mais',`${cnt('ATRASA 3 A 15 DIAS')+cnt('ATRASA +15 DIAS')}`,``)}
+    ${kpi('⚠️','red','Inadimplentes',`${cnt('INADIMPLENTE')}`,``)}
+    ${kpi('⚖️','red','Enviar ao jurídico',`${all.filter(r=>r.juridico).length}`,fmtR(all.reduce((s,r)=>s+r.jurV,0)))}
+    ${kpi('🔥','orange','Risco alto / crítico',`${all.filter(r=>r.risco==='ALTO'||r.risco==='CRÍTICO').length}`,``)}
+  `;
   const tbl=document.getElementById('tbl-o360');
   tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th>ID</th><th>Limite</th><th>Em aberto</th><th>Disponível</th><th>Uso</th><th>Boletos</th><th>Média atraso (pagos)</th><th>% em dia</th><th>Vencido</th><th>Classificação</th><th>Risco</th><th>Jurídico</th><th></th></tr>';
   tbl.querySelector('tbody').innerHTML=data.length===0
@@ -1569,6 +1616,26 @@ async function limparO360(){
   render360();
 }
 
+// ===== AGING DA CARTEIRA (boleto + cheque + caderneta em aberto, por dias de atraso) =====
+function renderAging(){
+  const el=document.getElementById('dash-aging');if(!el)return;
+  const ano=(document.getElementById('aging-ano')||{}).value||'';
+  const fx=[{l:'A vencer',a:-1e9,b:0,c:'#27ae60'},{l:'1 a 30 dias',a:1,b:30,c:'#a3d977'},{l:'31 a 60 dias',a:31,b:60,c:'#f4d03f'},{l:'61 a 90 dias',a:61,b:90,c:'#f5a623'},{l:'91 a 180 dias',a:91,b:180,c:'#ef6c3c'},{l:'Mais de 180 dias',a:181,b:1e9,c:'#dc2626'}];
+  fx.forEach(f=>{f.v=0;f.n=0;});
+  const hoje=hojeISO();
+  ['boleto','cheque','caderneta'].forEach(t=>DB[t].forEach(r=>{
+    if(!isAberto(t,r)||(t==='boleto'&&boletoPago(r)))return;
+    if(ano&&String(r.ano||'')!==ano)return;
+    const venc=vencTitulo(t,r);if(!venc)return;
+    const d=diffDias(hoje,venc),val=valorAbertoTitulo(t,r);
+    const f=fx.find(x=>d>=x.a&&d<=x.b);if(f){f.v+=val;f.n++;}
+  }));
+  const tot=fx.reduce((s,f)=>s+f.v,0),mx=Math.max(...fx.map(f=>f.v),1);
+  el.innerHTML=tot===0?'<div class="tbl-empty">Nenhum título em aberto neste período.</div>':fx.map(f=>`
+    <div class="ag-row"><div>${f.l}</div><div class="ag-bar"><i style="width:${f.v/mx*100}%;background:${f.c}"></i></div><div class="ag-val">${fmtR(f.v)}</div><div class="ag-pct">${(f.v/tot*100).toFixed(0)}%</div></div>`).join('')+
+    `<div class="ag-row" style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:0"><div><b>Total</b></div><div></div><div class="ag-val">${fmtR(tot)}</div><div></div></div>`;
+}
+
 // ===== IMPORT =====
 function importExcel(type,input){
   const file=input.files[0];if(!file)return;
@@ -1600,6 +1667,7 @@ function importExcel(type,input){
           r.venc=parseDate(rl['vencimento']||'')||null;
           r.emitente=rl['emitente']||'';
           r.motivo=rl['motivo']||'';
+          r.dtpag=parseDate(rl['data pagamento']||rl['dt pagamento']||'')||null;
           r.atrib=rl['atribuição']||rl['atribuicao']||'';
           // calcular limite = venc + 30 dias
           if(r.venc){
