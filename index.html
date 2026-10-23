@@ -201,6 +201,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
 }
 .badge-risco{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 </style>
+<script src="dados-o360.js"></script>
 </head>
 <body>
 
@@ -531,10 +532,10 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
         <div class="import-box">
           <span>Lista O360:</span>
           <input type="file" id="imp-o360" accept=".xlsx,.xls,.csv" onchange="importO360(this)" style="display:none">
-          <button class="btn btn-primary" onclick="document.getElementById('imp-o360').click()">📂 Importar lista O360</button>
+          <button class="btn btn-primary" onclick="document.getElementById('imp-o360').click()">📂 Atualizar lista</button>
           <button class="btn btn-outline" onclick="exportO360()">⬇ Exportar análise</button>
           <button class="btn btn-danger btn-sm" onclick="limparO360()">Limpar lista</button>
-          <span style="font-weight:400">Colunas esperadas: ID, Cliente, Limite</span>
+          <span style="font-weight:400">A base de clientes de boleto já vem carregada. Importar (ID, Nome, Limite, Ramo, Restrição) atualiza ou acrescenta clientes.</span>
         </div>
         <div class="card-row" id="cards-o360"></div>
         <div class="toolbar">
@@ -546,19 +547,16 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <select id="fil-o360-risco" onchange="render360()">
             <option value="">Todos</option><option>BAIXO</option><option>MÉDIO</option><option>ALTO</option><option>CRÍTICO</option>
           </select>
-          <label>Origem</label>
-          <select id="fil-o360-origem" onchange="render360()">
-            <option value="">Todos</option><option value="lista">Na lista O360</option><option value="fora">Compra boleto, fora da lista</option>
-          </select>
           <input type="text" id="fil-o360-q" oninput="render360()" placeholder="🔍 Buscar cliente, ID...">
           <button class="btn btn-danger btn-sm" onclick="clear360Filters()">Limpar</button>
         </div>
         <details style="margin-bottom:12px;font-size:12px;color:var(--text2)">
           <summary style="cursor:pointer;font-weight:700">Como a classificação e o risco são calculados</summary>
-          <div style="padding:8px 4px;line-height:1.6">
-            <b>Classificação</b> (pela média de atraso dos boletos pagos + os vencidos em aberto): <b>Paga em dia</b> (média 0) · <b>Atrasa até 2 dias</b> · <b>Atrasa 3 a 15 dias</b> · <b>Atrasa +15 dias</b> · <b>Inadimplente</b> (tem boleto vencido em aberto há mais de 30 dias).<br>
-            <b>Score de risco (0–100)</b>: média de atraso (até 35) + maior boleto vencido em aberto (até 30) + % dos boletos pagos com mais de 2 dias de atraso (até 15) + uso do limite acima de 80% / 100% (5 / 10) + outras pendências do cliente: cheque, chargeback ou acordo parado (até 15).
-            <b>Baixo</b> &lt;20 · <b>Médio</b> 20–39 · <b>Alto</b> 40–59 · <b>Crítico</b> ≥60.
+          <div style="padding:8px 4px;line-height:1.7">
+            Só entram <b>boletos</b> dos clientes da lista (casados pelo ID, ou pelo nome). Boleto conta como pago se a situação for PAGO, tiver data de pagamento ou valor pago cobrindo o título.<br>
+            <b>Classificação</b>: <b>Paga em dia</b> (média de atraso 0) · <b>Atrasa até 2 dias</b> · <b>Atrasa 3 a 15 dias</b> · <b>Atrasa +15 dias</b> (pelo maior entre a média dos pagos e o atraso atual) · <b>Inadimplente</b> (boleto vencido em aberto há mais de 30 dias).<br>
+            <b>Score de risco (0–100)</b>: boleto vencido em aberto (3 a 40 pts conforme os dias) + média de atraso dos pagos (2 pts por dia, máx. 25) + % dos pagos com mais de 5 dias de atraso (até 15) + uso do limite acima de 80% (5) ou de 100% (15) + restrição (15).
+            <b>Baixo</b> &lt;25 · <b>Médio</b> 25–49 · <b>Alto</b> 50–74 · <b>Crítico</b> ≥75. Passe o mouse sobre o risco para ver os motivos.
           </div>
         </details>
         <div class="tbl-card"><div class="tbl-wrap"><table id="tbl-o360"><thead></thead><tbody></tbody></table></div></div>
@@ -798,7 +796,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
       <div class="form-group"><label>Multa (%)</label><input id="j-multa" type="number" step="0.01" min="0"></div>
       <div class="form-group"><label>Juros (% ao mês)</label><input id="j-juros" type="number" step="0.01" min="0"></div>
     </div>
-    <div style="font-size:11px;color:var(--text2)">Aplicados sobre títulos vencidos (boleto, cheque e caderneta): multa única + juros simples proporcionais aos dias de atraso. Fica salvo neste navegador.</div>
+    <div style="font-size:11px;color:var(--text2)">Aplicados sobre títulos vencidos (boleto, cheque e caderneta): multa (deixe 0 se não houver) + juros simples proporcionais aos dias de atraso. Fica salvo neste navegador.</div>
     <div class="modal-actions">
       <button class="btn btn-danger" onclick="closeModal('juros')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveJuros()">Salvar</button>
@@ -1287,7 +1285,7 @@ function normNome(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,''
 function diffDias(a,b){return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000);}
 function mesIdx(m){const s=String(m||'').trim().toUpperCase();const i=MESES.indexOf(s.slice(0,3));if(i>=0)return i;const n=parseInt(s);return n>=1&&n<=12?n-1:-1;}
 
-const JUROS_DEF={multa:2,juros:1};
+const JUROS_DEF={multa:0,juros:6};
 function getJurosCfg(){
   try{const c=JSON.parse(localStorage.getItem('leoJuros')||'null');if(c&&isFinite(c.multa)&&isFinite(c.juros))return c;}catch(e){}
   return {...JUROS_DEF};
@@ -1328,6 +1326,8 @@ function calcAtualizado(tipo,r){
 function rowsCliente(tipo,nome,id,usarId){
   const n=normNome(nome);
   let rows=n?(DB[tipo]||[]).filter(r=>normNome(r.cliente)===n):[];
+  // boleto: o ID do boleto é o ID do cliente, então ID igual já identifica o cliente
+  if(tipo==='boleto'&&usarId&&id){const ex=new Set(rows.map(r=>r._uid));(DB.boleto||[]).forEach(r=>{if(r.id&&String(r.id)===String(id)&&!ex.has(r._uid))rows.push(r);});return rows;}
   // alternativa: mesmo ID E nome compatível (evita juntar clientes diferentes que repetem o ID)
   if(!rows.length&&usarId&&id)rows=(DB[tipo]||[]).filter(r=>r.id&&String(r.id)===String(id)&&nomeCompat(r.cliente,nome));
   return rows;
@@ -1348,56 +1348,29 @@ function relatorioClienteHTML(nome,ref){
   tipos.forEach(t=>{
     rowsCliente(t,nome,ref.id,ref.tipo===t).forEach(r=>{
       if(r.cliente&&(!nomes[normNome(r.cliente)]||r.cliente.length>nomes[normNome(r.cliente)].length))nomes[normNome(r.cliente)]=r.cliente;
-      if(r.id)ids.add(String(r.id));
       if(!isAberto(t,r))return;
+      if(r.id)ids.add(String(r.id));
       const a=calcAtualizado(t,r);
       const doc=t==='cheque'?('Cheque '+(r.num||'')):t==='caderneta'?((r.mes||'')+'/'+(r.ano||'')):t==='boleto'?(r.atrib||''):('Ano '+(r.ano||''));
-      linhas.push({tipo:t.toUpperCase(),id:r.id,doc,sit:r.sit||r.status,...a});
+      linhas.push({tipo:t.toUpperCase(),id:r.id,doc,...a});
     });
   });
   linhas.sort((a,b)=>(a.venc||'9999').localeCompare(b.venc||'9999'));
-  const n=normNome(nome);
-  const reneg=rowsCliente('renegociacao',nome).filter(r=>['ATIVO','PAROU DE PAGAR'].includes((r.status||'').toUpperCase())&&(parseFloat(r.taberto)||0)>0);
-  const hist=DB.cobrancas.filter(c=>normNome(c.cliente)===n).sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))).slice(0,8);
-  const nomeCompleto=nomes[n]||nome;
+  const nomeCompleto=nomes[normNome(nome)]||nome;
   const S=k=>linhas.reduce((s,l)=>s+l[k],0);
-  const sumReneg=reneg.reduce((s,r)=>s+(parseFloat(r.taberto)||0),0);
-  const maxAtraso=linhas.reduce((m,l)=>Math.max(m,l.dias),0);
   const c=getJurosCfg();
-  const perfil=perfilBoletoHTML(nome,ref);
   const agora=new Date().toLocaleString('pt-BR');
   return `<div class="rp-page">
-    <div class="rp-head"><div><h1>Relatório de Cobrança — Leo Mato Grosso</h1><small>Posição atualizada em ${agora} · emitido por ${esc(currentUser?currentUser.nome:'—')}</small></div></div>
+    <div class="rp-head"><div><h1>Relatório de Cobrança — Leo Mato Grosso</h1><small>Posição atualizada em ${agora}</small></div></div>
     <div class="rp-cli"><div class="nome">${esc(nomeCompleto)}</div>
-      <div>ID(s): <b>${esc([...ids].join(', ')||ref.id||'—')}</b></div></div>
-    <div class="rp-sum">
-      <div>Títulos em aberto<b>${linhas.length}</b></div>
-      <div>Valor original<b>${fmtR(S('principal'))}</b></div>
-      <div>Multa + juros<b>${fmtR(S('multa')+S('juros'))}</b></div>
-      <div>Maior atraso<b>${maxAtraso} dias</b></div>
-      <div class="tot">TOTAL ATUALIZADO<b>${fmtR(S('total'))}</b></div>
-    </div>
-    <h3>Títulos em aberto</h3>
-    <table><thead><tr><th>Tipo</th><th>ID</th><th>Ref.</th><th>Vencimento</th><th class="n">Atraso</th><th class="n">Valor</th><th class="n">Multa</th><th class="n">Juros</th><th class="n">Total</th><th>Situação</th></tr></thead><tbody>
-    ${linhas.length?linhas.map(l=>`<tr><td>${l.tipo}</td><td>${esc(l.id||'—')}</td><td>${esc(l.doc)}</td><td>${l.venc?fmtDate(l.venc):'—'}</td><td class="n">${l.dias?l.dias+'d':'—'}</td><td class="n">${fmtR(l.principal)}</td><td class="n">${l.multa?fmtR(l.multa):'—'}</td><td class="n">${l.juros?fmtR(l.juros):'—'}</td><td class="n"><b>${fmtR(l.total)}</b></td><td>${esc(l.sit||'—')}</td></tr>`).join(''):'<tr><td colspan="10" style="text-align:center">Nenhum título em aberto para este cliente.</td></tr>'}
+      <div>ID: <b>${esc(ref.id||[...ids].join(', ')||'—')}</b></div></div>
+    <table><thead><tr><th>Tipo</th><th>ID</th><th>Ref.</th><th>Vencimento</th><th class="n">Atraso</th><th class="n">Valor original</th><th class="n">Juros${c.multa?' + multa':''}</th><th class="n">Valor atualizado</th></tr></thead><tbody>
+    ${linhas.length?linhas.map(l=>`<tr><td>${l.tipo}</td><td>${esc(l.id||'—')}</td><td>${esc(l.doc)}</td><td>${l.venc?fmtDate(l.venc):'—'}</td><td class="n">${l.dias?l.dias+'d':'—'}</td><td class="n">${fmtR(l.principal)}</td><td class="n">${l.multa+l.juros?fmtR(l.multa+l.juros):'—'}</td><td class="n"><b>${fmtR(l.total)}</b></td></tr>`).join(''):'<tr><td colspan="8" style="text-align:center">Nenhum título em aberto para este cliente.</td></tr>'}
+    <tr><td colspan="5" class="n"><b>TOTAL</b></td><td class="n"><b>${fmtR(S('principal'))}</b></td><td class="n"><b>${fmtR(S('multa')+S('juros'))}</b></td><td class="n" style="font-size:12px"><b>${fmtR(S('total'))}</b></td></tr>
     </tbody></table>
-    <div class="rp-note">Multa de ${c.multa}% + juros de ${c.juros}% ao mês (proporcional aos dias de atraso) sobre títulos vencidos. Chargeback sem acréscimo. Valores sujeitos a conferência no momento do pagamento.</div>
-    ${reneg.length?`<h3>Acordos de renegociação em aberto</h3><table><thead><tr><th>ID</th><th>Dt Acordo</th><th class="n">Total negociado</th><th class="n">Total pago</th><th class="n">Total aberto</th><th>Status</th></tr></thead><tbody>${reneg.map(r=>`<tr><td>${esc(r.id||'—')}</td><td>${fmtDate(r.data)}</td><td class="n">${fmtR(r.vneg)}</td><td class="n">${fmtR(r.tpago)}</td><td class="n"><b>${fmtR(r.taberto)}</b></td><td>${esc(r.status)}</td></tr>`).join('')}</tbody></table><div class="rp-note">Acordos não estão somados ao total atualizado acima (${fmtR(sumReneg)} em aberto).</div>`:''}
-    ${perfil}
-    ${hist.length?`<h3>Últimos acionamentos</h3><table><thead><tr><th>Data</th><th>Cobradora</th><th>Meio</th><th>Status</th><th>Retorno do cliente</th></tr></thead><tbody>${hist.map(h=>`<tr><td>${fmtDate(h.data)}</td><td>${esc(h.cobradora||'—')}</td><td>${esc(h.meio||'—')}</td><td>${esc(h.status||'—')}</td><td>${esc(h.retorno||'—')}</td></tr>`).join('')}</tbody></table>`:''}
+    <div class="rp-note">Juros de ${c.juros}% ao mês${c.multa?` + multa de ${c.multa}%`:''}, proporcionais aos dias de atraso. Valores sujeitos a conferência no momento do pagamento.</div>
     <div class="rp-sign"><div>Valor recebido / forma de pagamento</div><div>Recebido por (motoboy)</div><div>Data</div><div>Assinatura do cliente</div></div>
   </div>`;
-}
-function perfilBoletoHTML(nome,ref){
-  const rb=rowsCliente('boleto',nome,ref&&ref.id,ref&&ref.tipo==='boleto');
-  if(!rb.length)return '';
-  const n=normNome(nome);
-  const lim=DB.o360.find(c=>normNome(c.cliente)===n||(ref&&ref.id&&c.id&&String(c.id)===String(ref.id)));
-  const m=metricas360(nome,lim?lim.id:(ref&&ref.id),lim?lim.limite:null,rb);
-  return `<h3>Perfil de pagamento — boleto</h3><table><tbody><tr>
-    <td>Classificação: <b>${m.classe}</b></td><td>Risco: <b>${m.risco}</b> (${m.score}/100)</td>
-    <td>Média de atraso: <b>${m.media.toFixed(1)} dias</b></td><td>Limite: <b>${m.limite!=null?fmtR(m.limite):'—'}</b></td>
-    <td>Em aberto: <b>${fmtR(m.aberto)}</b></td></tr></tbody></table>`;
 }
 function printClientes(items){
   const seen=new Set(),pages=[];
@@ -1425,121 +1398,120 @@ setInterval(async()=>{
 },30000);
 
 // ===== ANÁLISE 360 — CLIENTES DE BOLETO =====
-function metricas360(nome,id,limite,rb){
-  let comprado=0,aberto=0,vencido=0,somaAt=0,nAt=0,nPagosData=0,nPagosAtraso=0,maxAt=0,maxAbertoVenc=0;
+// Base fixa (dados-o360.js) + lista importada pela tela (a importada sobrescreve a base pelo mesmo ID)
+function listaO360(){
+  const m=new Map();
+  (typeof O360_BASE!=='undefined'?O360_BASE:[]).forEach(c=>m.set(String(c.id),{...c,_base:true}));
+  DB.o360.forEach(c=>{const k=String(c.id||c._uid);m.set(k,{...(m.get(k)||{}),...c});});
+  return [...m.values()];
+}
+// pago = situação PAGO, ou com data de pagamento, ou valor pago cobrindo o título
+function boletoPago(r){
+  if((r.sit||'').toUpperCase()==='PAGO'||r.dtpag)return true;
+  const vp=parseFloat(r.vpago)||0,val=parseFloat(r.valor)||0;
+  return vp>0&&vp>=val-0.01;
+}
+function metricas360(c,rb){
+  let comprado=0,aberto=0,vencido=0,somaAt=0,nPagosData=0,nPagosAtraso=0,maxAt=0,maxAbertoVenc=0,nPagos=0;
+  const hojeS=hojeISO();
   rb.forEach(r=>{
     const val=parseFloat(r.valor)||0;comprado+=val;
-    if((r.sit||'').toUpperCase()==='PAGO'){
+    if(boletoPago(r)){
+      nPagos++;
       if(r.venc&&r.dtpag){
-        const d=Math.max(0,diffDias(r.dtpag,r.venc));
-        nPagosData++;somaAt+=d;nAt++;maxAt=Math.max(maxAt,d);
-        if(d>2)nPagosAtraso++;
+        const d=Math.max(0,diffDias(String(r.dtpag).slice(0,10),r.venc));
+        nPagosData++;somaAt+=d;maxAt=Math.max(maxAt,d);
+        if(d>5)nPagosAtraso++;
       }
     }else{
       aberto+=val;
       const d=r.venc?calcAtraso(r.venc):(parseInt(r.atraso)||0);
-      if(d>0){vencido+=val;somaAt+=d;nAt++;maxAt=Math.max(maxAt,d);maxAbertoVenc=Math.max(maxAbertoVenc,d);}
+      if(d>0){vencido+=val;maxAbertoVenc=Math.max(maxAbertoVenc,d);}
     }
   });
-  const media=nAt?somaAt/nAt:0;
-  const lim=(limite===null||limite===undefined||limite==='')?null:(parseFloat(limite)||0);
-  const uso=lim>0?aberto/lim*100:null;
-  const pctEmDia=nPagosData?(nPagosData-rb.filter(r=>(r.sit||'').toUpperCase()==='PAGO'&&r.venc&&r.dtpag&&diffDias(r.dtpag,r.venc)>0).length)/nPagosData*100:null;
-  // outras pendências do mesmo cliente
-  const nm=normNome(nome);
-  const ch=rowsCliente('cheque',nome).some(r=>isAberto('cheque',r));
-  const cb=rowsCliente('chargeback',nome).some(r=>isAberto('chargeback',r)&&valorAbertoTitulo('chargeback',r)>0);
-  const rn=rowsCliente('renegociacao',nome).some(r=>(r.status||'').toUpperCase()==='PAROU DE PAGAR');
-  // classificação
+  const media=nPagosData?somaAt/nPagosData:0;   // média de atraso dos boletos PAGOS
+  const lim=parseFloat(c.limite)||0;
+  const uso=lim>0?aberto/lim*100:(aberto>0?999:null);
+  const pctEmDia=nPagosData?(nPagosData-rb.filter(r=>boletoPago(r)&&r.venc&&r.dtpag&&diffDias(String(r.dtpag).slice(0,10),r.venc)>0).length)/nPagosData*100:null;
+  const restricao=(c.restricao||'')==='SIM';
+  // classificação: pior entre o hábito de pagamento e o atraso atual em aberto
+  const ref=Math.max(Math.round(media),maxAbertoVenc);
   let classe;
   if(!rb.length)classe='SEM HISTÓRICO';
   else if(maxAbertoVenc>30)classe='INADIMPLENTE';
-  else if(media>15)classe='ATRASA +15 DIAS';
-  else if(Math.round(media)>2)classe='ATRASA 3 A 15 DIAS';
-  else if(Math.round(media)>0)classe='ATRASA ATÉ 2 DIAS';
+  else if(ref>15)classe='ATRASA +15 DIAS';
+  else if(ref>2)classe='ATRASA 3 A 15 DIAS';
+  else if(ref>0)classe='ATRASA ATÉ 2 DIAS';
   else classe='PAGA EM DIA';
-  // score de risco
-  let score=0;
+  // score de risco (cada fator é listado em "motivos")
+  const motivos=[];let score=0;
+  const add=(pts,txt)=>{if(pts>0){score+=pts;motivos.push(`${txt} (+${Math.round(pts)})`);}};
   if(rb.length){
-    score+=Math.min(35,media*1.5);
-    score+=maxAbertoVenc>90?30:maxAbertoVenc>30?22:maxAbertoVenc>15?12:maxAbertoVenc>0?5:0;
-    score+=(nPagosData?nPagosAtraso/nPagosData:0)*15;
-    score+=uso>100?10:uso>80?5:0;
-    score+=Math.min(15,(ch?8:0)+(cb?8:0)+(rn?8:0));
+    add(maxAbertoVenc>60?40:maxAbertoVenc>30?30:maxAbertoVenc>15?18:maxAbertoVenc>5?8:maxAbertoVenc>0?3:0,`boleto vencido em aberto há ${maxAbertoVenc}d`);
+    add(Math.min(25,media*2),`média de atraso ${media.toFixed(1)}d nos pagos`);
+    add(nPagosData?nPagosAtraso/nPagosData*15:0,`${nPagosAtraso} de ${nPagosData} pagos com +5d de atraso`);
   }
+  add(uso>100?15:uso>80?5:0,`uso do limite ${uso>=999?'sem limite':Math.round(uso)+'%'}`);
+  add(restricao?15:0,'cliente com restrição');
   score=Math.min(100,Math.round(score));
-  const risco=!rb.length?'SEM DADOS':score>=60?'CRÍTICO':score>=40?'ALTO':score>=20?'MÉDIO':'BAIXO';
-  return {nome,id,limite:lim,comprado,aberto,vencido,media,maxAt,maxAbertoVenc,uso,pctEmDia,nTitulos:rb.length,ticket:rb.length?comprado/rb.length:0,disponivel:lim!=null?lim-aberto:null,classe,score,risco,outras:{cheque:ch,chargeback:cb,reneg:rn}};
+  const risco=score>=75?'CRÍTICO':score>=50?'ALTO':score>=25?'MÉDIO':'BAIXO';
+  return {id:c.id,nome:c.cliente,ramo:c.ramo||'',restricao:c.restricao||'',limite:lim,comprado,aberto,vencido,media,maxAt,maxAbertoVenc,uso,pctEmDia,nTitulos:rb.length,nPagos,disponivel:lim-aberto,classe,score,risco,motivos};
 }
 function build360(){
-  const usados=new Set(),rows=[];
-  DB.o360.forEach(c=>{
-    const rb=rowsCliente('boleto',c.cliente,c.id,true);
-    rb.forEach(r=>usados.add(r._uid));
-    rows.push({...metricas360(c.cliente,c.id,c.limite,rb),foraLista:false});
-  });
-  const grupos={};
-  DB.boleto.forEach(r=>{if(usados.has(r._uid))return;const k=normNome(r.cliente);if(!k)return;(grupos[k]=grupos[k]||[]).push(r);});
-  Object.values(grupos).forEach(rb=>{
-    const nome=rb.map(r=>r.cliente).sort((a,b)=>b.length-a.length)[0];
-    rows.push({...metricas360(nome,rb[0].id,null,rb),foraLista:true});
-  });
-  return rows;
+  return listaO360().map(c=>metricas360(c,rowsCliente('boleto',c.cliente,c.id,true)));
 }
-const RISCO_BADGE={'BAIXO':'bg-ok','MÉDIO':'bg-warn','ALTO':'bg-orange','CRÍTICO':'bg-red','SEM DADOS':'bg-gray'};
+const RISCO_BADGE={'BAIXO':'bg-ok','MÉDIO':'bg-warn','ALTO':'bg-orange','CRÍTICO':'bg-red'};
 const CLASSE_BADGE={'PAGA EM DIA':'bg-ok','ATRASA ATÉ 2 DIAS':'bg-blue','ATRASA 3 A 15 DIAS':'bg-warn','ATRASA +15 DIAS':'bg-orange','INADIMPLENTE':'bg-red','SEM HISTÓRICO':'bg-gray'};
 let cache360=[];
 function filtrar360(){
   let d=build360();
-  const classe=v('fil-o360-classe'),risco=v('fil-o360-risco'),origem=v('fil-o360-origem'),q=normNome(v('fil-o360-q'));
+  const classe=v('fil-o360-classe'),risco=v('fil-o360-risco'),q=normNome(v('fil-o360-q'));
   if(classe)d=d.filter(r=>r.classe===classe);
   if(risco)d=d.filter(r=>r.risco===risco);
-  if(origem)d=d.filter(r=>origem==='fora'?r.foraLista:!r.foraLista);
   if(q)d=d.filter(r=>normNome(r.nome).includes(q)||String(r.id||'').toLowerCase().includes(q));
   return d.sort((a,b)=>b.score-a.score||b.aberto-a.aberto);
 }
 function render360(){
   const data=filtrar360();cache360=data;
   const all=build360();
-  const naLista=all.filter(r=>!r.foraLista);
   const cnt=c=>all.filter(r=>r.classe===c).length;
-  const limTot=naLista.reduce((s,r)=>s+(r.limite||0),0),abTot=naLista.reduce((s,r)=>s+r.aberto,0);
+  const limTot=all.reduce((s,r)=>s+r.limite,0),abTot=all.reduce((s,r)=>s+r.aberto,0);
   document.getElementById('cards-o360').innerHTML=`
-    <div class="kcard"><div class="klabel">Clientes na lista O360</div><div class="kvalue">${naLista.length}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">+ ${all.length-naLista.length} compram boleto fora da lista</div></div>
-    <div class="kcard"><div class="klabel">Limite total (lista)</div><div class="kvalue" style="font-size:16px">${fmtR(limTot)}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">Usado: ${fmtR(abTot)}</div></div>
+    <div class="kcard"><div class="klabel">Clientes de boleto</div><div class="kvalue">${all.length}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">${cnt('SEM HISTÓRICO')} sem boleto lançado</div></div>
+    <div class="kcard"><div class="klabel">Limite total</div><div class="kvalue" style="font-size:16px">${fmtR(limTot)}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">Em aberto: ${fmtR(abTot)}</div></div>
     <div class="kcard green"><div class="klabel">Pagam em dia</div><div class="kvalue">${cnt('PAGA EM DIA')}</div></div>
     <div class="kcard"><div class="klabel">Atrasam até 2 dias</div><div class="kvalue">${cnt('ATRASA ATÉ 2 DIAS')}</div></div>
     <div class="kcard"><div class="klabel">Atrasam 3 dias ou mais</div><div class="kvalue">${cnt('ATRASA 3 A 15 DIAS')+cnt('ATRASA +15 DIAS')}</div></div>
     <div class="kcard accent"><div class="klabel">Inadimplentes</div><div class="kvalue">${cnt('INADIMPLENTE')}</div></div>
     <div class="kcard accent"><div class="klabel">Risco alto / crítico</div><div class="kvalue">${all.filter(r=>r.risco==='ALTO'||r.risco==='CRÍTICO').length}</div></div>`;
   const tbl=document.getElementById('tbl-o360');
-  tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th>ID</th><th>Limite</th><th>Em aberto</th><th>Disponível</th><th>Uso</th><th>Títulos</th><th>Comprado</th><th>Média atraso</th><th>Maior atraso</th><th>% em dia</th><th>Vencido</th><th>Classificação</th><th>Risco</th><th></th></tr>';
+  tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th>ID</th><th>Ramo</th><th>Restrição</th><th>Limite</th><th>Em aberto</th><th>Disponível</th><th>Uso</th><th>Boletos</th><th>Média atraso (pagos)</th><th>% em dia</th><th>Vencido</th><th>Classificação</th><th>Risco</th><th></th></tr>';
   tbl.querySelector('tbody').innerHTML=data.length===0
-    ?'<tr><td colspan="15" class="tbl-empty">Nenhum cliente. Importe a lista O360 ou ajuste os filtros.</td></tr>'
+    ?'<tr><td colspan="15" class="tbl-empty">Nenhum cliente com esses filtros.</td></tr>'
     :data.map((r,i)=>`<tr>
-      <td><b>${esc(r.nome)}</b>${r.foraLista?' <span class="badge bg-gray" title="Compra boleto mas não está na lista O360">fora da lista</span>':''}</td>
+      <td><b>${esc(r.nome)}</b></td>
       <td>${esc(r.id||'—')}</td>
-      <td>${r.limite!=null?fmtR(r.limite):'—'}</td>
+      <td>${esc(r.ramo||'—')}</td>
+      <td>${r.restricao==='SIM'?'<span class="badge bg-red">SIM</span>':(r.restricao||'—')}</td>
+      <td>${fmtR(r.limite)}</td>
       <td>${fmtR(r.aberto)}</td>
-      <td class="${r.disponivel!=null&&r.disponivel<0?'atraso-grave':''}">${r.disponivel!=null?fmtR(r.disponivel):'—'}</td>
-      <td>${r.uso!=null?r.uso.toFixed(0)+'%':'—'}</td>
+      <td class="${r.disponivel<0?'atraso-grave':''}">${fmtR(r.disponivel)}</td>
+      <td>${r.uso!=null?(r.uso>=999?'s/ limite':r.uso.toFixed(0)+'%'):'—'}</td>
       <td>${r.nTitulos}</td>
-      <td>${fmtR(r.comprado)}</td>
-      <td class="${atrasoClass(Math.round(r.media))}">${r.nTitulos?r.media.toFixed(1)+'d':'—'}</td>
-      <td class="${atrasoClass(r.maxAt)}">${r.maxAt?r.maxAt+'d':'—'}</td>
+      <td class="${atrasoClass(Math.round(r.media))}">${r.nPagos?r.media.toFixed(1)+'d':'—'}</td>
       <td>${r.pctEmDia!=null?r.pctEmDia.toFixed(0)+'%':'—'}</td>
       <td>${r.vencido?fmtR(r.vencido):'—'}</td>
       <td><span class="badge ${CLASSE_BADGE[r.classe]||'bg-gray'}">${r.classe}</span></td>
-      <td><span class="badge ${RISCO_BADGE[r.risco]||'bg-gray'}">${r.risco} · ${r.score}</span></td>
-      <td><button class="btn btn-outline btn-sm" title="Imprimir relatório 360 do cliente" onclick="print360(${i})">🖨</button></td>
+      <td><span class="badge ${RISCO_BADGE[r.risco]||'bg-gray'}" title="${esc(r.motivos.join(' · ')||'Sem pontos de risco')}">${r.risco} · ${r.score}</span></td>
+      <td><button class="btn btn-outline btn-sm" title="Imprimir relatório do cliente" onclick="print360(${i})">🖨</button></td>
     </tr>`).join('');
 }
 function print360(i){const r=cache360[i];if(!r)return;printClientes([{nome:r.nome,ref:{tipo:'boleto',id:r.id}}]);}
-function clear360Filters(){['classe','risco','origem','q'].forEach(k=>{const el=document.getElementById('fil-o360-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});render360();}
+function clear360Filters(){['classe','risco','q'].forEach(k=>{const el=document.getElementById('fil-o360-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});render360();}
 function exportO360(){
   const data=filtrar360();
   if(!data.length){alert('Nenhum dado.');return;}
-  exportToXLSX(data.map(r=>({Cliente:r.nome,ID:r.id||'',Origem:r.foraLista?'Fora da lista':'Lista O360',Limite:r.limite??'','Em aberto':r.aberto,Disponível:r.disponivel??'','Uso do limite %':r.uso!=null?Math.round(r.uso):'',Títulos:r.nTitulos,Comprado:r.comprado,'Média de atraso (dias)':+r.media.toFixed(1),'Maior atraso (dias)':r.maxAt,'% pagos em dia':r.pctEmDia!=null?Math.round(r.pctEmDia):'',Vencido:r.vencido,Classificação:r.classe,Risco:r.risco,Score:r.score})),'Analise360_Boleto');
+  exportToXLSX(data.map(r=>({ID:r.id||'',Cliente:r.nome,Ramo:r.ramo,Restrição:r.restricao,Limite:r.limite,'Em aberto':r.aberto,Disponível:r.disponivel,'Boletos':r.nTitulos,'Média de atraso dos pagos (dias)':+r.media.toFixed(1),'% pagos em dia':r.pctEmDia!=null?Math.round(r.pctEmDia):'',Vencido:r.vencido,'Maior atraso em aberto (dias)':r.maxAbertoVenc,Classificação:r.classe,Risco:r.risco,Score:r.score,Motivos:r.motivos.join(' | ')})),'Analise360_Boleto');
 }
 function persistO360(){try{localStorage.setItem('leoO360',JSON.stringify(DB.o360));}catch(e){}}
 function importO360(input){
@@ -1558,9 +1530,10 @@ function importO360(input){
         const limite=parseNum(rl['limite']||rl['limite de crédito']||rl['limite de credito']||rl['limite crédito']||rl['limite credito']||0);
         if(!cliente&&!id){skipped++;continue;}
         const idx=DB.o360.findIndex(c=>(id&&c.id&&c.id===id)||(cliente&&normNome(c.cliente)===normNome(cliente)));
+        const ex={ramo:String(rl['ramo']||'').trim(),restricao:String(rl['restrição']||rl['restricao']||'').trim().toUpperCase()};
         let obj;
-        if(idx>=0){obj={...DB.o360[idx],id:id||DB.o360[idx].id,cliente:cliente||DB.o360[idx].cliente,limite};DB.o360[idx]=obj;updated++;}
-        else{obj={_uid:uid(),id,cliente,limite};DB.o360.push(obj);added++;}
+        if(idx>=0){obj={...DB.o360[idx],id:id||DB.o360[idx].id,cliente:cliente||DB.o360[idx].cliente,limite,...ex};DB.o360[idx]=obj;updated++;}
+        else{obj={_uid:uid(),id,cliente,limite,...ex};DB.o360.push(obj);added++;}
         toSave.push(obj);
       }
       persistO360();
@@ -1572,8 +1545,8 @@ function importO360(input){
   reader.readAsBinaryString(file);input.value='';
 }
 async function limparO360(){
-  if(!DB.o360.length){alert('A lista já está vazia.');return;}
-  if(!confirm(`Remover os ${DB.o360.length} clientes da lista O360? (os boletos não são afetados)`))return;
+  if(!DB.o360.length){alert('Não há lista importada para limpar (a base fixa permanece).');return;}
+  if(!confirm(`Remover as ${DB.o360.length} alterações importadas? (a base fixa de clientes e os boletos não são afetados)`))return;
   const ids=DB.o360.map(c=>c._uid);
   DB.o360=[];persistO360();
   for(let i=0;i<ids.length;i+=10)await Promise.all(ids.slice(i,i+10).map(u=>sbDel('o360',u)));
