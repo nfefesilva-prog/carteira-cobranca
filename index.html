@@ -535,7 +535,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <button class="btn btn-primary" onclick="document.getElementById('imp-o360').click()">📂 Atualizar lista</button>
           <button class="btn btn-outline" onclick="exportO360()">⬇ Exportar análise</button>
           <button class="btn btn-danger btn-sm" onclick="limparO360()">Limpar lista</button>
-          <span style="font-weight:400">A base de clientes de boleto já vem carregada. Importar (ID, Nome, Limite, Ramo, Restrição) atualiza ou acrescenta clientes.</span>
+          <span style="font-weight:400">A base de clientes de boleto já vem carregada. Importar (ID, Nome, Limite) atualiza ou acrescenta clientes.</span>
         </div>
         <div class="card-row" id="cards-o360"></div>
         <div class="toolbar">
@@ -547,15 +547,21 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <select id="fil-o360-risco" onchange="render360()">
             <option value="">Todos</option><option>BAIXO</option><option>MÉDIO</option><option>ALTO</option><option>CRÍTICO</option>
           </select>
+          <label>Jurídico</label>
+          <select id="fil-o360-jur" onchange="render360()"><option value="">Todos</option><option value="1">Enviar ao jurídico</option></select>
           <input type="text" id="fil-o360-q" oninput="render360()" placeholder="🔍 Buscar cliente, ID...">
           <button class="btn btn-danger btn-sm" onclick="clear360Filters()">Limpar</button>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 10px;margin:0 8px 12px 0;font-size:11px;color:var(--text2)" title="Boleto vencido há mais dias E acima deste valor deve ser enviado ao jurídico">
+          <b>⚖ Jurídico:</b> atraso &gt; <input id="jur-dias" type="number" min="0" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;font-size:11px"> dias e valor &gt; R$ <input id="jur-valor" type="number" min="0" step="0.01" style="width:70px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;font-size:11px">
+          <button class="btn btn-outline btn-sm" style="padding:2px 8px" onclick="saveJurCfg()">OK</button>
         </div>
         <details style="margin-bottom:12px;font-size:12px;color:var(--text2)">
           <summary style="cursor:pointer;font-weight:700">Como a classificação e o risco são calculados</summary>
           <div style="padding:8px 4px;line-height:1.7">
             Só entram <b>boletos</b> dos clientes da lista (casados pelo ID, ou pelo nome). Boleto conta como pago se a situação for PAGO, tiver data de pagamento ou valor pago cobrindo o título.<br>
             <b>Classificação</b>: <b>Paga em dia</b> (média de atraso 0) · <b>Atrasa até 2 dias</b> · <b>Atrasa 3 a 15 dias</b> · <b>Atrasa +15 dias</b> (pelo maior entre a média dos pagos e o atraso atual) · <b>Inadimplente</b> (boleto vencido em aberto há mais de 30 dias).<br>
-            <b>Score de risco (0–100)</b>: boleto vencido em aberto (3 a 40 pts conforme os dias) + média de atraso dos pagos (2 pts por dia, máx. 25) + % dos pagos com mais de 5 dias de atraso (até 15) + uso do limite acima de 80% (5) ou de 100% (15) + restrição (15).
+            <b>Score de risco (0–100)</b>: boleto vencido em aberto (3 a 40 pts conforme os dias) + média de atraso dos pagos (2 pts por dia, máx. 25) + % dos pagos com mais de 5 dias de atraso (até 15) + uso do limite acima de 80% (5) ou de 100% (15).
             <b>Baixo</b> &lt;25 · <b>Médio</b> 25–49 · <b>Alto</b> 50–74 · <b>Crítico</b> ≥75. Passe o mouse sobre o risco para ver os motivos.
           </div>
         </details>
@@ -1411,7 +1417,16 @@ function boletoPago(r){
   const vp=parseFloat(r.vpago)||0,val=parseFloat(r.valor)||0;
   return vp>0&&vp>=val-0.01;
 }
+const JUR_DEF={dias:180,valor:3000};
+function getJurCfg(){try{const c=JSON.parse(localStorage.getItem('leoJur')||'null');if(c&&c.dias>=0&&c.valor>=0)return c;}catch(e){}return {...JUR_DEF};}
+function saveJurCfg(){
+  const dias=parseInt(v('jur-dias')),valor=parseFloat(v('jur-valor'));
+  if(!(dias>=0)||!(valor>=0)){alert('Informe valores válidos.');return;}
+  try{localStorage.setItem('leoJur',JSON.stringify({dias,valor}));}catch(e){}
+  render360();
+}
 function metricas360(c,rb){
+  const jc=getJurCfg();let jurN=0,jurV=0;
   let comprado=0,aberto=0,vencido=0,somaAt=0,nPagosData=0,nPagosAtraso=0,maxAt=0,maxAbertoVenc=0,nPagos=0;
   const hojeS=hojeISO();
   rb.forEach(r=>{
@@ -1426,14 +1441,13 @@ function metricas360(c,rb){
     }else{
       aberto+=val;
       const d=r.venc?calcAtraso(r.venc):(parseInt(r.atraso)||0);
-      if(d>0){vencido+=val;maxAbertoVenc=Math.max(maxAbertoVenc,d);}
+      if(d>0){vencido+=val;maxAbertoVenc=Math.max(maxAbertoVenc,d);if(d>jc.dias&&val>jc.valor){jurN++;jurV+=val;}}
     }
   });
   const media=nPagosData?somaAt/nPagosData:0;   // média de atraso dos boletos PAGOS
   const lim=parseFloat(c.limite)||0;
   const uso=lim>0?aberto/lim*100:(aberto>0?999:null);
   const pctEmDia=nPagosData?(nPagosData-rb.filter(r=>boletoPago(r)&&r.venc&&r.dtpag&&diffDias(String(r.dtpag).slice(0,10),r.venc)>0).length)/nPagosData*100:null;
-  const restricao=(c.restricao||'')==='SIM';
   // classificação: pior entre o hábito de pagamento e o atraso atual em aberto
   const ref=Math.max(Math.round(media),maxAbertoVenc);
   let classe;
@@ -1452,10 +1466,9 @@ function metricas360(c,rb){
     add(nPagosData?nPagosAtraso/nPagosData*15:0,`${nPagosAtraso} de ${nPagosData} pagos com +5d de atraso`);
   }
   add(uso>100?15:uso>80?5:0,`uso do limite ${uso>=999?'sem limite':Math.round(uso)+'%'}`);
-  add(restricao?15:0,'cliente com restrição');
   score=Math.min(100,Math.round(score));
   const risco=score>=75?'CRÍTICO':score>=50?'ALTO':score>=25?'MÉDIO':'BAIXO';
-  return {id:c.id,nome:c.cliente,ramo:c.ramo||'',restricao:c.restricao||'',limite:lim,comprado,aberto,vencido,media,maxAt,maxAbertoVenc,uso,pctEmDia,nTitulos:rb.length,nPagos,disponivel:lim-aberto,classe,score,risco,motivos};
+  return {id:c.id,nome:c.cliente,jurN,jurV,limite:lim,comprado,aberto,vencido,media,maxAt,maxAbertoVenc,uso,pctEmDia,nTitulos:rb.length,nPagos,disponivel:lim-aberto,classe,score,risco,motivos,juridico:jurN>0};
 }
 function build360(){
   return listaO360().map(c=>metricas360(c,rowsCliente('boleto',c.cliente,c.id,true)));
@@ -1465,13 +1478,16 @@ const CLASSE_BADGE={'PAGA EM DIA':'bg-ok','ATRASA ATÉ 2 DIAS':'bg-blue','ATRASA
 let cache360=[];
 function filtrar360(){
   let d=build360();
-  const classe=v('fil-o360-classe'),risco=v('fil-o360-risco'),q=normNome(v('fil-o360-q'));
+  const classe=v('fil-o360-classe'),risco=v('fil-o360-risco'),jur=v('fil-o360-jur'),q=normNome(v('fil-o360-q'));
   if(classe)d=d.filter(r=>r.classe===classe);
   if(risco)d=d.filter(r=>r.risco===risco);
+  if(jur)d=d.filter(r=>r.juridico);
   if(q)d=d.filter(r=>normNome(r.nome).includes(q)||String(r.id||'').toLowerCase().includes(q));
   return d.sort((a,b)=>b.score-a.score||b.aberto-a.aberto);
 }
 function render360(){
+  if(document.activeElement&&document.activeElement.id!=='jur-dias'&&document.activeElement.id!=='jur-valor'){const jc=getJurCfg();sv('jur-dias',jc.dias);sv('jur-valor',jc.valor);}
+  else if(!v('jur-dias')){const jc=getJurCfg();sv('jur-dias',jc.dias);sv('jur-valor',jc.valor);}
   const data=filtrar360();cache360=data;
   const all=build360();
   const cnt=c=>all.filter(r=>r.classe===c).length;
@@ -1483,16 +1499,15 @@ function render360(){
     <div class="kcard"><div class="klabel">Atrasam até 2 dias</div><div class="kvalue">${cnt('ATRASA ATÉ 2 DIAS')}</div></div>
     <div class="kcard"><div class="klabel">Atrasam 3 dias ou mais</div><div class="kvalue">${cnt('ATRASA 3 A 15 DIAS')+cnt('ATRASA +15 DIAS')}</div></div>
     <div class="kcard accent"><div class="klabel">Inadimplentes</div><div class="kvalue">${cnt('INADIMPLENTE')}</div></div>
+    <div class="kcard accent"><div class="klabel">⚖ Enviar ao jurídico</div><div class="kvalue">${all.filter(r=>r.juridico).length}</div><div style="font-size:11px;color:#ffffff80;margin-top:4px">${fmtR(all.reduce((s,r)=>s+r.jurV,0))}</div></div>
     <div class="kcard accent"><div class="klabel">Risco alto / crítico</div><div class="kvalue">${all.filter(r=>r.risco==='ALTO'||r.risco==='CRÍTICO').length}</div></div>`;
   const tbl=document.getElementById('tbl-o360');
-  tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th>ID</th><th>Ramo</th><th>Restrição</th><th>Limite</th><th>Em aberto</th><th>Disponível</th><th>Uso</th><th>Boletos</th><th>Média atraso (pagos)</th><th>% em dia</th><th>Vencido</th><th>Classificação</th><th>Risco</th><th></th></tr>';
+  tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th>ID</th><th>Limite</th><th>Em aberto</th><th>Disponível</th><th>Uso</th><th>Boletos</th><th>Média atraso (pagos)</th><th>% em dia</th><th>Vencido</th><th>Classificação</th><th>Risco</th><th>Jurídico</th><th></th></tr>';
   tbl.querySelector('tbody').innerHTML=data.length===0
-    ?'<tr><td colspan="15" class="tbl-empty">Nenhum cliente com esses filtros.</td></tr>'
+    ?'<tr><td colspan="14" class="tbl-empty">Nenhum cliente com esses filtros.</td></tr>'
     :data.map((r,i)=>`<tr>
       <td><b>${esc(r.nome)}</b></td>
       <td>${esc(r.id||'—')}</td>
-      <td>${esc(r.ramo||'—')}</td>
-      <td>${r.restricao==='SIM'?'<span class="badge bg-red">SIM</span>':(r.restricao||'—')}</td>
       <td>${fmtR(r.limite)}</td>
       <td>${fmtR(r.aberto)}</td>
       <td class="${r.disponivel<0?'atraso-grave':''}">${fmtR(r.disponivel)}</td>
@@ -1503,15 +1518,16 @@ function render360(){
       <td>${r.vencido?fmtR(r.vencido):'—'}</td>
       <td><span class="badge ${CLASSE_BADGE[r.classe]||'bg-gray'}">${r.classe}</span></td>
       <td><span class="badge ${RISCO_BADGE[r.risco]||'bg-gray'}" title="${esc(r.motivos.join(' · ')||'Sem pontos de risco')}">${r.risco} · ${r.score}</span></td>
+      <td>${r.juridico?`<span class="badge bg-red" title="${r.jurN} título(s) somando ${fmtR(r.jurV)}">⚖ ENVIAR (${r.jurN})</span>`:'—'}</td>
       <td><button class="btn btn-outline btn-sm" title="Imprimir relatório do cliente" onclick="print360(${i})">🖨</button></td>
     </tr>`).join('');
 }
 function print360(i){const r=cache360[i];if(!r)return;printClientes([{nome:r.nome,ref:{tipo:'boleto',id:r.id}}]);}
-function clear360Filters(){['classe','risco','q'].forEach(k=>{const el=document.getElementById('fil-o360-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});render360();}
+function clear360Filters(){['classe','risco','jur','q'].forEach(k=>{const el=document.getElementById('fil-o360-'+k);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});render360();}
 function exportO360(){
   const data=filtrar360();
   if(!data.length){alert('Nenhum dado.');return;}
-  exportToXLSX(data.map(r=>({ID:r.id||'',Cliente:r.nome,Ramo:r.ramo,Restrição:r.restricao,Limite:r.limite,'Em aberto':r.aberto,Disponível:r.disponivel,'Boletos':r.nTitulos,'Média de atraso dos pagos (dias)':+r.media.toFixed(1),'% pagos em dia':r.pctEmDia!=null?Math.round(r.pctEmDia):'',Vencido:r.vencido,'Maior atraso em aberto (dias)':r.maxAbertoVenc,Classificação:r.classe,Risco:r.risco,Score:r.score,Motivos:r.motivos.join(' | ')})),'Analise360_Boleto');
+  exportToXLSX(data.map(r=>({ID:r.id||'',Cliente:r.nome,Limite:r.limite,'Em aberto':r.aberto,Disponível:r.disponivel,'Boletos':r.nTitulos,'Média de atraso dos pagos (dias)':+r.media.toFixed(1),'% pagos em dia':r.pctEmDia!=null?Math.round(r.pctEmDia):'',Vencido:r.vencido,'Maior atraso em aberto (dias)':r.maxAbertoVenc,Classificação:r.classe,Risco:r.risco,Score:r.score,'Enviar ao jurídico':r.juridico?'SIM':'','Títulos p/ jurídico':r.jurN,'Valor p/ jurídico':r.jurV,Motivos:r.motivos.join(' | ')})),'Analise360_Boleto');
 }
 function persistO360(){try{localStorage.setItem('leoO360',JSON.stringify(DB.o360));}catch(e){}}
 function importO360(input){
@@ -1530,7 +1546,7 @@ function importO360(input){
         const limite=parseNum(rl['limite']||rl['limite de crédito']||rl['limite de credito']||rl['limite crédito']||rl['limite credito']||0);
         if(!cliente&&!id){skipped++;continue;}
         const idx=DB.o360.findIndex(c=>(id&&c.id&&c.id===id)||(cliente&&normNome(c.cliente)===normNome(cliente)));
-        const ex={ramo:String(rl['ramo']||'').trim(),restricao:String(rl['restrição']||rl['restricao']||'').trim().toUpperCase()};
+        const ex={};
         let obj;
         if(idx>=0){obj={...DB.o360[idx],id:id||DB.o360[idx].id,cliente:cliente||DB.o360[idx].cliente,limite,...ex};DB.o360[idx]=obj;updated++;}
         else{obj={_uid:uid(),id,cliente,limite,...ex};DB.o360.push(obj);added++;}
