@@ -361,6 +361,100 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
   #print-area{display:block}
   @page{margin:10mm}
 }
+/* ===== VISUAL MAIS LIMPO: filtros em gaveta e cards sem caixinhas (abas da carteira) ===== */
+.toolbar.fd-bar{background:transparent;border:none;padding:0 0 8px;box-shadow:none}
+.fd-open{display:inline-flex;align-items:center;gap:7px}
+.fd-open svg{width:15px;height:15px}
+.fd-badge{background:#4cc2ff;color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 7px}
+.fd-bg{display:none;position:fixed;inset:0;background:#0000004d;z-index:1000;justify-content:flex-end}
+.fd-bg.open{display:flex}
+.fd-panel{background:#fff;width:400px;max-width:100%;height:100%;overflow-y:auto;padding:24px 24px 30px;box-shadow:-8px 0 30px #0002}
+.fd-head{display:flex;justify-content:space-between;align-items:flex-start}
+.fd-head h3{font-size:20px;font-weight:700;color:var(--text)}
+.fd-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1}
+.fd-sub{font-size:13px;color:var(--text2);margin:6px 0 16px}
+.fd-actions{display:flex;gap:10px;margin-bottom:20px}
+.fd-actions .fd-reset{background:#f1f4f9;color:var(--text);border:none;border-radius:8px;padding:11px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.fd-actions .fd-apply{flex:1;background:#4cc2ff;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer}
+.fd-field{margin-bottom:14px}
+.fd-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.fd-field select,.fd-field input{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:#fff;outline:none}
+.fd-field select:focus,.fd-field input:focus{border-color:#4cc2ff}
+.fd-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card-row[id^="cards-"] .kcard{background:transparent;border:none;box-shadow:none;border-left:none!important;padding:4px 18px 4px 0;min-width:120px;flex:0 1 auto}
+.card-row[id^="cards-"] .kcard .klabel{color:var(--text2)}
+.card-row[id^="cards-"] .kcard .kvalue{color:var(--text)}
+.card-row[id^="cards-"] .kcard.accent .klabel,.card-row[id^="cards-"] .kcard.green .klabel{color:var(--text2)}
+.card-row[id^="cards-"] .kcard.accent .kvalue,.card-row[id^="cards-"] .kcard.green .kvalue{color:var(--text)}
+.card-row[id^="cards-"] .kcard.accent .kvalue::before{content:'▼ ';color:#dc2626;font-size:12px}
+.card-row[id^="cards-"] .kcard.green .kvalue::before{content:'▲ ';color:#16a34a;font-size:12px}
+/* ===== FECHAMENTO — slides (formato Resultado Cobrança MT) ===== */
+.fs-deck{--fsz:1}
+.fs-slide{width:1170px;height:830px;position:relative;background:#fff;overflow:hidden;box-sizing:border-box;border-radius:8px;box-shadow:0 4px 16px #1b2a5014;margin:0 auto 18px;font-family:'Poppins','Segoe UI',Arial,sans-serif;color:#222;zoom:var(--fsz);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fs-title{position:absolute;left:92px;top:68px;font-size:30px;font-weight:800;color:#6bb30f;letter-spacing:.3px}
+.fs-mark{position:absolute;left:0;top:62px;width:54px;height:54px}
+.fs-mark i{position:absolute;top:8px;height:42px;border-radius:0 8px 8px 0}
+.fs-mark i:nth-child(1){left:0;width:30px;background:#0d4a22}
+.fs-mark i:nth-child(2){left:26px;width:26px;background:#6bb30f}
+.fs-body{position:absolute;left:56px;right:56px;top:160px;bottom:96px}
+.fs-foot{position:absolute;right:0;bottom:28px;display:flex;align-items:center}
+.fs-pill{background:#f1f2f3;border-radius:30px;padding:11px 26px 11px 20px;font-size:11px;color:#555;margin-right:-14px}
+.fs-pill b{color:#222}
+.fs-leo{background:#0d4a22;color:#ffe800;font-weight:900;font-style:italic;font-size:24px;padding:8px 16px 8px 22px;border-left:8px solid #6bb30f;border-radius:6px 0 0 6px}
+.fs-sec{font-size:12.5px;font-weight:700;color:#6bb30f;letter-spacing:.3px;border-bottom:1px solid #dfe5d8;padding-bottom:10px;margin:0 0 20px}
+.fs-kpi{display:flex;gap:14px;align-items:flex-start}
+.fs-ico{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fs-kb{min-width:0}
+.fs-kl{font-size:14px;color:#555;font-weight:300}
+.fs-kv{font-size:38px;font-weight:700;color:#0d3b1a;line-height:1.1;margin-top:2px;white-space:nowrap}
+.fs-ks{font-size:11.5px;color:#666;margin-top:6px;line-height:1.35}
+.fs-row4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.fs-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.fs-row2{display:grid;grid-template-columns:repeat(2,1fr);gap:28px}
+.fs-row6{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px}
+.fs-mini .fs-kl{margin-top:10px;font-size:12.5px}
+.fs-row4+.fs-sec,.fs-row3+.fs-sec{margin-top:30px}
+.fs-two{display:flex;gap:40px;align-items:flex-start}
+.fs-chart{flex:0 0 470px}
+.fs-two .fs-chart:last-child{flex:1}
+.fs-right{flex:1;min-width:0}
+.fs-col3{display:flex;flex-direction:column;gap:64px;flex:0 0 360px;padding-top:6px}
+.fs-two2{display:grid;grid-template-columns:1fr 1fr;gap:50px;padding-top:8px}
+.fs-ct2{font-size:14px;font-weight:700;color:#0d3b1a;margin:8px 0 6px}
+.fs-grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px 18px;margin-top:28px}
+.fs-grid2 .fs-kv{font-size:30px}
+.fs-tbl{width:100%;border-collapse:collapse}
+.fs-tbl th{font-size:11.5px;font-weight:400;color:#555;text-align:left;padding:6px 8px;border-bottom:1px solid #dfe5d8;vertical-align:bottom}
+.fs-tbl td{font-size:11.5px;padding:13px 8px;border-bottom:1px solid #e8e8e8;color:#333;white-space:nowrap}
+.fs-tbl .n{text-align:right}
+.fs-tbl tr.tot td{background:#eef6e4;color:#0d3b1a;font-weight:700}
+.fs-tbl2{margin-top:30px}
+.fs-tbl2 td,.fs-tbl2 th{padding:8px 8px;font-size:10.5px}
+.fs-st{display:inline-block;border-radius:10px;padding:2px 9px;font-size:9.5px;font-weight:700}
+.fs-st.ok{background:#dcfce7;color:#166534}.fs-st.ab{background:#fef3c7;color:#92400e}
+.fs-head2{font-size:17px;font-weight:700;color:#0d3b1a;margin-bottom:22px}
+.fs-note{font-size:12px;font-style:italic;color:#555;margin-top:10px}
+.fs-empty{padding:40px;text-align:center;color:#8a94a0;font-size:13px}
+.fs-dark{background:radial-gradient(ellipse at 0 38%,#2e6310 0%,#06390f 48%,#04300b 100%)}
+.fs-cover{position:absolute;left:48px;top:50%;transform:translateY(-50%)}
+.fs-ct{color:#d4f000;font-size:36px;font-weight:800;letter-spacing:.3px}
+.fs-cs{color:#e4f6a0;font-style:italic;font-size:22px;margin-top:14px}
+.fs-quote{color:#d4f000;font-size:24px;font-weight:700;line-height:1.4;max-width:560px}
+.fs-logo{position:absolute;right:34px;top:110px;width:430px;height:430px;transform:rotate(4deg)}
+.fs-logo>div{position:absolute;inset:0;background:#b4e600;border-radius:34px;display:flex;align-items:center;justify-content:center}
+.fs-logo>div>div{width:76%;height:76%;background:#70b800;border-radius:28px;display:flex;align-items:center;justify-content:center}
+.fs-logo>div>div>span{width:72%;height:72%;background:#004d2c;border-radius:20px;display:flex;align-items:center;justify-content:center;color:#ffe800;font-weight:900;font-size:92px;font-style:italic;letter-spacing:-4px}
+.fs-manual{background:#fff;border-radius:14px;padding:14px 18px;margin-bottom:12px;box-shadow:0 4px 16px #1b2a5012}
+.fs-mh{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
+.fs-mh span{font-weight:400;color:var(--text2);font-size:11px;margin-left:6px}
+.fs-minputs{display:flex;gap:14px;flex-wrap:wrap}
+.fs-in{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text2);font-weight:600}
+.fs-in input{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:230px}
+.fs-actions{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+@media print{
+  .fs-printing .fs-slide{zoom:.95;margin:0;box-shadow:none;border-radius:0;page-break-after:always;break-after:page}
+  .fs-printing .fs-slide:last-child{page-break-after:auto;break-after:auto}
+}
 </style>
 </head>
 <body>
@@ -525,6 +619,10 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <button class="btn btn-danger btn-sm" onclick="document.getElementById('fil-vis-classe').value='';document.getElementById('fil-vis-tend').value='';document.getElementById('fil-vis-pont').value='';document.getElementById('fil-vis-q').value='';document.getElementById('fil-vis-vencido').checked=false;renderVisao360()">Limpar</button>
         </div>
 
+        <details style="margin-bottom:10px;font-size:12px;color:var(--text2)"><summary style="cursor:pointer;font-weight:700">Como o comportamento é calculado</summary><div style="padding:6px 2px;line-height:1.7">
+          Pagar até <b>2 dias</b> depois do vencimento conta como <b>em dia</b>. Pontualidade = % dos boletos pagos em dia. Atraso médio = média de dias entre vencimento e pagamento de todos os pagos.<br>
+          🔴 <b>Alto risco</b>: boleto vencido em aberto há +30 dias, ou atraso médio acima de 15 dias, ou pontualidade abaixo de 50% com atraso médio acima de 5 dias.<br>
+          🟠 <b>Atraso recorrente</b>: pontualidade abaixo de 75% ou atraso médio acima de 5 dias. 🟡 <b>Ocasional</b>: pontualidade abaixo de 90%, atraso médio acima de 2 dias ou vencido há +5 dias. 🟢 <b>Bom pagador</b>: o restante.</div></details>
         <div id="v360-jur-box" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 10px;margin-bottom:12px;font-size:11px;color:var(--text2)" title="Boleto vencido há mais dias E acima deste valor deve ser enviado ao jurídico"></div>
         <div class="tbl-card"><div class="tbl-wrap"><div id="visao360-wrap"></div></div></div>
       </div>
@@ -1159,6 +1257,9 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     <div class="cm-section-title">📅 Linha do Tempo — Pontualidade Mensal</div>
     <div id="cm-timeline-mensal" class="cm-timeline-mensal"></div>
 
+    <div class="cm-section-title">🗓️ Pagamentos — vencimento, pagamento e tempo em aberto</div>
+    <div id="cm-pagamentos"></div>
+
     <div class="cm-section-title">💰 Histórico Financeiro (Boleto)</div>
     <div class="cm-breakdown" id="cm-fin-boleto"></div>
 
@@ -1453,6 +1554,8 @@ function faixaMesDia(dataStr){
   if(d<=20)return 'Meio do mês';
   return 'Fim do mês';
 }
+// tolerância: pagar até 2 dias após o vencimento ainda conta como "em dia"
+const TOL_PAGTO=2;
 function classificarComportamento(pontualidade){
   if(pontualidade>=90)return{nivel:'BOM',emoji:'🟢',label:'Bom Pagador'};
   if(pontualidade>=75)return{nivel:'OCASIONAL',emoji:'🟡',label:'Pagador com Atrasos Ocasionais'};
@@ -1469,8 +1572,8 @@ function analisarComportamentoCliente(nomeCliente,idCliente){
   if(!todos.length)return null;
 
   const pagos=todos.filter(t=>(t.sit||'').toUpperCase()==='PAGO'&&t.dtpag);
-  const pagosEmDia=pagos.filter(t=>!t.venc||t.dtpag<=t.venc);
-  const pagosAtraso=pagos.filter(t=>t.venc&&t.dtpag>t.venc);
+  const pagosEmDia=pagos.filter(t=>!t.venc||diasAtrasoPagto(t)<=TOL_PAGTO);
+  const pagosAtraso=pagos.filter(t=>t.venc&&diasAtrasoPagto(t)>TOL_PAGTO);
   const abertos=todos.filter(t=>(t.sit||'').toUpperCase()!=='PAGO');
   const vencidos=abertos.filter(t=>t.venc&&calcAtraso(t.venc)>0);
 
@@ -1481,6 +1584,10 @@ function analisarComportamentoCliente(nomeCliente,idCliente){
   const mediaAtraso=diasAtrasoArr.length?Math.round(diasAtrasoArr.reduce((s,d)=>s+d,0)/diasAtrasoArr.length):0;
   const atrasosAbertosArr=vencidos.map(t=>calcAtraso(t.venc));
   const maiorAtraso=Math.max(0,...diasAtrasoArr,...atrasosAbertosArr);
+  // tempo médio que o cliente demora para pagar (todos os pagos; 0 = pagou em dia) e maior atraso ATUAL em aberto
+  const diasPagos=pagos.map(diasAtrasoPagto);
+  const mediaGeral=diasPagos.length?diasPagos.reduce((s,d)=>s+d,0)/diasPagos.length:0;
+  const maxVencAberto=Math.max(0,...atrasosAbertosArr);
   const ultimoAtrasoData=[...pagosAtraso].sort((a,b)=>(b.dtpag||'').localeCompare(a.dtpag||''))[0];
 
   const valorAberto=abertos.reduce((s,t)=>s+parseFloat(t.valor||0),0);
@@ -1501,7 +1608,7 @@ function analisarComportamentoCliente(nomeCliente,idCliente){
     const ym=t.venc.slice(0,7);
     if(!porMes[ym])porMes[ym]={total:0,emDia:0};
     porMes[ym].total++;
-    if(!t.dtpag||t.dtpag<=t.venc)porMes[ym].emDia++;
+    if(!t.dtpag||diasAtrasoPagto(t)<=TOL_PAGTO)porMes[ym].emDia++;
   });
   const mesesOrdenados=Object.keys(porMes).sort();
   const evolucaoCompleta=mesesOrdenados.map(ym=>({
@@ -1523,12 +1630,16 @@ function analisarComportamentoCliente(nomeCliente,idCliente){
   const ultimos3=evolucao.slice(-3);
   const recorrenteRecente=ultimos3.filter(e=>e.pontualidade<100).length>=2;
 
-  let classe=pontualidade==null
-    ?{nivel:'SEM_HISTORICO',emoji:'⚪',label:'Sem Histórico de Pagamento'}
-    :classificarComportamento(pontualidade);
-  if(classe.nivel!=='SEM_HISTORICO'&&(maiorAtraso>=60||(tendencia==='PIORANDO'&&pontualidade<70))){
-    classe={nivel:'ALTO_RISCO',emoji:'🔴',label:'Comportamento de Alto Risco'};
-  }
+  // classificação: usa o TEMPO de atraso (não só se pagou depois do vencimento)
+  //  Alto risco: título vencido em aberto há +30 dias, OU atraso médio > 15 dias, OU pontualidade < 50% com atraso médio > 5 dias
+  //  Recorrente: pontualidade < 75% OU atraso médio > 5 dias
+  //  Ocasional : pontualidade < 90% OU atraso médio > 2 dias OU título vencido em aberto há +5 dias
+  let classe;
+  if(pontualidade==null)classe={nivel:'SEM_HISTORICO',emoji:'⚪',label:'Sem Histórico de Pagamento'};
+  else if(maxVencAberto>30||mediaGeral>15||(pontualidade<50&&mediaGeral>5))classe={nivel:'ALTO_RISCO',emoji:'🔴',label:'Comportamento de Alto Risco'};
+  else if(pontualidade<75||mediaGeral>5)classe={nivel:'RECORRENTE',emoji:'🟠',label:'Pagador com Atraso Recorrente'};
+  else if(pontualidade<90||mediaGeral>2||maxVencAberto>5)classe={nivel:'OCASIONAL',emoji:'🟡',label:'Pagador com Atrasos Ocasionais'};
+  else classe={nivel:'BOM',emoji:'🟢',label:'Bom Pagador'};
 
   // alertas inteligentes (informativos — nenhuma ação automática)
   // alerta jurídico: título vencido há mais dias E acima do valor configurado
@@ -1568,6 +1679,10 @@ function analisarComportamentoCliente(nomeCliente,idCliente){
     totalPagos:pagos.length,totalPagosEmDia:pagosEmDia.length,totalPagosAtraso:pagosAtraso.length,
     qtdRegularizacoes:pagosAtraso.length,
     titulosAbertos:abertos.length,titulosVencidos:vencidos.length,valorAberto,valorVencido,jurosAcumulados,valorVencidoAtualizado,
+    mediaGeral,maxVencAberto,
+    ultimoPagamento:pagos.map(t=>dOnly(t.dtpag)).sort().pop()||null,
+    pagamentos:pagos.slice().sort((a,b)=>(b.dtpag||'').localeCompare(a.dtpag||'')).slice(0,12).map(t=>({id:t.id,valor:t.valor,venc:t.venc,dtpag:t.dtpag,dias:diasAtrasoPagto(t)})),
+    abertosDet:abertos.slice().sort((a,b)=>(a.venc||'9999').localeCompare(b.venc||'9999')).slice(0,12).map(t=>({id:t.id,valor:t.valor,venc:t.venc,dias:t.venc?calcAtraso(t.venc):0})),
     periodoMaisAtraso,evolucao,tendencia,recorrenteRecente,classe,alertas,credito,leitura,juridicoN:juridico.length,juridicoValor,
     ultimoAtraso:ultimoAtrasoData?ultimoAtrasoData.dtpag:null,
     primeiroTitulo:todos.map(t=>t.venc).filter(Boolean).sort()[0]
@@ -1583,6 +1698,7 @@ function baseCliente360(nome,id){
 // cliente da base sem título de boleto lançado: não tem atraso nem título em aberto → bom pagador
 function clienteSemHistorico(b){
   return{nome:b.cliente,pontualidade:null,percAtraso:null,mediaAtraso:0,maiorAtraso:0,totalPagos:0,totalPagosEmDia:0,totalPagosAtraso:0,qtdRegularizacoes:0,
+    mediaGeral:0,maxVencAberto:0,ultimoPagamento:null,pagamentos:[],abertosDet:[],
     titulosAbertos:0,titulosVencidos:0,valorAberto:0,valorVencido:0,jurosAcumulados:0,valorVencidoAtualizado:0,periodoMaisAtraso:null,evolucao:[],tendencia:'ESTAVEL',recorrenteRecente:false,
     classe:{nivel:'BOM',emoji:'🟢',label:'Bom Pagador'},alertas:[],
     credito:'💰 Cliente sem título em aberto e sem histórico de atraso: comportamento favorável para avaliação de limite, conforme política de crédito.',
@@ -1662,7 +1778,7 @@ function renderVisao360(){
   wrap.innerHTML=`
     <table class="v360-table">
       <thead><tr>
-        <th>Cliente</th><th>Limite</th><th>Comportamento</th><th>Pontualidade</th><th>Maior Atraso</th><th>Tendência</th><th>Vencido Hoje</th><th>Vencido c/ Juros</th><th>Jurídico</th><th></th>
+        <th>Cliente</th><th>Limite</th><th>Comportamento</th><th>Pontualidade</th><th>Atraso Médio</th><th>Último Pgto</th><th>Maior Atraso</th><th>Tendência</th><th>Vencido Hoje</th><th>Vencido c/ Juros</th><th>Jurídico</th><th></th>
       </tr></thead>
       <tbody>
         ${filtrada.map(c=>{
@@ -1672,6 +1788,8 @@ function renderVisao360(){
             <td>${c.limiteBase!=null?fmtR(c.limiteBase):'—'}</td>
             <td><span class="badge classe-${c.classe.nivel}">${c.classe.emoji} ${c.classe.label}</span></td>
             <td>${c.pontualidade!=null?`<span class="pont-bar-track"><span class="pont-bar-fill" style="width:${c.pontualidade}%;background:${pontColor}"></span></span>${c.pontualidade}%`:'—'}</td>
+            <td>${c.pontualidade!=null?(c.mediaGeral<0.05?'em dia':c.mediaGeral.toFixed(1)+'d'):'—'}</td>
+            <td>${c.ultimoPagamento?fmtDate(c.ultimoPagamento):'—'}</td>
             <td class="${atrasoClass(c.maiorAtraso)}">${c.maiorAtraso>0?c.maiorAtraso+'d':'—'}</td>
             <td>${tendIcon[c.tendencia]||'—'} ${c.tendencia==='MELHORANDO'?'Melhorando':c.tendencia==='PIORANDO'?'Piorando':'Estável'}</td>
             <td>${c.titulosVencidos>0?`<span class="badge bg-red">${c.titulosVencidos}</span>`:'—'}</td>
@@ -1695,6 +1813,13 @@ function openClienteModal(nome,id){
   document.getElementById('cm-relacionamento').textContent=(c.primeiroTitulo?'Cliente desde '+fmtDate(c.primeiroTitulo)+' (primeiro boleto registrado)':'Sem boleto lançado na carteira')+(c.limiteBase!=null?' · Limite '+fmtR(c.limiteBase):'')+(c.idBase?' · ID '+c.idBase:'');
 
   document.getElementById('cm-leitura').textContent=c.leitura;
+  const pgEl=document.getElementById('cm-pagamentos');
+  if(pgEl){
+    const rowP=p=>`<tr><td>${esc(p.id||'—')}</td><td>${p.venc?fmtDate(p.venc):'—'}</td><td>${p.dtpag?fmtDate(p.dtpag):'<b style="color:#dc2626">em aberto</b>'}</td><td style="text-align:right">${p.dtpag?(p.dias>0?p.dias+'d de atraso':'em dia'):(p.dias>0?p.dias+'d vencido':'a vencer')}</td><td style="text-align:right">${fmtR(p.valor)}</td></tr>`;
+    pgEl.innerHTML=(c.pagamentos.length||c.abertosDet.length)
+      ?`<table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="color:var(--text2);text-align:left"><th>ID</th><th>Vencimento</th><th>Pagamento</th><th style="text-align:right">Situação</th><th style="text-align:right">Valor</th></tr></thead><tbody>${c.abertosDet.map(rowP).join('')}${c.pagamentos.map(rowP).join('')}</tbody></table><div class="kmeta" style="margin-top:4px">Últimos 12 pagos + títulos em aberto. Pagar até ${TOL_PAGTO} dias após o vencimento conta como em dia.</div>`
+      :'<div class="cm-tl-empty">Sem títulos de boleto lançados.</div>';
+  }
 
   const tendLabel=c.tendencia==='MELHORANDO'?'📈 Melhorando':c.tendencia==='PIORANDO'?'📉 Piorando':'📊 Estável';
   document.getElementById('cm-metrics').innerHTML=`
@@ -1702,7 +1827,7 @@ function openClienteModal(nome,id){
     <div class="cm-metric"><div class="cm-metric-label">% Atraso</div><div class="cm-metric-value">${c.percAtraso!=null?c.percAtraso+'%':'—'}</div></div>
     <div class="cm-metric"><div class="cm-metric-label">Pagos em Dia</div><div class="cm-metric-value">${c.totalPagosEmDia}</div></div>
     <div class="cm-metric"><div class="cm-metric-label">Pagos em Atraso</div><div class="cm-metric-value">${c.totalPagosAtraso}</div></div>
-    <div class="cm-metric"><div class="cm-metric-label">Média Dias Atraso</div><div class="cm-metric-value">${c.mediaAtraso}d</div></div>
+    <div class="cm-metric"><div class="cm-metric-label">Atraso Médio (pagos)</div><div class="cm-metric-value">${c.mediaGeral.toFixed(1)}d</div></div>
     <div class="cm-metric"><div class="cm-metric-label">Maior Atraso</div><div class="cm-metric-value">${c.maiorAtraso}d</div></div>
     <div class="cm-metric"><div class="cm-metric-label">Regularizações</div><div class="cm-metric-value">${c.qtdRegularizacoes}</div></div>
     <div class="cm-metric"><div class="cm-metric-label">Tendência</div><div class="cm-metric-value" style="font-size:13px">${tendLabel}</div></div>
@@ -2873,186 +2998,239 @@ function initRelatorio(){
   renderRelatorio();
 }
 
+function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+// ===== FECHAMENTO MENSAL — formato "Resultado Cobrança MT" (slides + gráficos) =====
+// Tudo vem das planilhas/CRM. Manual: apenas o "recebido em dia" de boleto e cheque, o faturado da caderneta e (opcional) o Multicheck.
+const MESES_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const PERC_SEGURO=0.8; // chargeback: seguro cobre 80% do valor da venda
+const FS_ICONS={
+  cheque:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 14h5M7 10h10"/>',
+  barcode:'<path d="M4 5v14M7 5v14M11 5v14M14 5v14M17 5v14M20 5v14"/>',
+  notebook:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v18M3 8h2M3 12h2M3 16h2"/>',
+  down:'<polyline points="3 7 9 13 13 9 21 17"/><polyline points="15 17 21 17 21 11"/>',
+  up:'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+  usercheck:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><polyline points="16 11 18 13 22 9"/>',
+  check:'<circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.4.6 3.5 2.6 3.5 6"/>',
+  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  repeat:'<polyline points="17 2 21 6 17 10"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><polyline points="7 22 3 18 7 14"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
+  xcircle:'<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+  percent:'<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+  userx:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6 1.5 0 2.8.4 3.9 1.1"/><path d="M16 10l5 5M21 10l-5 5"/>',
+  cash:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><path d="M9 13h6M9 17h6"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  bars:'<path d="M5 20V12M12 20V5M19 20v-9"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14-4M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/>'
+};
+const fsIcon=(n,c)=>`<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${FS_ICONS[n]||''}</svg>`;
+const FS_TONE={green:{bg:'#e6f4d7',fg:'#4f9d0a',v:'#0d3b1a'},red:{bg:'#fde3ea',fg:'#e5174f',v:'#e5174f'},teal:{bg:'#dcebe4',fg:'#0d4a2a',v:'#0d3b1a'},amber:{bg:'#fff1d6',fg:'#d98a00',v:'#0d3b1a'}};
+function fsKpi(ico,tone,label,value,sub,opt){
+  opt=opt||{};const t=FS_TONE[tone]||FS_TONE.green;
+  return `<div class="fs-kpi" style="${opt.style||''}"><div class="fs-ico" style="background:${t.bg}">${fsIcon(ico,t.fg)}</div><div class="fs-kb"><div class="fs-kl">${label}</div><div class="fs-kv" style="color:${opt.vcolor||t.v};${opt.vsize?'font-size:'+opt.vsize:''}">${value}</div>${sub?`<div class="fs-ks" style="${tone==='red'&&!opt.subneutral?'color:#e5174f':''}">${sub}</div>`:''}</div></div>`;
+}
+const fsPct=v=>v==null?'—':v.toFixed(2).replace('.',',')+'%';
+const fsPct1=v=>v==null?'—':v.toFixed(1).replace('.',',')+'%';
+const fsMil=v=>(v/1000).toFixed(1).replace('.',',');
+
+// ---------- gráficos (SVG) ----------
+let _fsGid=0;
+function fsPath(pts){
+  if(pts.length<2)return '';
+  let d=`M${pts[0][0]},${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){const [x0,y0]=pts[i],[x1,y1]=pts[i+1],cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1},${y1}`;}
+  return d;
+}
+function fsArea(vals,labels,o){
+  o=o||{};const w=o.w||520,h=o.h||270,fmt=o.fmt||fsPct;
+  const nums=vals.filter(v=>v!=null);
+  if(!nums.length)return '<div class="fs-empty">Sem dados no período.</div>';
+  const mn=Math.min(...nums),mx=Math.max(...nums),range=(mx-mn)||1,n=vals.length;
+  const padX=42,top=44,base=h-36,xs=i=>n===1?w/2:padX+i*(w-2*padX)/(n-1),ys=v=>top+(1-(v-mn)/range)*(base-top-70);
+  const pts=vals.map((v,i)=>v==null?null:[xs(i),ys(v)]).filter(Boolean);
+  const gid='fsg'+(++_fsGid);
+  const line=fsPath(pts);
+  const area=pts.length>1?`${line} L${pts[pts.length-1][0]},${base} L${pts[0][0]},${base} Z`:'';
+  const lastIdx=vals.map((v,i)=>v!=null?i:-1).filter(i=>i>=0).pop();
+  const tags=vals.map((v,i)=>{if(v==null)return '';const x=xs(i),y=ys(v),last=i===lastIdx&&o.hlLast!==false;
+    const txt=fmt(v),tw=txt.length*6.4+12;
+    return `<rect x="${x-tw/2}" y="${y-30}" width="${tw}" height="18" rx="4" fill="${last?'#ff1f5a':'#0b4a22'}"/><text x="${x}" y="${y-17}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">${txt}</text>`+(last?`<circle cx="${x}" cy="${y}" r="4" fill="#ff1f5a"/>`:'');}).join('');
+  const xl=labels.map((l,i)=>`<text x="${xs(i)}" y="${base+22}" text-anchor="middle" font-size="11" fill="#8a94a0">${l}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.color||'#6bb30f'}" stop-opacity=".35"/><stop offset="1" stop-color="${o.color||'#6bb30f'}" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${padX-20}" y1="${base}" x2="${w-padX+20}" y2="${base}" stroke="#e7ebe3"/>
+    ${area?`<path d="${area}" fill="url(#${gid})"/>`:''}${line?`<path d="${line}" fill="none" stroke="${o.color||'#6bb30f'}" stroke-width="3.5" stroke-linecap="round"/>`:''}${tags}${xl}</svg>`;
+}
+function fsNiceStep(max){const raw=max/5||1,p=Math.pow(10,Math.floor(Math.log10(raw)));for(const m of [1,2,2.5,5,10]){if(m*p>=raw)return m*p;}return 10*p;}
+function fsAxis(max,w,h,pl,pt,pb){
+  const step=fsNiceStep(max),top=Math.ceil(max/step)*step||step,ph=h-pt-pb;let g='';
+  for(let v=0;v<=top+1e-9;v+=step){const y=pt+ph-(v/top)*ph;g+=`<line x1="${pl}" y1="${y}" x2="${w-10}" y2="${y}" stroke="#e5e7eb"/><text x="${pl-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#333">${Number.isInteger(v)?v:v.toFixed(1)}</text>`;}
+  return {g,top,ph};
+}
+function fsStack(items,title){
+  const w=470,h=360,pl=44,pt=44,pb=70,tot=items.map(i=>i.a+i.b),max=Math.max(...tot,1)/1000;
+  const ax=fsAxis(max,w,h,pl,pt,pb),bw=130,gap=(w-pl-10-items.length*bw)/(items.length+1);
+  const bars=items.map((it,i)=>{const x=pl+gap*(i+1)+bw*i,ha=it.a/1000/ax.top*ax.ph,hb=it.b/1000/ax.top*ax.ph,y0=pt+ax.ph;
+    return `<rect x="${x}" y="${y0-ha}" width="${bw}" height="${ha}" fill="#70b800"/>${ha>16?`<text x="${x+bw/2}" y="${y0-ha/2+5}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${fsMil(it.a)}</text>`:''}
+    <rect x="${x}" y="${y0-ha-hb}" width="${bw}" height="${hb}" fill="#ff1148"/>${hb>16?`<text x="${x+bw/2}" y="${y0-ha-hb/2+5}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${fsMil(it.b)}</text>`:''}
+    <text x="${x+bw/2}" y="${y0+20}" text-anchor="middle" font-size="12" fill="#333">${it.label}</text>`;}).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block"><text x="${w/2}" y="20" text-anchor="middle" font-size="14" font-weight="700" fill="#111">${title}</text>${ax.g}${bars}
+    <rect x="${w/2-135}" y="${h-22}" width="10" height="10" fill="#70b800"/><text x="${w/2-120}" y="${h-13}" font-size="12" fill="#333">Recebido com atraso</text>
+    <rect x="${w/2+30}" y="${h-22}" width="10" height="10" fill="#ff1148"/><text x="${w/2+45}" y="${h-13}" font-size="12" fill="#333">Em aberto</text></svg>`;
+}
+function fsBars(vals,labels,hl,title){
+  const w=560,h=330,pl=44,pt=48,pb=34,max=Math.max(...vals,1)/1000;
+  const ax=fsAxis(max,w,h,pl,pt,pb),n=vals.length,slot=(w-pl-10)/n,bw=Math.min(46,slot*0.7);
+  const bars=vals.map((v,i)=>{const bh=v/1000/ax.top*ax.ph,x=pl+slot*i+(slot-bw)/2,y=pt+ax.ph-bh;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(bh,0)}" fill="${i===hl?'#ff1148':'#70b800'}"/><text x="${x+bw/2}" y="${y-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#222">${fsMil(v)}</text><text x="${x+bw/2}" y="${pt+ax.ph+20}" text-anchor="middle" font-size="12" fill="#333">${labels[i]}</text>`;}).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block"><text x="${w/2}" y="20" text-anchor="middle" font-size="14" font-weight="700" fill="#111">${title}</text>${ax.g}${bars}</svg>`;
+}
+
+// ---------- dados ----------
+function fsFat(m,ano){try{return JSON.parse(localStorage.getItem(`relFat_${m}_${ano}`)||'{}');}catch(e){return {};}}
+function fsMesBC(type,m,ano){
+  const fat=fsFat(m,ano);
+  const d=(DB[type]||[]).filter(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano));
+  const aberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
+  const pago=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
+  const emDia=parseFloat(fat[type]||0),cart=aberto+pago,rec=cart+emDia;
+  return{aberto,pago,emDia,cart,rec,atraso:rec>0?cart/rec*100:null,inad:rec>0?aberto/rec*100:null,temDados:d.length>0||emDia>0};
+}
+function fsMesCad(m,ano){
+  const fat=fsFat(m,ano);
+  const d=(DB.caderneta||[]).filter(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano));
+  const aberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
+  const input=parseFloat(fat.caderneta||0);
+  const pago=input>0?Math.max(input-aberto,0):d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
+  const total=input||aberto+pago;
+  return{aberto,pago,total,pAberto:total>0?aberto/total*100:null};
+}
+function fsAtividade(ano,mIdx){
+  const pref=`${ano}-${String(mIdx+1).padStart(2,'0')}`,hoje=hojeISO(),nm=r=>(r.cliente||'').trim().toUpperCase();
+  const cobs=(DB.cobrancas||[]).filter(c=>dOnly(c.data).startsWith(pref));
+  const acionados=new Set(cobs.map(nm).filter(Boolean));
+  const NAO=['SEM CONTATO','NÃO ATENDEU'];
+  const semC=cobs.filter(c=>NAO.includes((c.status||'').toUpperCase())).length;
+  const lig=cobs.filter(c=>(c.meio||'').toUpperCase().startsWith('LIGA')).length;
+  const wpp=cobs.filter(c=>(c.meio||'').toUpperCase().includes('WHATS')).length;
+  const carteira=new Set(),pagtos={};
+  ['boleto','cheque','caderneta'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    if((r.sit||'').toUpperCase()!=='PAGO'){if(r.cliente)carteira.add(nm(r));}
+    else if(r.dtpag){(pagtos[nm(r)]=pagtos[nm(r)]||[]).push(dOnly(r.dtpag));}
+  }));
+  const pagouNoMes=n=>(pagtos[n]||[]).some(d=>d.startsWith(pref))||cobs.some(c=>nm(c)===n&&(c.status||'').toUpperCase()==='PAGO');
+  const recuperados=[...acionados].filter(pagouNoMes).length;
+  // promessas com data no mês e já vencidas: cumprida = pagou até a data prometida
+  const prom=(DB.cobrancas||[]).filter(c=>c.dtpromessa&&dOnly(c.dtpromessa).startsWith(pref)&&dOnly(c.dtpromessa)<hoje);
+  const cump=prom.filter(c=>{const n=nm(c),dp=dOnly(c.dtpromessa),da=dOnly(c.data);return(pagtos[n]||[]).some(d=>d>=da&&d<=dp)||(DB.cobrancas||[]).some(x=>nm(x)===n&&(x.status||'').toUpperCase()==='PAGO'&&dOnly(x.data)>=da&&dOnly(x.data)<=dp);}).length;
+  // pontos de atenção (sobre a carteira em aberto)
+  const ultimo={};(DB.cobrancas||[]).forEach(c=>{const n=nm(c),d=dOnly(c.data);if(n&&(!ultimo[n]||d>ultimo[n]))ultimo[n]=d;});
+  const lim=new Date();lim.setDate(lim.getDate()-15);const limISO=`${lim.getFullYear()}-${String(lim.getMonth()+1).padStart(2,'0')}-${String(lim.getDate()).padStart(2,'0')}`;
+  let semAcion15=0,nunca=0;carteira.forEach(n=>{if(!ultimo[n])nunca++;else if(ultimo[n]<limISO)semAcion15++;});
+  return{tent:cobs.length,acionados:acionados.size,lig,wpp,semC,efet:cobs.length-semC,carteira:carteira.size,recuperados,prom:prom.length,cump,semAcion15,nunca};
+}
+
+// ---------- slides ----------
+const FS_MARK='<div class="fs-mark"><i></i><i></i></div>';
+function fsFooter(){return '<div class="fs-foot"><span class="fs-pill"><b>fortes</b> no resultado · <b>simples</b> na eficiência · <b>juntos</b> pelo cliente</span><span class="fs-leo">Leo</span></div>';}
+function fsSlide(title,body,extra){return `<div class="fs-slide">${FS_MARK}<div class="fs-title">${title}</div>${extra||''}<div class="fs-body">${body}</div>${fsFooter()}</div>`;}
+function fsSec(t){return `<div class="fs-sec">${t}</div>`;}
+
+function montarFechamentoHTML(mes,ano){
+  const mIdx=MESES.indexOf(mes),mNome=MESES_FULL[mIdx],mUp=mNome.toUpperCase(),mLow=mNome.toLowerCase();
+  const bol=fsMesBC('boleto',mes,ano),che=fsMesBC('cheque',mes,ano),cad=fsMesCad(mes,ano),at=fsAtividade(ano,mIdx);
+  // evolução jan..mês
+  const ms=MESES.slice(0,mIdx+1),lbl=ms.map(m=>m[0]+m.slice(1).toLowerCase());
+  const snap=(()=>{try{return JSON.parse(localStorage.getItem(`relSnap_${ano}`)||'{}');}catch(e){return {};}})();
+  const evo=(type,campo)=>ms.map(m=>{const d=fsMesBC(type,m,ano);if(!d.temDados)return null;if(campo==='atraso'&&snap[m]&&snap[m][type]!=null&&m!==mes)return snap[m][type];return d[campo];});
+  const prevM=mIdx>0?MESES[mIdx-1]:null,bolPrev=prevM?fsMesBC('boleto',prevM,ano):null,chePrev=prevM?fsMesBC('cheque',prevM,ano):null;
+  // resumo geral
+  let abAno=0,recAno=0;ms.forEach(m=>{['boleto','cheque'].forEach(t=>{const d=fsMesBC(t,m,ano);abAno+=d.aberto;recAno+=d.rec;});const c=fsMesCad(m,ano);abAno+=c.aberto;recAno+=c.total;});
+  const inadGeral=recAno>0?abAno/recAno*100:null;
+  const recuperado=bol.pago+che.pago;
+  const recup=(DB.cobrancas||[]).length?'':'';
+  const slides=[];
+  // capa
+  slides.push(`<div class="fs-slide fs-dark"><div class="fs-cover"><div class="fs-ct">RESULTADO COBRANÇA MT</div><div class="fs-cs">${mUp} ${ano}</div></div><div class="fs-logo"><div><div><span>Leo</span></div></div></div></div>`);
+  // resumo
+  slides.push(fsSlide('RESUMO DO MÊS',
+    fsSec('ONDE ESTAMOS — SITUAÇÃO DA CARTEIRA')+
+    `<div class="fs-row4">${fsKpi('cheque','red','Cheque — inadimplência',fsPct(che.inad),fmtR(che.aberto)+' em aberto')}${fsKpi('barcode','green','Boleto — inadimplência',fsPct(bol.inad),fmtR(bol.aberto)+' em aberto',{subneutral:1})}${fsKpi('notebook','red','Caderneta — acerto em aberto',fsPct(cad.pAberto),fmtR(cad.aberto)+' em aberto')}${fsKpi('down','teal','Inadimplência geral da carteira',fsPct(inadGeral),inadGeral==null?'':fmtR(abAno)+' de '+fmtR(recAno))}</div>`+
+    `<div style="height:46px"></div>`+fsSec('O QUE FIZEMOS — RESULTADO DA COBRANÇA')+
+    `<div class="fs-row3">${fsKpi('up','teal','Valor recuperado',fmtR(recuperado),'igual ao recebido com atraso (cheque + boleto)')}${fsKpi('usercheck','teal','Clientes recuperados',String(at.recuperados),`de ${at.acionados} clientes acionados (${at.acionados?fsPct1(at.recuperados/at.acionados*100):'—'})`)}${fsKpi('check','green','Promessas cumpridas',at.prom?fsPct1(at.cump/at.prom*100):'—',`${at.cump} de ${at.prom} promessas vencidas`)}</div>`));
+  // cheque e boleto
+  const tr=(l,d)=>`<tr><td>${l}</td><td class="n">${fmtR(d.rec)}</td><td class="n">${fmtR(d.cart)}</td><td class="n">${fmtR(d.pago)}</td><td class="n">${fmtR(d.aberto)}</td></tr>`;
+  const tot={rec:bol.rec+che.rec,cart:bol.cart+che.cart,pago:bol.pago+che.pago,aberto:bol.aberto+che.aberto};
+  slides.push(fsSlide(`CHEQUE E BOLETO — ${mUp}`,
+    `<div class="fs-two"><div class="fs-chart">${fsStack([{label:'Cheque',a:che.pago,b:che.aberto},{label:'Boleto',a:bol.pago,b:bol.aberto}],'Valor em atraso (R$ mil)')}</div>
+    <div class="fs-right"><table class="fs-tbl"><thead><tr><th></th><th class="n">Recebível do mês</th><th class="n">Em atraso</th><th class="n">Recebido com atraso</th><th class="n">Em aberto</th></tr></thead><tbody>${tr('Cheque',che)}${tr('Boleto',bol)}<tr class="tot"><td>Total</td><td class="n">${fmtR(tot.rec)}</td><td class="n">${fmtR(tot.cart)}</td><td class="n">${fmtR(tot.pago)}</td><td class="n">${fmtR(tot.aberto)}</td></tr></tbody></table>
+    <div class="fs-grid2">${fsKpi('cheque','green','Cheque — atraso',fsPct(che.atraso),'devolvidos no mês',{subneutral:1})}${fsKpi('barcode','green','Boleto — atraso',fsPct(bol.atraso),'não pagos no vencimento',{subneutral:1})}${fsKpi('cheque','red','Cheque — inadimplência',fsPct(che.inad),che.inad==null?'':fsPct(100-che.inad)+' já recebido')}${fsKpi('barcode','teal','Boleto — inadimplência',fsPct(bol.inad),bol.inad==null?'':fsPct(100-bol.inad)+' já recebido',{subneutral:1})}</div></div></div>`));
+  // evolução da inadimplência
+  const evoCol=(type,nome,tone,ico,d,campo,tit,sufixo)=>`<div class="fs-evo">${fsKpi(ico,tone,`${nome} — ${tit} em ${mLow}`,fsPct(d[campo]),sufixo,{style:'margin-bottom:14px'})}<div class="fs-ct2">${nome} — evolução ${campo==='inad'?'da inadimplência':'do atraso'}</div>${fsArea(evo(type,campo),lbl)}</div>`;
+  slides.push(fsSlide('EVOLUÇÃO DA INADIMPLÊNCIA',`<div class="fs-two2">${evoCol('boleto','Boleto','green','barcode',bol,'inad','inadimplência',bol.inad==null?'':fsPct(100-bol.inad)+' do mês já recebido')}${evoCol('cheque','Cheque','red','cheque',che,'inad','inadimplência',che.inad==null?'':`<span style="color:#e5174f">${fsPct(100-che.inad)} do mês já recebido</span>`)}</div>`));
+  const dif=(a,b)=>a==null||b==null?'':`${a-b>=0?'+':''}${(a-b).toFixed(1).replace('.',',')} p.p. sobre ${MESES_FULL[mIdx-1].toLowerCase()} (${fsPct(b)})`;
+  slides.push(fsSlide('ACOMPANHAMENTO DE ATRASO',`<div class="fs-two2">${evoCol('boleto','Boleto','green','barcode',bol,'atraso','atraso',prevM&&bolPrev.atraso!=null?`${MESES_FULL[mIdx-1].toLowerCase()}: ${fsPct(bolPrev.atraso)}`:'')}${evoCol('cheque','Cheque','red','cheque',che,'atraso','atraso',prevM&&chePrev.atraso!=null?`<span style="color:#e5174f">${dif(che.atraso,chePrev.atraso)}</span>`:'')}</div>`));
+  // caderneta
+  const cadMes=ms.map(m=>fsMesCad(m,ano).aberto);
+  slides.push(fsSlide('CADERNETA',`<div class="fs-two"><div class="fs-col3">${fsKpi('file','teal','Total faturado no mês',fmtR(cad.total),'')}${fsKpi('notebook','teal','Acerto pago',fmtR(cad.pago),cad.total>0?fsPct1(cad.pago/cad.total*100)+' do faturado':'',{subneutral:1})}${fsKpi('notebook','red','Acerto em aberto',fmtR(cad.aberto),cad.total>0?fsPct(cad.pAberto)+' do faturado':'')}</div><div class="fs-chart">${fsBars(cadMes,lbl,mIdx,`Caderneta em aberto por mês de origem — ${ano} (R$ mil)`)}</div></div>`));
+  // multicheck (só se houver dado manual)
+  const mc=m=>{const f=fsFat(m,ano);return{dep:parseFloat(f.mcdep||0),fat:parseFloat(f.mcfat||0),res:parseFloat(f.mcres||0)};};
+  const mcAtual=mc(mes);
+  if(mcAtual.dep>0){
+    let aDep=0,aFat=0,aRes=0;ms.forEach(m=>{const x=mc(m);aDep+=x.dep;aFat+=x.fat;aRes+=x.res;});
+    const custo=ms.map(m=>{const x=mc(m);return x.dep>0?x.fat/x.dep*100:null;});
+    slides.push(fsSlide('MULTICHECK — CUSTO DO SERVIÇO',fsSec(mUp)+`<div class="fs-row4">${fsKpi('cash','green','Valor depositado',fmtR(mcAtual.dep),'no mês')}${fsKpi('file','green','Fatura paga',fmtR(mcAtual.fat),fsPct(mcAtual.fat/mcAtual.dep*100)+' do depositado')}${fsKpi('refresh','green','Cheques ressarcidos',fmtR(mcAtual.res),'taxa de inadimplência '+fsPct(mcAtual.res/mcAtual.dep*100))}${fsKpi('percent','teal','Custo efetivo',fsPct(mcAtual.fat/mcAtual.dep*100),aDep>0?'acumulado do ano: '+fsPct(aFat/aDep*100):'')}</div><div class="fs-ct2" style="margin-top:34px">Evolução do custo efetivo (% do valor depositado)</div>${fsArea(custo,lbl,{w:1040,h:250})}<div class="fs-note">Acumulado do ano: depositado ${fmtR(aDep)} · fatura paga ${fmtR(aFat)} · cheques ressarcidos ${fmtR(aRes)}</div>`));
+  }
+  // chargeback
+  const cb=(DB.chargeback||[]).filter(r=>String(r.ano||'')===String(ano));
+  const cbTot=cb.reduce((s,r)=>s+parseFloat(r.taberto||0),0),cbPagos=cb.filter(r=>(r.status||'').toUpperCase()==='PAGO'),cbPago=cbPagos.reduce((s,r)=>s+parseFloat(r.taberto||0),0),seguro=cbTot*PERC_SEGURO;
+  slides.push(fsSlide(`CHARGEBACK — ${ano}`,`<div class="fs-head2">Chargeback ${ano}: ${fmtR(cbTot).replace('R$ ','R$ ')} em ${cb.length} título${cb.length!==1?'s':''}; o seguro cobriu ${fmtR(seguro)} e os clientes já pagaram ${fmtR(cbPago)}</div>
+    <div class="fs-row3" style="margin-top:34px">${fsKpi('bars','teal','Total chargeback',fmtR(cbTot),`${cb.length} título${cb.length!==1?'s':''} · Leozinha`,{vsize:'34px'})}${fsKpi('shield','green','Valor do seguro',fmtR(seguro),`${Math.round(PERC_SEGURO*100)}% do valor da venda`,{vsize:'34px'})}${fsKpi('check','green','Valor pago pelo cliente',fmtR(cbPago),`${cbPagos.length} título${cbPagos.length!==1?'s':''} pago${cbPagos.length!==1?'s':''}`,{vsize:'34px'})}</div>
+    <table class="fs-tbl fs-tbl2"><thead><tr><th>ID</th><th>Cliente</th><th class="n">Total aberto</th><th>Ano</th><th>Cento</th><th>Status</th><th>Dt pagamento</th></tr></thead><tbody>${cb.slice(0,9).map(r=>`<tr><td>${esc(r.id||'—')}</td><td>${esc(r.cliente||'—')}</td><td class="n">${fmtR(r.taberto)}</td><td>${esc(r.ano||'')}</td><td>${esc(r.cento||'—')}</td><td><span class="fs-st ${(r.status||'').toUpperCase()==='PAGO'?'ok':'ab'}">${esc(r.status||'—')}</span></td><td>${r.dtpag?fmtDate(r.dtpag):'—'}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center">Nenhum chargeback no ano.</td></tr>'}</tbody></table>${cb.length>9?`<div class="fs-note">+ ${cb.length-9} título(s) não exibido(s)</div>`:''}`));
+  // equipe
+  const pc=(a,b)=>b>0?fsPct1(a/b*100):'—';
+  const head=at.tent?`${at.tent} tentativas no mês: ${pc(at.efet,at.tent)} viraram contato efetivo${at.carteira&&at.acionados/at.carteira<0.5?', mas só':' e'} ${pc(at.acionados,at.carteira)} da carteira foi trabalhada`:'Nenhum acionamento registrado no mês';
+  slides.push(fsSlide('EQUIPE DE COBRANÇA — ATIVIDADE',`<div class="fs-head2">${head}</div>${fsSec('PRODUTIVIDADE')}
+    <div class="fs-row6">${[['users','Clientes acionados',at.acionados],['phone','Ligações',at.lig],['chat','WhatsApp',at.wpp],['repeat','Tentativas',at.tent],['check','Contatos efetivos',at.efet],['xcircle','Sem contato',at.semC]].map(([i,l,v])=>`<div class="fs-mini"><div class="fs-ico" style="background:#e6f4d7">${fsIcon(i,'#4f9d0a')}</div><div class="fs-kl">${l}</div><div class="fs-kv" style="font-size:32px;margin-top:14px">${v}</div></div>`).join('')}</div>
+    ${fsSec('EFICIÊNCIA')}<div class="fs-row4">${fsKpi('target','teal','% da carteira trabalhada',pc(at.acionados,at.carteira),`${at.acionados} de ${at.carteira} clientes`)}${fsKpi('check','teal','% de contato efetivo',pc(at.efet,at.tent),`${at.efet} de ${at.tent} tentativas`)}${fsKpi('percent','teal','Taxa de eficiência',pc(at.recuperados,at.acionados),`${at.recuperados} recuperados de ${at.acionados} acionados`)}${fsKpi('up','green','Valor recuperado',fmtR(recuperado),'cheque + boleto',{vsize:'22px'})}</div>
+    ${fsSec('PONTOS DE ATENÇÃO')}<div class="fs-row2">${fsKpi('clock','amber','+15 dias sem acionamento',`${at.semAcion15} clientes`,'',{vsize:'26px'})}${fsKpi('userx','red','Nunca acionados',`${at.nunca} clientes`,'',{vsize:'26px'})}</div>`));
+  // encerramento
+  slides.push(`<div class="fs-slide fs-dark"><div class="fs-cover"><div class="fs-quote">Com força no coração e disciplina na rotina,<br>nenhum obstáculo pode frear o nosso avanço.</div></div><div class="fs-logo"><div><div><span>Leo</span></div></div></div></div>`);
+  return slides.join('');
+}
+
+function relManualHTML(mes,ano){
+  const f=fsFat(mes,ano),chave=`relFat_${mes}_${ano}`;
+  const inp=(k,l)=>`<label class="fs-in"><span>${l}</span><input type="number" step="0.01" placeholder="0,00" value="${f[k]||''}" onchange="fsSetManual('${chave}','${k}',this.value)"></label>`;
+  return `<div class="fs-manual"><div class="fs-mh">✍️ Lançamento manual — ${MESES_FULL[MESES.indexOf(mes)]}/${ano} <span>(todo o resto vem das planilhas e do CRM)</span></div>
+    <div class="fs-minputs">${inp('boleto','Boleto — recebido em dia no mês (R$)')}${inp('cheque','Cheque — recebido em dia no mês (R$)')}${inp('caderneta','Caderneta — total faturado do mês (R$)')}</div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--text2)">Multicheck (opcional — só aparece no relatório se preencher)</summary><div class="fs-minputs" style="margin-top:8px">${inp('mcdep','Valor depositado (R$)')}${inp('mcfat','Fatura paga (R$)')}${inp('mcres','Cheques ressarcidos (R$)')}</div></details></div>`;
+}
+function fsSetManual(chave,k,val){const f=JSON.parse(localStorage.getItem(chave)||'{}');f[k]=parseFloat(val)||0;localStorage.setItem(chave,JSON.stringify(f));renderRelatorio();}
+function fsFit(){
+  const box=document.getElementById('rel-slides');if(!box)return;
+  const z=Math.min(1,(box.parentElement.clientWidth-4)/1170);
+  box.style.setProperty('--fsz',z);
+}
 function renderRelatorio(){
-  const mes=(document.getElementById('rel-mes')||{}).value;
-  const ano=(document.getElementById('rel-ano')||{}).value;
+  const mes=(document.getElementById('rel-mes')||{}).value,ano=(document.getElementById('rel-ano')||{}).value;
   if(!mes||!ano)return;
   const el=document.getElementById('rel-conteudo');if(!el)return;
-  const chave=`relFat_${mes}_${ano}`;
-  let fat=JSON.parse(localStorage.getItem(chave)||'{}');
-
-  function fmtV(v){return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-  function relInp(type,lbl){
-    return `<div class="rel-input-row">
-      <label>${lbl} (R$)</label>
-      <input type="number" step="0.01" placeholder="0,00" value="${fat[type]||''}"
-        oninput="(function(v){let f=JSON.parse(localStorage.getItem('${chave}')||'{}');f['${type}']=parseFloat(v)||0;localStorage.setItem('${chave}',JSON.stringify(f));renderRelatorio();})(this.value)">
-    </div>`;
-  }
-
-  // ---- BOLETO / CHEQUE ----
-  function calcBolCheq(type,bannerLabel,lblNPago){
-    const d=(DB[type]||[]).filter(r=>(r.mes||'').toUpperCase()===mes&&String(r.ano||'')===String(ano));
-    const cartAberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
-    const cartPago=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-    const cartTotal=cartAberto+cartPago;
-    const compensado=parseFloat(fat[type]||0);
-    const totalGeral=cartTotal+compensado;
-    const pAtraso=totalGeral>0?((cartTotal/totalGeral)*100).toFixed(2):0;
-    const pInad=totalGeral>0?((cartAberto/totalGeral)*100).toFixed(2):0;
-    return `<div class="rel-section">
-      <div class="rel-banner">${bannerLabel} — ${mes}/${ano}</div>
-      ${relInp(type,'Total Recebido Em Dia no Mês')}
-      <div class="rel-cards">
-        <div class="rel-card"><div class="rel-card-label">Total Recebíveis do Mês</div><div class="rel-card-value">${fmtR(totalGeral)}</div></div>
-        <div class="rel-card"><div class="rel-card-label">Total Recebido Em dia no Mês</div><div class="rel-card-value">${fmtR(compensado)}</div></div>
-        <div class="rel-card"><div class="rel-card-label">${lblNPago}</div><div class="rel-card-value">${fmtR(cartTotal)}</div></div>
-      </div>
-      <div class="rel-body" style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
-        <div class="rel-lime-box">
-          <div class="rl-label">Atraso do mês</div>
-          <div class="rl-value">${pAtraso}%</div>
-          <div class="rl-label" style="margin-top:10px">Inadimplência do mês</div>
-          <div class="rl-value">${pInad}%</div>
-        </div>
-        <table class="rel-side-table" style="margin-top:6px">
-          <tr><td>ABERTO</td><td>R$</td><td>${fmtV(cartAberto)}</td></tr>
-          <tr><td>PAGO</td><td>R$</td><td>${fmtV(cartPago)}</td></tr>
-        </table>
-      </div>
-    </div>`;
-  }
-
-  // ---- CADERNETA ----
-  function calcCaderneta(){
-    const d=(DB.caderneta||[]).filter(r=>(r.mes||'').toUpperCase()===mes&&String(r.ano||'')===String(ano));
-    const aberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
-    const totalInput=parseFloat(fat['caderneta']||0);
-    const pago=totalInput>0?Math.max(totalInput-aberto,0):d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-    const total=totalInput||aberto+pago;
-    const pAtraso=total>0?((aberto/total)*100).toFixed(2):0;
-    return `<div class="rel-section">
-      <div class="rel-banner">Caderneta do Mês — ${mes}/${ano}</div>
-      ${relInp('caderneta','Total Faturado do Mês')}
-      <div class="rel-cards">
-        <div class="rel-card"><div class="rel-card-label">Total Faturado do Mês</div><div class="rel-card-value">${fmtR(total)}</div></div>
-        <div class="rel-card"><div class="rel-card-label">Total de Acerto Pago</div><div class="rel-card-value">${fmtR(pago)}</div></div>
-        <div class="rel-card"><div class="rel-card-label">Total de Acerto Aberto</div><div class="rel-card-value">${fmtR(aberto)}</div></div>
-      </div>
-      <div class="rel-body">
-        <div class="rel-lime-box">
-          <div class="rl-label">Atraso do mês</div>
-          <div class="rl-value">${pAtraso}%</div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ---- EVOLUÇÃO MÊS A MÊS ----
-  function evolucaoTable(){
-    const snapKey=`relSnap_${ano}`;
-    let snap=JSON.parse(localStorage.getItem(snapKey)||'{}');
-
-    const mesesComDados=MESES.filter(m=>{
-      const fat2=JSON.parse(localStorage.getItem(`relFat_${m}_${ano}`)||'{}');
-      const temFat=fat2['boleto']||fat2['cheque'];
-      const temDB=['boleto','cheque'].some(t=>(DB[t]||[]).some(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano)));
-      return temFat||temDB||snap[m];
-    });
-    if(!mesesComDados.length)return '';
-
-    function getMesData(type,m){
-      const fat2=JSON.parse(localStorage.getItem(`relFat_${m}_${ano}`)||'{}');
-      const d=(DB[type]||[]).filter(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano));
-      const cartAberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
-      const cartPago=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-      const cartTotal=cartAberto+cartPago;
-      const compensado=parseFloat(fat2[type]||0);
-      const totalGeral=cartTotal+compensado;
-      return {cartAberto,cartTotal,totalGeral};
-    }
-
-    const thBg='background:#1a5c24;color:#fff';
-    const th=(v,left)=>`<th style="${thBg};padding:7px 10px;font-size:11px;text-align:${left?'left':'center'};white-space:nowrap;border:1px solid #2d7a2d">${v}</th>`;
-    const td=(v,red)=>`<td style="text-align:center;padding:6px 10px;font-size:12px;font-weight:700;border:1px solid var(--border);${red?'color:#dc2626':''}">${v}</td>`;
-    const tdL=(v)=>`<td style="padding:6px 10px;font-size:11px;white-space:nowrap;border:1px solid var(--border);color:var(--text2);background:#f6faf0">${v}</td>`;
-
-    function buildTypeTable(type,typeLabel){
-      let rFech='',rInad='';
-      let totalRec=0,totalCart=0,totalAberto=0;
-      let sumFech=0,sumInad=0,cntF=0,cntI=0;
-      mesesComDados.forEach(m=>{
-        const {cartAberto,cartTotal,totalGeral}=getMesData(type,m);
-        totalRec+=totalGeral;totalCart+=cartTotal;totalAberto+=cartAberto;
-        const fechSnap=snap[m]&&snap[m][type]!=null?snap[m][type]:null;
-        const pFech=fechSnap!=null?fechSnap:(totalGeral>0?(cartTotal/totalGeral)*100:null);
-        const pInad=totalGeral>0?(cartAberto/totalGeral)*100:null;
-        if(pFech!=null){sumFech+=pFech;cntF++;}
-        if(pInad!=null){sumInad+=pInad;cntI++;}
-        const fmt=v=>v!=null?v.toFixed(2)+'%':'—';
-        rFech+=td(fmt(pFech));
-        rInad+=td(fmt(pInad),pInad!=null&&pInad>10);
-      });
-      // média
-      rFech+=td(cntF>0?(sumFech/cntF).toFixed(2)+'%':'—');
-      rInad+=td(cntI>0?(sumInad/cntI).toFixed(2)+'%':'—');
-      return {
-        html:`<div style="margin-bottom:14px">
-          <table style="border-collapse:collapse;width:100%">
-            <thead>
-              <tr>
-                <th colspan="${mesesComDados.length+2}" style="${thBg};padding:7px 10px;text-align:left;font-size:12px;border:1px solid #2d7a2d">${typeLabel}</th>
-              </tr>
-              <tr>${th('',true)}${mesesComDados.map(m=>th(m)).join('')}${th('MÉDIA')}</tr>
-            </thead>
-            <tbody>
-              <tr>${tdL('Inadimplência no Fechamento de cada mês')}${rFech}</tr>
-              <tr>${tdL('Inadimplência')}${rInad}</tr>
-            </tbody>
-          </table>
-        </div>`,
-        totalRec,totalCart,totalAberto
-      };
-    }
-
-    const b=buildTypeTable('boleto','BOLETO');
-    const c=buildTypeTable('cheque','CHEQUE');
-    const totalRecGeral=b.totalRec+c.totalRec;
-    const totalCartGeral=b.totalCart+c.totalCart;
-    const pInadGeral=totalRecGeral>0?((b.totalAberto+c.totalAberto)/totalRecGeral*100).toFixed(2):0;
-    const btnFechar=`<button class="btn btn-outline btn-sm" onclick="fecharMesRelatorio('${ano}')" style="margin-left:auto">📸 Salvar Fechamento</button>`;
-
-    return `<div class="rel-section">
-      <div class="rel-banner" style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:18px">📊</span>
-        <span>Evolução de Mês a Mês — Inadimplência ${ano}</span>
-        ${btnFechar}
-      </div>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;padding:16px">
-        <div style="flex:1;min-width:300px;overflow-x:auto">
-          ${b.html}${c.html}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px;min-width:180px;justify-content:center">
-          <div style="background:#1a5c24;color:#fff;border-radius:8px;padding:12px 18px">
-            <div style="font-size:10px;color:#ffffffbb;margin-bottom:4px">Total Recebíveis</div>
-            <div style="font-size:11px;color:#ffffff80">R$</div>
-            <div style="font-size:16px;font-weight:800">${fmtV(totalRecGeral)}</div>
-          </div>
-          <div style="background:#1a5c24;color:#fff;border-radius:8px;padding:12px 18px">
-            <div style="font-size:10px;color:#ffffffbb;margin-bottom:4px">Total carteira</div>
-            <div style="font-size:11px;color:#ffffff80">R$</div>
-            <div style="font-size:16px;font-weight:800">${fmtV(totalCartGeral)}</div>
-          </div>
-          <div style="text-align:center;padding:12px 0">
-            <div style="font-size:13px;color:var(--text2)">Inadimplência</div>
-            <div style="font-size:44px;font-weight:900;color:#dc2626;line-height:1">${pInadGeral}%</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  el.innerHTML=calcBolCheq('boleto','Boletos do Mês de '+mes,'Total Não Pagos Do dia no Mês')+calcBolCheq('cheque','Cheques do Mês de '+mes,'Total Devolvidos No Mês')+calcCaderneta()+evolucaoTable();
+  el.innerHTML=relManualHTML(mes,ano)+
+    `<div class="fs-actions no-print"><button class="btn btn-primary" onclick="fecharMesRelatorio('${ano}')">📸 Salvar Fechamento</button><button class="btn btn-outline" onclick="printFechamento()">🖨 Exportar PDF</button><span style="font-size:11px;color:var(--text2)">“Salvar Fechamento” congela o % de atraso do mês para a evolução.</span></div>
+    <div id="rel-slides" class="fs-deck">${montarFechamentoHTML(mes,ano)}</div>`;
+  fsFit();
+}
+window.addEventListener('resize',fsFit);
+function printFechamento(){
+  const mes=document.getElementById('rel-mes').value,ano=document.getElementById('rel-ano').value;
+  const st=document.createElement('style');st.id='fs-page-style';st.textContent='@page{size:297mm 210mm;margin:0}';document.head.appendChild(st);
+  const pa=document.getElementById('print-area');pa.innerHTML='<div class="fs-deck fs-printing">'+montarFechamentoHTML(mes,ano)+'</div>';
+  const limpar=()=>{st.remove();pa.innerHTML='';window.removeEventListener('afterprint',limpar);};
+  window.addEventListener('afterprint',limpar);
+  setTimeout(()=>window.print(),120);
 }
 
 function fecharMesRelatorio(ano){
@@ -3488,6 +3666,62 @@ function populateCobradoras(){const cobs=getCobradoras();['ind-fil-cob','fil-crm
 
 
 document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
+
+// ===== FILTROS EM GAVETA (ícone de filtro) — abas da carteira =====
+// Os mesmos campos de filtro (mesmos IDs) são movidos para um painel lateral; a busca de cliente fica na barra.
+const FUNIL_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+function initFilterDrawers(){
+  ['boleto','cheque','caderneta','renegociacao','chargeback'].forEach(name=>{
+    const panel=document.getElementById('panel-'+name);
+    const tb=panel&&panel.querySelector('.toolbar');
+    if(!tb||tb.dataset.fd)return;
+    tb.dataset.fd='1';tb.classList.add('fd-bar');
+    const kids=[...tb.children];
+    const campos=[];let reset=null,busca=null;
+    for(let i=0;i<kids.length;i++){
+      const k=kids[i];
+      if(k.tagName==='LABEL'&&kids[i+1]&&(kids[i+1].tagName==='SELECT'||kids[i+1].tagName==='INPUT')){campos.push({label:k.textContent.trim(),ctl:kids[i+1]});k.remove();i++;}
+      else if(k.tagName==='BUTTON'&&/limpar/i.test(k.textContent)&&k.classList.contains('btn-danger'))reset=k;
+      else if(k.tagName==='INPUT'&&k.type==='text')busca=k;
+    }
+    const bg=document.createElement('div');bg.className='fd-bg';bg.id='fd-'+name;
+    bg.innerHTML='<div class="fd-panel"><div class="fd-head"><h3>Filtros disponíveis</h3><button class="fd-x" type="button">✕</button></div><div class="fd-sub">Os valores alterados aqui serão refletidos na tabela.</div><div class="fd-actions"></div><div class="fd-body"></div></div>';
+    const acts=bg.querySelector('.fd-actions'),body=bg.querySelector('.fd-body');
+    if(reset){reset.className='fd-reset';reset.textContent='Redefinir';acts.appendChild(reset);}
+    const ap=document.createElement('button');ap.type='button';ap.className='fd-apply';ap.textContent='Filtrar Dados';acts.appendChild(ap);
+    // busca de cliente também dentro do filtro (espelhada com a da barra)
+    let espelho=null;
+    if(busca){
+      const f=document.createElement('div');f.className='fd-field';f.innerHTML='<label>Cliente / busca</label>';
+      espelho=document.createElement('input');espelho.type='text';espelho.placeholder='Digite o cliente ou ID…';f.appendChild(espelho);body.appendChild(f);
+      espelho.addEventListener('input',()=>{busca.value=espelho.value;busca.dispatchEvent(new Event('input'));});
+      busca.addEventListener('input',()=>{espelho.value=busca.value;});
+    }
+    let par=null;
+    campos.forEach(c=>{
+      const f=document.createElement('div');f.className='fd-field';
+      const l=document.createElement('label');l.textContent=c.label;f.appendChild(l);f.appendChild(c.ctl);
+      // pares De/Até lado a lado
+      if(c.ctl.type==='date'&&/^(até)$/i.test(c.label)&&par){par.appendChild(f);par=null;}
+      else if(c.ctl.type==='date'&&/ de$/i.test(c.label)){par=document.createElement('div');par.className='fd-row2';par.appendChild(f);body.appendChild(par);}
+      else body.appendChild(f);
+    });
+    document.body.appendChild(bg);
+    const btn=document.createElement('button');btn.type='button';btn.className='btn btn-outline fd-open';
+    btn.innerHTML=FUNIL_SVG+' Filtros <span class="fd-badge" style="display:none">0</span>';
+    tb.insertBefore(btn,tb.firstChild);
+    const badge=btn.querySelector('.fd-badge');
+    const atualizar=()=>{const n=[...body.querySelectorAll('select,input[type=date]')].filter(e=>e.value!=='').length+(busca&&busca.value?1:0);badge.textContent=n;badge.style.display=n?'inline':'none';};
+    const abrir=()=>{atualizar();bg.classList.add('open');};
+    const fechar=()=>{atualizar();bg.classList.remove('open');};
+    btn.onclick=abrir;ap.onclick=fechar;bg.querySelector('.fd-x').onclick=fechar;
+    bg.addEventListener('click',e=>{if(e.target===bg)fechar();});
+    bg.addEventListener('input',atualizar);bg.addEventListener('change',atualizar);
+    if(reset)reset.addEventListener('click',()=>{if(espelho)espelho.value='';setTimeout(atualizar,0);});
+    if(busca)busca.addEventListener('input',atualizar);
+  });
+}
+initFilterDrawers();
 
 // AUTO LOGIN se sessão existir
 (function(){const s=sessionStorage.getItem('leoUser');if(s){try{currentUser=JSON.parse(s);initApp().catch(console.error);}catch(e){}}})();
