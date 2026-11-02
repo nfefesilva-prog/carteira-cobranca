@@ -2497,6 +2497,30 @@ function atualizarNovosTitulos(){
   renderListaGerada();
   alert(adicionados.length+' novo(s) título(s)/cliente(s) adicionado(s) à carteira de hoje.');
 }
+function normNome(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
+// Carteira compartilhada: quando QUALQUER cobradora aciona e fala com o cliente, ele sai da lista de todas.
+// Só continuam na fila os "sem contato / não atendeu". A tela de cada uma recarrega os acionamentos sozinha.
+let _refreshCrmBusy=false;
+async function refreshCarteiraCompartilhada(){
+  if(_refreshCrmBusy||!currentUser||document.hidden)return;
+  const painel=document.getElementById('panel-crm');
+  if(!painel||!painel.classList.contains('active'))return;
+  if(document.querySelector('.modal-bg.open'))return;
+  _refreshCrmBusy=true;
+  try{
+    const marcados=new Set([...document.querySelectorAll('.chk-lista-cliente:checked')].map(c=>c.dataset.cliente));
+    await loadAll();
+    renderCRM();
+    if(listaGerada.length){
+      renderListaGerada();
+      document.querySelectorAll('.chk-lista-cliente').forEach(c=>{if(marcados.has(c.dataset.cliente))c.checked=true;});
+      updateListaSelecao();
+    }
+  }catch(e){console.error(e);}
+  finally{_refreshCrmBusy=false;}
+}
+setInterval(refreshCarteiraCompartilhada,20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCarteiraCompartilhada();});
 function carregarListaFixaHoje(){
   const fixa=getListaFixaHoje();
   if(fixa&&fixa.itens&&fixa.itens.length){
@@ -2505,7 +2529,7 @@ function carregarListaFixaHoje(){
   }
 }
 function renderListaGerada(){
-  const hoje=new Date().toISOString().split('T')[0];
+  const hoje=hojeISO();
   // cliente só sai da carteira do dia se teve acionamento hoje com contato efetivo.
   // se o(s) único(s) acionamento(s) de hoje forem "SEM CONTATO"/"NÃO ATENDEU", o cliente
   // continua na lista — mas vai para o final, com destaque, para nova tentativa.
@@ -2514,15 +2538,15 @@ function renderListaGerada(){
   const naoAtendeuHoje=new Set();
   DB.cobrancas.forEach(c=>{
     if(dOnly(c.data)!==hoje)return;
-    const cli=(c.cliente||'').toLowerCase().trim();
+    const cli=normNome(c.cliente);
     if(NAO_ATENDEU.includes((c.status||'').toUpperCase())){naoAtendeuHoje.add(cli);return;}
     atendidosHoje.add(cli);
   });
-  const pendentes=listaGerada.filter(r=>!atendidosHoje.has((r.cliente||'').toLowerCase().trim()));
+  const pendentes=listaGerada.filter(r=>!atendidosHoje.has(normNome(r.cliente)));
   const total=listaGerada.reduce((s,r)=>s+r.valor,0);
   const totalPend=pendentes.reduce((s,r)=>s+r.valor,0);
-  const clientesUnicos=new Set(listaGerada.map(r=>(r.cliente||'').toLowerCase().trim())).size;
-  const clientesPendentes=new Set(pendentes.map(r=>(r.cliente||'').toLowerCase().trim())).size;
+  const clientesUnicos=new Set(listaGerada.map(r=>normNome(r.cliente))).size;
+  const clientesPendentes=new Set(pendentes.map(r=>normNome(r.cliente))).size;
   const clientesAcionados=clientesUnicos-clientesPendentes;
   document.getElementById('gen-resultado').innerHTML=listaGerada.length===0
     ?'<span style="color:#dc2626">Nenhum cliente encontrado.</span>'
@@ -2543,15 +2567,15 @@ function renderListaGerada(){
     grupos[cli].push(r);
   });
   const rowsHtml=Object.entries(grupos).sort((a,b)=>{
-    const aNao=naoAtendeuHoje.has(a[0].toLowerCase().trim())?1:0;
-    const bNao=naoAtendeuHoje.has(b[0].toLowerCase().trim())?1:0;
+    const aNao=naoAtendeuHoje.has(normNome(a[0]))?1:0;
+    const bNao=naoAtendeuHoje.has(normNome(b[0]))?1:0;
     if(aNao!==bNao)return aNao-bNao; // "não atendeu" vai para o final da fila
     const totalA=a[1].reduce((s,r)=>s+r.valor,0);
     const totalB=b[1].reduce((s,r)=>s+r.valor,0);
     return totalB-totalA;
   }).map(([cliente,items])=>{
     const totalCli=items.reduce((s,r)=>s+r.valor,0);
-    const isNao=naoAtendeuHoje.has(cliente.toLowerCase().trim());
+    const isNao=naoAtendeuHoje.has(normNome(cliente));
     return `<tr style="background:${isNao?'#fff7ed':'#fff'};border:1px solid ${isNao?'#fb923c':'var(--border)'}">
       <td style="text-align:center"><input type="checkbox" class="chk-lista-cliente" data-cliente="${cliente.replace(/"/g,'&quot;')}" onchange="updateListaSelecao()" style="cursor:pointer;width:15px;height:15px"></td>
       <td style="font-weight:600;color:var(--sidebar)">${cliente}${isNao?' <span class="badge" style="background:#ffedd5;color:#9a3412;margin-left:6px">⚠ Tentar novamente</span>':''}</td>
