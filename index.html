@@ -619,6 +619,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <button class="btn btn-danger btn-sm" onclick="document.getElementById('fil-vis-classe').value='';document.getElementById('fil-vis-tend').value='';document.getElementById('fil-vis-pont').value='';document.getElementById('fil-vis-q').value='';document.getElementById('fil-vis-vencido').checked=false;renderVisao360()">Limpar</button>
         </div>
 
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><button class="btn btn-outline" onclick="exportVisao360Excel()">⬇ Exportar Excel</button><button class="btn btn-outline" onclick="printVisao360()">🖨 Relatório PDF</button><span style="font-size:11px;color:var(--text2)">Exporta exatamente a lista filtrada na tela.</span></div>
         <details style="margin-bottom:10px;font-size:12px;color:var(--text2)"><summary style="cursor:pointer;font-weight:700">Como o comportamento é calculado</summary><div style="padding:6px 2px;line-height:1.7">
           Pagar até <b>2 dias</b> depois do vencimento conta como <b>em dia</b>. Pontualidade = % dos boletos pagos em dia. Atraso médio = média de dias entre vencimento e pagamento de todos os pagos.<br>
           🔴 <b>Alto risco</b>: boleto vencido em aberto há +30 dias, ou atraso médio acima de 15 dias, ou pontualidade abaixo de 50% com atraso médio acima de 5 dias.<br>
@@ -1767,6 +1768,7 @@ function renderVisao360(){
   if(filQ)filtrada=filtrada.filter(c=>c.nome.toLowerCase().includes(filQ));
   const ordemClasse={ALTO_RISCO:0,RECORRENTE:1,OCASIONAL:2,BOM:3,SEM_HISTORICO:4};
   filtrada.sort((a,b)=>ordemClasse[a.classe.nivel]-ordemClasse[b.classe.nivel]||(a.pontualidade??101)-(b.pontualidade??101));
+  window._v360Filtrada=filtrada;
 
   if(!filtrada.length){
     wrap.innerHTML='<div class="tbl-empty" style="padding:24px">Nenhum cliente encontrado para os filtros selecionados.</div>';
@@ -1801,6 +1803,55 @@ function renderVisao360(){
       </tbody>
     </table>
   `;
+}
+
+// ===== RELATÓRIO DA VISÃO 360° — Excel e PDF (usa a lista filtrada na tela) =====
+const V360_TEND={MELHORANDO:'Melhorando',PIORANDO:'Piorando',ESTAVEL:'Estável'};
+function v360FiltrosAtivos(){
+  const t=[],sel=id=>{const el=document.getElementById(id);return el&&el.value?el.options[el.selectedIndex].text.replace(/^[^\wÀ-ú]+/,'').trim():'';};
+  const c=sel('fil-vis-classe'),te=sel('fil-vis-tend'),pt=(document.getElementById('fil-vis-pont')||{}).value,q=(document.getElementById('fil-vis-q')||{}).value;
+  if(c)t.push('Comportamento: '+c);if(te)t.push('Tendência: '+te);if(pt)t.push('Pontualidade até '+pt+'%');
+  if((document.getElementById('fil-vis-vencido')||{}).checked)t.push('Só com título vencido hoje');if(q)t.push('Busca: '+q);
+  return t.length?t.join(' · '):'Todos os clientes';
+}
+function exportVisao360Excel(){
+  const lista=window._v360Filtrada||[];
+  if(!lista.length){alert('Nenhum cliente na lista. Ajuste os filtros.');return;}
+  if(typeof XLSX==='undefined'){alert('Biblioteca de Excel não carregada. Verifique a internet e recarregue a página.');return;}
+  const resumo=lista.map(c=>({Cliente:c.nome,ID:c.idBase||'',Limite:c.limiteBase??'',Comportamento:c.classe.label,'Pontualidade %':c.pontualidade??'','Atraso médio (dias)':c.pontualidade!=null?+c.mediaGeral.toFixed(1):'','Maior atraso (dias)':c.maiorAtraso,'Último pagamento':c.ultimoPagamento?fmtDate(c.ultimoPagamento):'',Tendência:V360_TEND[c.tendencia]||'','Boletos pagos':c.totalPagos,'Pagos em dia':c.totalPagosEmDia,'Pagos com atraso':c.totalPagosAtraso,'Títulos em aberto':c.titulosAbertos,'Títulos vencidos':c.titulosVencidos,'Valor em aberto':+c.valorAberto.toFixed(2),'Valor vencido':+c.valorVencido.toFixed(2),'Juros (6% a.m.)':+c.jurosAcumulados.toFixed(2),'Vencido c/ juros':+c.valorVencidoAtualizado.toFixed(2),'Enviar ao jurídico':c.juridicoN>0?'SIM':'','Títulos p/ jurídico':c.juridicoN,'Valor p/ jurídico':+c.juridicoValor.toFixed(2)}));
+  // detalhe: todos os boletos de cada cliente (vencimento, pagamento e tempo em aberto)
+  const detalhe=[];
+  lista.forEach(c=>{
+    const nome=(c.nome||'').trim().toUpperCase(),idc=c.idBase?normalizeId(c.idBase):'';
+    (DB.boleto||[]).filter(b=>(nome&&(b.cliente||'').trim().toUpperCase()===nome)||(idc&&normalizeId(b.id)===idc))
+      .sort((a,b)=>(a.venc||'').localeCompare(b.venc||'')).forEach(b=>{
+        const pago=(b.sit||'').toUpperCase()==='PAGO'&&b.dtpag;
+        const dias=pago?diasAtrasoPagto(b):(b.venc?calcAtraso(b.venc):0);
+        detalhe.push({Cliente:c.nome,ID:c.idBase||b.id||'',Vencimento:b.venc?fmtDate(b.venc):'',Pagamento:pago?fmtDate(b.dtpag):'','Dias de atraso':dias,Situação:pago?'PAGO':(dias>0?'VENCIDO':'A VENCER'),Valor:parseFloat(b.valor||0),'Valor c/ juros':pago?'':+(parseFloat(b.valor||0)+calcJuros(b.valor,dias)).toFixed(2)});
+      });
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resumo),'Visão 360');
+  if(detalhe.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(detalhe),'Boletos por cliente');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{Relatório:'Visão 360° — clientes de boleto',Filtros:v360FiltrosAtivos(),Clientes:lista.length,Emitido:new Date().toLocaleString('pt-BR'),Critério:'Pagar até 2 dias após o vencimento conta como em dia'}]),'Info');
+  XLSX.writeFile(wb,`LeoMT_Visao360_${hojeISO()}.xlsx`);
+}
+function printVisao360(){
+  const lista=window._v360Filtrada||[];
+  if(!lista.length){alert('Nenhum cliente na lista. Ajuste os filtros.');return;}
+  const cnt=n=>lista.filter(c=>c.classe.nivel===n).length,nJur=lista.filter(c=>c.juridicoN>0).length;
+  const cor={BOM:'#dcfce7;color:#166534',OCASIONAL:'#fef9c3;color:#854d0e',RECORRENTE:'#ffedd5;color:#9a3412',ALTO_RISCO:'#fee2e2;color:#991b1b',SEM_HISTORICO:'#f3f4f6;color:#374151'};
+  const totVenc=lista.reduce((s,c)=>s+c.valorVencidoAtualizado,0),totAb=lista.reduce((s,c)=>s+c.valorAberto,0);
+  const linhas=lista.map(c=>`<tr><td><b>${esc(c.nome)}</b></td><td>${esc(c.idBase||'—')}</td><td class="n">${c.limiteBase!=null?fmtR(c.limiteBase):'—'}</td><td><span style="padding:1px 7px;border-radius:9px;font-weight:700;background:${cor[c.classe.nivel]||cor.SEM_HISTORICO}">${({BOM:'Bom Pagador',OCASIONAL:'Atrasos Ocasionais',RECORRENTE:'Atraso Recorrente',ALTO_RISCO:'Alto Risco',SEM_HISTORICO:'Sem Histórico'})[c.classe.nivel]||esc(c.classe.label)}</span></td><td class="n">${c.pontualidade!=null?c.pontualidade+'%':'—'}</td><td class="n">${c.pontualidade!=null?c.mediaGeral.toFixed(1)+'d':'—'}</td><td>${c.ultimoPagamento?fmtDate(c.ultimoPagamento):'—'}</td><td class="n">${c.maiorAtraso>0?c.maiorAtraso+'d':'—'}</td><td>${V360_TEND[c.tendencia]||'—'}</td><td class="n">${c.titulosVencidos>0?fmtR(c.valorVencidoAtualizado):'—'}</td><td>${c.juridicoN>0?'<b style="color:#991b1b">⚖ ENVIAR ('+c.juridicoN+')</b>':'—'}</td></tr>`).join('');
+  const html=`<div class="rp-page"><div class="rp-head"><h1>Visão 360° — Clientes de Boleto</h1><small>Emitido em ${new Date().toLocaleString('pt-BR')} · ${esc(v360FiltrosAtivos())}</small></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;font-size:10px;flex-wrap:wrap">${[['Clientes',lista.length],['🟢 Bom pagador',cnt('BOM')],['🟡 Ocasional',cnt('OCASIONAL')],['🟠 Recorrente',cnt('RECORRENTE')],['🔴 Alto risco',cnt('ALTO_RISCO')],['⚖ Jurídico',nJur],['Em aberto',fmtR(totAb)],['Vencido c/ juros',fmtR(totVenc)]].map(([l,v])=>`<div style="border:1px solid #999;padding:4px 8px"><div>${l}</div><b style="font-size:13px">${v}</b></div>`).join('')}</div>
+    <table class="rp-360"><thead><tr><th>Cliente</th><th>ID</th><th class="n">Limite</th><th>Comportamento</th><th class="n">Pontual.</th><th class="n">Atraso médio</th><th>Último pgto</th><th class="n">Maior atraso</th><th>Tendência</th><th class="n">Vencido c/ juros</th><th>Jurídico</th></tr></thead><tbody>${linhas}</tbody></table>
+    <div class="rp-note">Pagar até 2 dias após o vencimento conta como em dia. Alerta jurídico: boleto vencido há mais de ${getJurCfg().dias} dias e acima de ${fmtR(getJurCfg().valor)}. Juros de 6% ao mês sobre vencidos.</div></div>`;
+  const st=document.createElement('style');st.id='v360-page-style';st.textContent='@page{size:A4 landscape;margin:10mm}.rp-360 thead{display:table-header-group}.rp-360 tr{page-break-inside:avoid}.rp-360 td,.rp-360 th{font-size:9px!important}';document.head.appendChild(st);
+  const pa=document.getElementById('print-area');pa.innerHTML=html;
+  const limpar=()=>{st.remove();pa.innerHTML='';window.removeEventListener('afterprint',limpar);};
+  window.addEventListener('afterprint',limpar);
+  setTimeout(()=>window.print(),120);
 }
 
 function openClienteModal(nome,id){
