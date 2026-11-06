@@ -1250,8 +1250,8 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
   <div class="modal" style="max-width:1100px">
     <h2>🏦 Baixa automática — francesinha do banco</h2>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">
-      Envie a <b>Movimentação de boletos</b> do banco (Excel, CSV ou página HTML salva) <b>ou cole a tabela</b> no campo abaixo.
-      <b>L</b> = liquidado (pago no banco) · <b>B</b> = baixa (pago na loja e baixado no banco). O dia do pagamento é a coluna <b>Dia/mês</b>. Só são baixados os boletos que estão na carteira (mesmo vencimento, valor e nome); o valor pago é o valor do boleto, sem juros. Nada é gravado antes de você confirmar.
+      Envie o <b>CSV do relatório extrato de boletos</b> do banco (melhor opção), Excel ou página HTML salva, <b>ou cole a tabela</b> no campo abaixo.
+      <b>Liquidação</b> = pago no banco · <b>Baixa</b> = pago na loja e baixado no banco. O dia do pagamento é a <b>Data Movimentação</b> do arquivo (ou a coluna Dia/mês). Só são baixados os boletos que estão na carteira (mesmo vencimento, valor e nome); o valor pago é o valor do boleto, sem juros. Nada é gravado antes de você confirmar.
     </div>
     <div class="form-row" style="align-items:flex-end">
       <div class="form-group"><label>Arquivo (.xlsx, .xls, .csv, .html)</label><input type="file" id="baixa-file" accept=".xlsx,.xls,.csv,.html,.htm"></div>
@@ -3442,7 +3442,7 @@ function frNomeCasa(a,b){const x=normNome(a),y=normNome(b);if(!x||!y)return fals
 function casarFrancesinha(itens,emissao){
   const todos=DB.boleto||[],abertos=todos.filter(r=>(r.sit||'').toUpperCase()!=='PAGO'),usados=new Set();
   return itens.map(it=>{
-    const cents=Math.round((it.valor||0)*100),dtpag=frDataPagto(it.dia,emissao);
+    const cents=Math.round((it.valor||0)*100),dtpag=it.dtpag||frDataPagto(it.dia,emissao);
     const vpago=it.valor||0; // valor total do boleto, sem juros
     const base={...it,dtpag,vpago,via:it.hist==='L'?'BANCO (liquidado)':it.hist==='B'?'LOJA (baixa)':'BANCO ('+it.hist+')'};
     if(it.hist!=='L'&&it.hist!=='B')return{...base,status:'IGNORADO'};
@@ -3465,35 +3465,67 @@ function openBaixaModal(){
   _baixaPrev=[];baixaContar();
   document.getElementById('modal-baixa-bg').classList.add('open');
 }
+// CSV do banco ("Relatório extrato de boletos"): colunas separadas por ";", operação por linha (baixa / liquidação / entrada / juros)
+function parseFrancesinhaCSV(texto){
+  const linhas=texto.split(/\r?\n/);
+  const ih=linhas.findIndex(l=>/^\s*Carteira;Pagador/i.test(l));
+  if(ih<0)return null;
+  let dtMov=null;
+  for(let i=0;i<ih;i++){if(/Data Movimenta/i.test(linhas[i])&&linhas[i+1]){dtMov=frData(linhas[i+1].split(';')[2]);break;}}
+  const col=linhas[ih].split(';').map(s=>normNome(s));
+  const ix=n=>col.findIndex(c=>c.startsWith(n));
+  const iP=ix('pagador'),iV=ix('vencimento'),iVal=ix('valor inicial'),iOp=ix('descricao');
+  const itens=[];let entradas=0;
+  for(let i=ih+1;i<linhas.length;i++){
+    const c=linhas[i].split(';');
+    const nome=(c[iP]||'').trim();
+    if(!nome||!c[iV])continue;                       // linhas de "juros" não têm pagador
+    const op=normNome(c[iOp]||'');
+    const hist=op.startsWith('liquid')?'L':op.startsWith('baixa')?'B':null;
+    if(!hist){if(op.startsWith('entrada'))entradas++;continue;}   // entrada = boleto novo registrado, não é pagamento
+    itens.push({nome,venc:frData(c[iV]),valor:frNum(c[iVal]),hist,dia:'',dtpag:dtMov,outros:null,credito:null,seun:(c[4]||'').trim()});
+  }
+  return{itens,emissao:dtMov,entradas};
+}
 function lerFrancesinha(){
   const file=document.getElementById('baixa-file').files[0],texto=document.getElementById('baixa-texto').value;
-  const processar=rows=>{
-    const {itens,emissao}=parseFrancesinhaRows(rows);
-    if(!itens.length){document.getElementById('baixa-resumo').innerHTML='<span style="color:#dc2626">Nenhuma linha de boleto reconhecida. Confira se é a "Movimentação de boletos" (com vencimento, valor, Hist. e Dia/mês).</span>';document.getElementById('tbody-baixa').innerHTML='';_baixaPrev=[];baixaContar();return;}
-    _baixaPrev=casarFrancesinha(itens,emissao);renderBaixaPrev(emissao);
+  const mostrar=(itens,emissao,entradas)=>{
+    if(!itens.length){document.getElementById('baixa-resumo').innerHTML='<span style="color:#dc2626">Nenhuma baixa ou liquidação reconhecida. Confira se é a "Movimentação de boletos" / "Relatório extrato de boletos" do banco.</span>';document.getElementById('tbody-baixa').innerHTML='';_baixaPrev=[];baixaContar();return;}
+    _baixaPrev=casarFrancesinha(itens,emissao);renderBaixaPrev(emissao,entradas);
+  };
+  const processarRows=rows=>{const {itens,emissao}=parseFrancesinhaRows(rows);mostrar(itens,emissao,0);};
+  const processarTexto=t=>{
+    const csv=parseFrancesinhaCSV(t);
+    if(csv)return mostrar(csv.itens,csv.emissao,csv.entradas);
+    processarRows(t.split(/\r?\n/).map(frLinhaParaCelulas));
   };
   if(file){
     const nome=file.name.toLowerCase(),r=new FileReader();
-    if(/\.html?$/.test(nome)){
+    if(/\.(csv|txt)$/.test(nome)){
+      r.onload=e=>{let t=e.target.result;
+        if(t.includes('�')){const r2=new FileReader();r2.onload=e2=>processarTexto(e2.target.result);r2.readAsText(file,'windows-1252');}
+        else processarTexto(t);};
+      r.readAsText(file,'UTF-8');
+    }else if(/\.html?$/.test(nome)){
       r.onload=e=>{const doc=new DOMParser().parseFromString(e.target.result,'text/html');
-        processar([...doc.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('td,th')].map(c=>c.textContent.replace(/\s+/g,' ').trim())).concat([[doc.body?doc.body.textContent.replace(/\s+/g,' '):'']]));};
+        processarRows([...doc.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('td,th')].map(c=>c.textContent.replace(/\s+/g,' ').trim())).concat([[doc.body?doc.body.textContent.replace(/\s+/g,' '):'']]));};
       r.readAsText(file);
     }else{
       if(typeof XLSX==='undefined'){alert('Biblioteca de Excel não carregada. Recarregue a página.');return;}
       r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary'});
         const rows=[];wb.SheetNames.forEach(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''}).forEach(l=>rows.push(l.map(c=>String(c).trim()))));
-        processar(rows);}catch(err){alert('Erro ao ler o arquivo: '+err.message);}};
+        processarRows(rows);}catch(err){alert('Erro ao ler o arquivo: '+err.message);}};
       r.readAsBinaryString(file);
     }
   }else if(texto.trim()){
-    processar(texto.split(/\r?\n/).map(frLinhaParaCelulas));
+    processarTexto(texto);
   }else alert('Envie o arquivo da francesinha ou cole a tabela.');
 }
-function renderBaixaPrev(emissao){
+function renderBaixaPrev(emissao,entradas){
   const st={OK:['✅ Casado','#166534'],REVISAR:['⚠ Nome diferente — não baixa','#b45309'],JA:['✔ Já baixado','#6b7280'],NAO:['❌ Boleto não encontrado','#dc2626'],IGNORADO:['— Ignorado (não é L/B)','#6b7280']};
   const c=k=>_baixaPrev.filter(x=>x.status===k).length;
   const somaOk=_baixaPrev.filter(x=>x.status==='OK').reduce((s,x)=>s+x.vpago,0);
-  document.getElementById('baixa-resumo').innerHTML=`<b>${_baixaPrev.length}</b> linhas${emissao?' · emitida em '+fmtDate(emissao):''} — <span style="color:#166534"><b>${c('OK')}</b> casadas (${fmtR(somaOk)})</span> · <span style="color:#b45309"><b>${c('REVISAR')}</b> com nome diferente (não baixam)</span> · <b>${c('JA')}</b> já baixadas · <span style="color:#dc2626"><b>${c('NAO')}</b> não encontradas</span> · liquidados <b>${_baixaPrev.filter(x=>x.hist==='L').length}</b> · baixas (loja) <b>${_baixaPrev.filter(x=>x.hist==='B').length}</b>`;
+  document.getElementById('baixa-resumo').innerHTML=`<b>${_baixaPrev.length}</b> linhas${emissao?' · emitida em '+fmtDate(emissao):''} — <span style="color:#166534"><b>${c('OK')}</b> casadas (${fmtR(somaOk)})</span> · <span style="color:#b45309"><b>${c('REVISAR')}</b> com nome diferente (não baixam)</span> · <b>${c('JA')}</b> já baixadas · <span style="color:#dc2626"><b>${c('NAO')}</b> não encontradas</span> · liquidados <b>${_baixaPrev.filter(x=>x.hist==='L').length}</b> · baixas (loja) <b>${_baixaPrev.filter(x=>x.hist==='B').length}</b>${entradas?` · <span style="color:var(--text2)">${entradas} entradas (boletos novos) ignoradas</span>`:''}`;
   document.getElementById('tbody-baixa').innerHTML=_baixaPrev.map((x,i)=>{
     const ok=x.status==='OK',s=st[x.status];
     return `<tr><td><input type="checkbox" class="chk-baixa" data-i="${i}" ${x.status==='OK'?'checked':''} ${ok?'':'disabled'} onchange="baixaContar()"></td>
