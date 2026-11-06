@@ -900,7 +900,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
           <div id="gen-lista-wrap" style="display:none;margin-top:12px">
             <div class="tbl-wrap"><table id="tbl-gen-lista" style="width:100%">
               <thead><tr>
-                <th style="width:32px;text-align:center"><input type="checkbox" id="chk-all-lista" onchange="toggleAllLista(this)" style="cursor:pointer;width:15px;height:15px"></th><th>TIPO</th><th>ID</th><th>CLIENTE</th><th>VALOR</th><th>VENCIMENTO</th><th>SITUAÇÃO</th><th></th>
+                <th style="width:32px;text-align:center"><input type="checkbox" id="chk-all-lista" onchange="toggleAllLista(this)" style="cursor:pointer;width:15px;height:15px"></th><th>ID</th><th>CLIENTE</th><th style="text-align:right">VALOR</th><th>TIPO</th><th></th>
               </tr></thead>
               <tbody id="tbody-gen-lista"></tbody>
             </table></div>
@@ -1251,7 +1251,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
     <h2>🏦 Baixa automática — francesinha do banco</h2>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">
       Envie a <b>Movimentação de boletos</b> do banco (Excel, CSV ou página HTML salva) <b>ou cole a tabela</b> no campo abaixo.
-      <b>L</b> = liquidado (pago no banco) · <b>B</b> = baixa (pago na loja e baixado no banco). O dia do pagamento é a coluna <b>Dia/mês</b>. Nada é gravado antes de você confirmar.
+      <b>L</b> = liquidado (pago no banco) · <b>B</b> = baixa (pago na loja e baixado no banco). O dia do pagamento é a coluna <b>Dia/mês</b>. Só são baixados os boletos que estão na carteira (mesmo vencimento, valor e nome); o valor pago é o valor do boleto, sem juros. Nada é gravado antes de você confirmar.
     </div>
     <div class="form-row" style="align-items:flex-end">
       <div class="form-group"><label>Arquivo (.xlsx, .xls, .csv, .html)</label><input type="file" id="baixa-file" accept=".xlsx,.xls,.csv,.html,.htm"></div>
@@ -2689,7 +2689,7 @@ function renderListaGerada(){
   const tbody=document.getElementById('tbody-gen-lista');
   if(!pendentes.length){
     wrap.style.display=listaGerada.length?'block':'none';
-    tbody.innerHTML=listaGerada.length?`<tr><td colspan="7" style="text-align:center;color:#166534;padding:18px;font-weight:600">✅ Todos os clientes foram acionados hoje!</td></tr>`:'';
+    tbody.innerHTML=listaGerada.length?`<tr><td colspan="6" style="text-align:center;color:#166534;padding:18px;font-weight:600">✅ Todos os clientes foram acionados hoje!</td></tr>`:'';
     return;
   }
   const grupos={};
@@ -2710,10 +2710,10 @@ function renderListaGerada(){
     const isNao=naoAtendeuHoje.has(normNome(cliente));
     return `<tr style="background:${isNao?'#fff7ed':'#fff'};border:1px solid ${isNao?'#fb923c':'var(--border)'}">
       <td style="text-align:center"><input type="checkbox" class="chk-lista-cliente" data-cliente="${cliente.replace(/"/g,'&quot;')}" onchange="updateListaSelecao()" style="cursor:pointer;width:15px;height:15px"></td>
+      <td style="font-size:12px;color:#555">${[...new Set(items.map(r=>r.id).filter(Boolean))].join(', ')||'—'}</td>
       <td style="font-weight:600;color:var(--sidebar)">${cliente}${(()=>{const dm=Math.max(...items.map(r=>r.vencISO?(diasAtrasoBruto(r.vencISO)||0):0));return dm>0?` <span class="badge" style="background:${dm>90?'#fee2e2':dm>30?'#fef9c3':'#dcfce7'};color:${dm>90?'#991b1b':dm>30?'#854d0e':'#166534'};margin-left:6px">${dm}d de atraso</span>`:'';})()}${isNao?' <span class="badge" style="background:#ffedd5;color:#9a3412;margin-left:6px">⚠ Tentar novamente</span>':''}</td>
-      <td style="text-align:right"><b>${items.length} título${items.length>1?'s':''}</b></td>
       <td style="text-align:right"><b style="color:#166534;font-size:14px">${fmtR(totalCli)}</b></td>
-      <td style="font-size:11px;color:#666">${items.map(r=>r.tipo+' #'+r.id).join(', ')}</td>
+      <td style="white-space:nowrap">${['BOLETO','CHEQUE','CADERNETA','CHARGEBACK'].filter(t=>items.some(r=>r.tipo===t)).map(t=>{const n=items.filter(r=>r.tipo===t).length;return `<span class="badge ${t==='BOLETO'?'bg-blue':t==='CHEQUE'?'bg-purple':'bg-gray'}" style="margin-right:4px">${t}${n>1?' ×'+n:''}</span>`;}).join('')}</td>
       <td style="white-space:nowrap"><button class="btn btn-primary btn-sm" onclick="acionarCliente('${cliente.replace(/'/g,"\\'")}')">Acionar</button> <button class="btn btn-outline btn-sm" title="Imprimir relatório do cliente" onclick="printClientes([{nome:'${cliente.replace(/'/g,"\\'")}'}])">🖨</button></td>
     </tr>`;
   }).join('');
@@ -3443,7 +3443,7 @@ function casarFrancesinha(itens,emissao){
   const todos=DB.boleto||[],abertos=todos.filter(r=>(r.sit||'').toUpperCase()!=='PAGO'),usados=new Set();
   return itens.map(it=>{
     const cents=Math.round((it.valor||0)*100),dtpag=frDataPagto(it.dia,emissao);
-    const vpago=it.credito!=null?it.credito:(it.valor||0)+(it.outros||0);
+    const vpago=it.valor||0; // valor total do boleto, sem juros
     const base={...it,dtpag,vpago,via:it.hist==='L'?'BANCO (liquidado)':it.hist==='B'?'LOJA (baixa)':'BANCO ('+it.hist+')'};
     if(it.hist!=='L'&&it.hist!=='B')return{...base,status:'IGNORADO'};
     const eq=r=>r.venc&&dOnly(r.venc)===it.venc&&Math.round(parseFloat(r.valor||0)*100)===cents;
@@ -3490,12 +3490,12 @@ function lerFrancesinha(){
   }else alert('Envie o arquivo da francesinha ou cole a tabela.');
 }
 function renderBaixaPrev(emissao){
-  const st={OK:['✅ Casado','#166534'],REVISAR:['⚠ Revisar (nome diferente)','#b45309'],JA:['✔ Já baixado','#6b7280'],NAO:['❌ Boleto não encontrado','#dc2626'],IGNORADO:['— Ignorado (não é L/B)','#6b7280']};
+  const st={OK:['✅ Casado','#166534'],REVISAR:['⚠ Nome diferente — não baixa','#b45309'],JA:['✔ Já baixado','#6b7280'],NAO:['❌ Boleto não encontrado','#dc2626'],IGNORADO:['— Ignorado (não é L/B)','#6b7280']};
   const c=k=>_baixaPrev.filter(x=>x.status===k).length;
   const somaOk=_baixaPrev.filter(x=>x.status==='OK').reduce((s,x)=>s+x.vpago,0);
-  document.getElementById('baixa-resumo').innerHTML=`<b>${_baixaPrev.length}</b> linhas${emissao?' · emitida em '+fmtDate(emissao):''} — <span style="color:#166534"><b>${c('OK')}</b> casadas (${fmtR(somaOk)})</span> · <span style="color:#b45309"><b>${c('REVISAR')}</b> para revisar</span> · <b>${c('JA')}</b> já baixadas · <span style="color:#dc2626"><b>${c('NAO')}</b> não encontradas</span> · liquidados <b>${_baixaPrev.filter(x=>x.hist==='L').length}</b> · baixas (loja) <b>${_baixaPrev.filter(x=>x.hist==='B').length}</b>`;
+  document.getElementById('baixa-resumo').innerHTML=`<b>${_baixaPrev.length}</b> linhas${emissao?' · emitida em '+fmtDate(emissao):''} — <span style="color:#166534"><b>${c('OK')}</b> casadas (${fmtR(somaOk)})</span> · <span style="color:#b45309"><b>${c('REVISAR')}</b> com nome diferente (não baixam)</span> · <b>${c('JA')}</b> já baixadas · <span style="color:#dc2626"><b>${c('NAO')}</b> não encontradas</span> · liquidados <b>${_baixaPrev.filter(x=>x.hist==='L').length}</b> · baixas (loja) <b>${_baixaPrev.filter(x=>x.hist==='B').length}</b>`;
   document.getElementById('tbody-baixa').innerHTML=_baixaPrev.map((x,i)=>{
-    const ok=x.status==='OK'||x.status==='REVISAR',s=st[x.status];
+    const ok=x.status==='OK',s=st[x.status];
     return `<tr><td><input type="checkbox" class="chk-baixa" data-i="${i}" ${x.status==='OK'?'checked':''} ${ok?'':'disabled'} onchange="baixaContar()"></td>
       <td>${esc(x.nome)}</td><td>${x.venc?fmtDate(x.venc):'—'}</td><td>${fmtR(x.valor)}</td><td>${fmtR(x.vpago)}</td><td>${fmtDate(x.dtpag)}</td>
       <td><span class="badge ${x.hist==='L'?'bg-blue':'bg-purple'}">${esc(x.via)}</span></td>
@@ -3508,7 +3508,7 @@ function baixaContar(){
   if(b){b.textContent=`✔ Confirmar baixas (${n})`;b.disabled=n===0;}
 }
 async function confirmarBaixas(){
-  const sel=[...document.querySelectorAll('.chk-baixa:checked')].map(c=>_baixaPrev[+c.dataset.i]).filter(x=>x&&x.rec);
+  const sel=[...document.querySelectorAll('.chk-baixa:checked')].map(c=>_baixaPrev[+c.dataset.i]).filter(x=>x&&x.rec&&x.status==='OK');
   if(!sel.length)return;
   if(!confirm(`Baixar ${sel.length} boleto(s) como PAGO?`))return;
   sel.forEach(x=>{const r=x.rec;r.sit='PAGO';r.dtpag=x.dtpag;r.vpago=x.vpago;r.via=x.via;});
