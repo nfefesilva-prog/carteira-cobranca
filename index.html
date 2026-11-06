@@ -844,6 +844,10 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
 
         <div class="gen-box">
           <h4>📋 Gerar Lista de Cobrança</h4>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Régua por faixa de atraso — boleto e cheque (cada cobradora trabalha uma faixa)</div>
+            <div id="gen-regua" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+          </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
             <div class="gen-field"><label>Tipo</label>
               <div style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0">
@@ -865,6 +869,11 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
                 </label>
               </div>
             </div>
+            <div class="gen-field"><label>Faixa de atraso</label>
+              <select id="gen-faixa" onchange="renderReguaFaixas()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+                <option value="">Todas</option><option value="0-30">0 a 30 dias</option><option value="31-90">31 a 90 dias</option><option value="91-180">91 a 180 dias</option><option value="180+">Acima de 180 dias</option><option value="90+">Acima de 90 dias (91+)</option>
+              </select>
+            </div>
             <div class="gen-field"><label>Ano</label>
               <select id="gen-ano"><option value="">Todos</option></select>
             </div>
@@ -881,7 +890,7 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
             </div>
             <button class="btn btn-primary" onclick="gerarLista()">Gerar</button>
             <button class="btn btn-outline" onclick="atualizarNovosTitulos()">🔄 Atualizar Novos Títulos</button>
-            <button class="btn btn-outline" onclick="document.getElementById('gen-cliente').value='';document.getElementById('gen-tipo-boleto').checked=false;document.getElementById('gen-tipo-cheque').checked=false;document.getElementById('gen-tipo-caderneta').checked=false;document.getElementById('gen-tipo-chargeback').checked=false;document.getElementById('gen-ano').value='';document.getElementById('gen-mes').value='';document.getElementById('gen-data-inicio').value='';document.getElementById('gen-data-fim').value='';document.getElementById('gen-lista-wrap').style.display='none';document.getElementById('gen-resultado').innerHTML=''">Limpar</button>
+            <button class="btn btn-outline" onclick="document.getElementById('gen-faixa').value='';document.getElementById('gen-cliente').value='';document.getElementById('gen-tipo-boleto').checked=false;document.getElementById('gen-tipo-cheque').checked=false;document.getElementById('gen-tipo-caderneta').checked=false;document.getElementById('gen-tipo-chargeback').checked=false;document.getElementById('gen-ano').value='';document.getElementById('gen-mes').value='';document.getElementById('gen-data-inicio').value='';document.getElementById('gen-data-fim').value='';document.getElementById('gen-lista-wrap').style.display='none';document.getElementById('gen-resultado').innerHTML=''">Limpar</button>
             <button class="btn btn-outline" onclick="exportarLista()">⬇ Exportar</button>
             <button class="btn btn-primary" id="btn-acionar-sel" style="display:none" onclick="acionarSelecionados()">✔ Acionar Selecionados (<span id="cnt-sel">0</span>)</button>
             <button class="btn btn-outline" id="btn-print-sel" style="display:none" onclick="printSelecionados()">🖨 Imprimir Selecionados</button>
@@ -1455,7 +1464,7 @@ async function showTab(name,btn){
   if(name==='dashboard') renderDashboard();
   else if(name==='visao360') renderVisao360();
   else if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(name)){populateFilters();renderTable(name);}
-  else if(name==='crm'){populateGenAnos();renderCRM();carregarListaFixaHoje();}
+  else if(name==='crm'){populateGenAnos();renderCRM();carregarListaFixaHoje();renderReguaFaixas();}
   else if(name==='retorno'){renderRetorno();const rdEl=document.getElementById('rel-data');if(rdEl)rdEl.value=new Date().toISOString().split('T')[0];renderRelatorioDiario();}
   else if(name==='relatorio'){initRelatorio();}
   else if(name==='indicadores'){renderIndicadores();}
@@ -2474,6 +2483,45 @@ function salvarListaFixa(itens,filtros){
     localStorage.setItem(chaveListaFixa(),JSON.stringify({data:new Date().toISOString().split('T')[0],itens,filtros,geradaEm:new Date().toISOString()}));
   }catch(e){console.error('Erro ao salvar carteira fixa do dia:',e);}
 }
+// ===== RÉGUA POR FAIXA DE ATRASO (boleto + cheque) =====
+// O cliente pertence a UMA faixa: a do título mais atrasado dele. Assim duas cobradoras nunca trabalham o mesmo cliente.
+const FAIXAS_ATRASO={'0-30':{rotulo:'Faixa 1 · 0 a 30 dias',min:0,max:30,cor:'#16a34a'},'31-90':{rotulo:'Faixa 2 · 31 a 90 dias',min:31,max:90,cor:'#ca8a04'},'90+':{rotulo:'Faixa 3 · acima de 90 dias',min:91,max:1e9,cor:'#dc2626'},'91-180':{rotulo:'91 a 180 dias',min:91,max:180},'180+':{rotulo:'Acima de 180 dias',min:181,max:1e9}};
+function diasAtrasoBruto(venc){if(!venc)return null;const h0=new Date();h0.setHours(0,0,0,0);return Math.floor((h0-new Date(venc+'T00:00:00'))/86400000);}
+// mapa cliente -> {max: maior atraso (dias), aberto: valor em aberto de boleto+cheque}
+function mapaAtrasoClientes(){
+  const m={};
+  ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    if((r.sit||'').toUpperCase()!=='EM ABERTO'||!r.venc)return;
+    const k=normNome(r.cliente);if(!k)return;
+    const d=diasAtrasoBruto(r.venc);
+    if(!m[k])m[k]={max:d,aberto:0};
+    if(d>m[k].max)m[k].max=d;
+    m[k].aberto+=parseFloat(r.valor||0);
+  }));
+  return m;
+}
+function dentroFaixa(dias,faixa){const f=FAIXAS_ATRASO[faixa];return !!f&&dias!=null&&dias>=f.min&&dias<=f.max;}
+function renderReguaFaixas(){
+  const el=document.getElementById('gen-regua');if(!el)return;
+  const sel=document.getElementById('gen-faixa');
+  if(sel&&!sel.value&&!sel.dataset.restored&&currentUser){sel.dataset.restored='1';try{const s=localStorage.getItem('crm_faixa_'+currentUser.nome);if(s)sel.value=s;}catch(e){}}
+  const atual=sel?sel.value:'',m=mapaAtrasoClientes();
+  el.innerHTML=['0-30','31-90','90+'].map(k=>{
+    const f=FAIXAS_ATRASO[k],cli=Object.values(m).filter(x=>dentroFaixa(x.max,k));
+    const tot=cli.reduce((s,x)=>s+x.aberto,0),ativo=atual===k;
+    return `<button type="button" onclick="aplicarFaixa('${k}')" style="cursor:pointer;text-align:left;background:${ativo?'#f0fdf4':'#fff'};border:2px solid ${ativo?f.cor:'var(--border)'};border-left:6px solid ${f.cor};border-radius:10px;padding:8px 14px;min-width:210px">
+      <div style="font-size:12px;font-weight:700;color:var(--text)">${f.rotulo}${ativo?' ✔':''}</div>
+      <div style="font-size:11px;color:var(--text2)">${cli.length} cliente${cli.length!==1?'s':''} · ${fmtR(tot)}</div></button>`;
+  }).join('');
+}
+// aplica a faixa: boleto + cheque, e já gera a lista
+function aplicarFaixa(k){
+  const s=document.getElementById('gen-faixa');if(!s)return;
+  s.value=k;
+  ['boleto','cheque'].forEach(t=>{const c=document.getElementById('gen-tipo-'+t);if(c)c.checked=true;});
+  ['caderneta','chargeback'].forEach(t=>{const c=document.getElementById('gen-tipo-'+t);if(c)c.checked=false;});
+  gerarLista();
+}
 function lerFiltrosGerarLista(){
   const tipoSelecionados=[];
   if(document.getElementById('gen-tipo-boleto')?.checked)tipoSelecionados.push('boleto');
@@ -2485,6 +2533,7 @@ function lerFiltrosGerarLista(){
     ano:document.getElementById('gen-ano').value,
     mes:document.getElementById('gen-mes').value,
     cli:(document.getElementById('gen-cliente').value||'').trim().toLowerCase(),
+    faixa:(document.getElementById('gen-faixa')||{}).value||'',
     dtInicio:currentUser.role==='admin'?(document.getElementById('gen-data-inicio')?.value||''):'',
     dtFim:currentUser.role==='admin'?(document.getElementById('gen-data-fim')?.value||''):''
   };
@@ -2512,6 +2561,10 @@ function buscarTitulosPorFiltros(f){
       rows.forEach(r=>itens.push({tipo:t.toUpperCase(),id:r.id,cliente:r.cliente,valor:parseFloat(r.valor||0),vencimento:fmtDate(r.venc),vencISO:r.venc||null,mes:r.mes,ano:r.ano,situacao:r.sit||r.status,atribuicao:r.atrib}));
     }
   });
+  if(f.faixa){
+    const m=mapaAtrasoClientes();
+    return itens.filter(it=>{const x=m[normNome(it.cliente)];return x&&dentroFaixa(x.max,f.faixa);});
+  }
   return itens;
 }
 function gerarLista(){
@@ -2528,7 +2581,8 @@ function gerarLista(){
   }
   listaGerada=buscarTitulosPorFiltros(filtros);
   salvarListaFixa(listaGerada,filtros);
-  renderListaGerada();
+  try{if(currentUser)localStorage.setItem('crm_faixa_'+currentUser.nome,filtros.faixa||'');}catch(e){}
+  renderListaGerada();renderReguaFaixas();
 }
 function atualizarNovosTitulos(){
   const fixa=getListaFixaHoje();
@@ -2561,7 +2615,7 @@ async function refreshCarteiraCompartilhada(){
   try{
     const marcados=new Set([...document.querySelectorAll('.chk-lista-cliente:checked')].map(c=>c.dataset.cliente));
     await loadAll();
-    renderCRM();
+    renderCRM();renderReguaFaixas();
     if(listaGerada.length){
       renderListaGerada();
       document.querySelectorAll('.chk-lista-cliente').forEach(c=>{if(marcados.has(c.dataset.cliente))c.checked=true;});
@@ -2629,7 +2683,7 @@ function renderListaGerada(){
     const isNao=naoAtendeuHoje.has(normNome(cliente));
     return `<tr style="background:${isNao?'#fff7ed':'#fff'};border:1px solid ${isNao?'#fb923c':'var(--border)'}">
       <td style="text-align:center"><input type="checkbox" class="chk-lista-cliente" data-cliente="${cliente.replace(/"/g,'&quot;')}" onchange="updateListaSelecao()" style="cursor:pointer;width:15px;height:15px"></td>
-      <td style="font-weight:600;color:var(--sidebar)">${cliente}${isNao?' <span class="badge" style="background:#ffedd5;color:#9a3412;margin-left:6px">⚠ Tentar novamente</span>':''}</td>
+      <td style="font-weight:600;color:var(--sidebar)">${cliente}${(()=>{const dm=Math.max(...items.map(r=>r.vencISO?(diasAtrasoBruto(r.vencISO)||0):0));return dm>0?` <span class="badge" style="background:${dm>90?'#fee2e2':dm>30?'#fef9c3':'#dcfce7'};color:${dm>90?'#991b1b':dm>30?'#854d0e':'#166534'};margin-left:6px">${dm}d de atraso</span>`:'';})()}${isNao?' <span class="badge" style="background:#ffedd5;color:#9a3412;margin-left:6px">⚠ Tentar novamente</span>':''}</td>
       <td style="text-align:right"><b>${items.length} título${items.length>1?'s':''}</b></td>
       <td style="text-align:right"><b style="color:#166534;font-size:14px">${fmtR(totalCli)}</b></td>
       <td style="font-size:11px;color:#666">${items.map(r=>r.tipo+' #'+r.id).join(', ')}</td>
