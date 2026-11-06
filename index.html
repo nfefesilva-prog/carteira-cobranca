@@ -871,14 +871,14 @@ tbody td{padding:10px 12px;font-size:13px;color:var(--text);white-space:nowrap;v
             </div>
             <div class="gen-field"><label>Faixa de atraso</label>
               <select id="gen-faixa" onchange="renderReguaFaixas()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
-                <option value="">Todas</option><option value="0-30">0 a 30 dias</option><option value="31-90">31 a 90 dias</option><option value="91-180">91 a 180 dias</option><option value="180+">Acima de 180 dias</option><option value="90+">Acima de 90 dias (91+)</option>
+                <option value="">Todas</option><option value="0-30">Faixa 1 · 0 a 30 dias</option><option value="31-90">Faixa 2 · 31 a 90 dias</option><option value="91-180">Faixa 3 · 91 a 180 dias</option><option value="180+">Faixa 4 · acima de 180 dias</option>
               </select>
             </div>
             <div class="gen-field"><label>Ano</label>
-              <select id="gen-ano"><option value="">Todos</option></select>
+              <select id="gen-ano" onchange="renderReguaFaixas()"><option value="">Todos</option></select>
             </div>
             <div class="gen-field"><label>Mês</label>
-              <select id="gen-mes"><option value="">Todos</option><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
+              <select id="gen-mes" onchange="renderReguaFaixas()"><option value="">Todos</option><option>JAN</option><option>FEV</option><option>MAR</option><option>ABR</option><option>MAI</option><option>JUN</option><option>JUL</option><option>AGO</option><option>SET</option><option>OUT</option><option>NOV</option><option>DEZ</option></select>
             </div>
             <div class="gen-field"><label>Cliente</label>
               <input type="text" id="gen-cliente" placeholder="Buscar cliente..." style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;min-width:160px">
@@ -2485,13 +2485,15 @@ function salvarListaFixa(itens,filtros){
 }
 // ===== RÉGUA POR FAIXA DE ATRASO (boleto + cheque) =====
 // O cliente pertence a UMA faixa: a do título mais atrasado dele. Assim duas cobradoras nunca trabalham o mesmo cliente.
-const FAIXAS_ATRASO={'0-30':{rotulo:'Faixa 1 · 0 a 30 dias',min:0,max:30,cor:'#16a34a'},'31-90':{rotulo:'Faixa 2 · 31 a 90 dias',min:31,max:90,cor:'#ca8a04'},'90+':{rotulo:'Faixa 3 · acima de 90 dias',min:91,max:1e9,cor:'#dc2626'},'91-180':{rotulo:'91 a 180 dias',min:91,max:180},'180+':{rotulo:'Acima de 180 dias',min:181,max:1e9}};
+const FAIXAS_ATRASO={'0-30':{rotulo:'Faixa 1 · 0 a 30 dias',min:0,max:30,cor:'#16a34a'},'31-90':{rotulo:'Faixa 2 · 31 a 90 dias',min:31,max:90,cor:'#ca8a04'},'91-180':{rotulo:'Faixa 3 · 91 a 180 dias',min:91,max:180,cor:'#ea580c'},'180+':{rotulo:'Faixa 4 · acima de 180 dias',min:181,max:1e9,cor:'#dc2626'}};
 function diasAtrasoBruto(venc){if(!venc)return null;const h0=new Date();h0.setHours(0,0,0,0);return Math.floor((h0-new Date(venc+'T00:00:00'))/86400000);}
 // mapa cliente -> {max: maior atraso (dias), aberto: valor em aberto de boleto+cheque}
-function mapaAtrasoClientes(){
+function mapaAtrasoClientes(ano,mes){
   const m={};
   ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
     if((r.sit||'').toUpperCase()!=='EM ABERTO'||!r.venc)return;
+    if(ano&&String(r.ano||'')!==String(ano))return;
+    if(mes&&String(r.mes||'')!==String(mes))return;
     const k=normNome(r.cliente);if(!k)return;
     const d=diasAtrasoBruto(r.venc);
     if(!m[k])m[k]={max:d,aberto:0};
@@ -2505,11 +2507,12 @@ function renderReguaFaixas(){
   const el=document.getElementById('gen-regua');if(!el)return;
   const sel=document.getElementById('gen-faixa');
   if(sel&&!sel.value&&!sel.dataset.restored&&currentUser){sel.dataset.restored='1';try{const s=localStorage.getItem('crm_faixa_'+currentUser.nome);if(s)sel.value=s;}catch(e){}}
-  const atual=sel?sel.value:'',m=mapaAtrasoClientes();
-  el.innerHTML=['0-30','31-90','90+'].map(k=>{
+  if(sel&&sel.value&&!FAIXAS_ATRASO[sel.value])sel.value='';
+  const atual=sel?sel.value:'',m=mapaAtrasoClientes((document.getElementById('gen-ano')||{}).value,(document.getElementById('gen-mes')||{}).value);
+  el.innerHTML=['0-30','31-90','91-180','180+'].map(k=>{
     const f=FAIXAS_ATRASO[k],cli=Object.values(m).filter(x=>dentroFaixa(x.max,k));
     const tot=cli.reduce((s,x)=>s+x.aberto,0),ativo=atual===k;
-    return `<button type="button" onclick="aplicarFaixa('${k}')" style="cursor:pointer;text-align:left;background:${ativo?'#f0fdf4':'#fff'};border:2px solid ${ativo?f.cor:'var(--border)'};border-left:6px solid ${f.cor};border-radius:10px;padding:8px 14px;min-width:210px">
+    return `<button type="button" onclick="aplicarFaixa('${k}')" style="cursor:pointer;text-align:left;background:${ativo?'#f0fdf4':'#fff'};border:2px solid ${ativo?f.cor:'var(--border)'};border-left:6px solid ${f.cor};border-radius:10px;padding:8px 14px;min-width:190px">
       <div style="font-size:12px;font-weight:700;color:var(--text)">${f.rotulo}${ativo?' ✔':''}</div>
       <div style="font-size:11px;color:var(--text2)">${cli.length} cliente${cli.length!==1?'s':''} · ${fmtR(tot)}</div></button>`;
   }).join('');
@@ -2540,7 +2543,7 @@ function lerFiltrosGerarLista(){
 }
 function buscarTitulosPorFiltros(f){
   const itens=[];
-  const tipos=f.tipos&&f.tipos.length>0?f.tipos:['boleto','cheque','caderneta','chargeback'];
+  const tipos=f.tipos&&f.tipos.length>0?f.tipos:(f.faixa?['boleto','cheque']:['boleto','cheque','caderneta','chargeback']);
   tipos.forEach(t=>{
     let rows=DB[t]||[];
     if(f.ano)rows=rows.filter(r=>String(r.ano||'')===String(f.ano));
@@ -2562,8 +2565,9 @@ function buscarTitulosPorFiltros(f){
     }
   });
   if(f.faixa){
-    const m=mapaAtrasoClientes();
-    return itens.filter(it=>{const x=m[normNome(it.cliente)];return x&&dentroFaixa(x.max,f.faixa);});
+    // a régua vale só para boleto e cheque (respeita ano/mês); caderneta e chargeback seguem como sempre
+    const m=mapaAtrasoClientes(f.ano,f.mes);
+    return itens.filter(it=>{if(it.tipo!=='BOLETO'&&it.tipo!=='CHEQUE')return true;const x=m[normNome(it.cliente)];return x&&dentroFaixa(x.max,f.faixa);});
   }
   return itens;
 }
