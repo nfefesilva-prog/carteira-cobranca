@@ -3404,8 +3404,22 @@ function fecharMesRelatorio(ano){
 
 // ===== BAIXA AUTOMÁTICA — FRANCESINHA DO BANCO =====
 let _baixaPrev=[];
-function frNum(v){if(typeof v==='number')return v;const s=String(v==null?'':v).replace(/[R$\s+]/g,'');if(!s)return null;const n=s.includes(',')?parseFloat(s.replace(/\./g,'').replace(',','.')):parseFloat(s);return isNaN(n)?null:n;}
-function frData(s){const m=String(s||'').trim().match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);if(!m)return null;return `${m[3].length===2?'20'+m[3]:m[3]}-${m[2]}-${m[1]}`;}
+function frNum(v){
+  if(typeof v==='number')return v;
+  const s=String(v==null?'':v).replace(/[R$\s+]/g,'');if(!s)return null;
+  let n;
+  if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s))n=parseFloat(s.replace(/,/g,''));      // 1,819.42 (formato US)
+  else if(s.includes(','))n=parseFloat(s.replace(/\./g,'').replace(',','.'));       // 1.819,42 (BR)
+  else n=parseFloat(s);                                                               // 1819.42
+  return isNaN(n)?null:n;
+}
+function frData(s){
+  s=String(s||'').trim();
+  let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(m)return `${m[3].length===2?'20'+m[3]:m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?`${m[1]}-${m[2]}-${m[3]}`:null;
+}
 // uma linha colada sem tabulações -> células
 function frLinhaParaCelulas(linha){
   if(linha.includes('\t'))return linha.split('\t').map(c=>c.trim());
@@ -3465,27 +3479,32 @@ function openBaixaModal(){
   _baixaPrev=[];baixaContar();
   document.getElementById('modal-baixa-bg').classList.add('open');
 }
-// CSV do banco ("Relatório extrato de boletos"): colunas separadas por ";", operação por linha (baixa / liquidação / entrada / juros)
-function parseFrancesinhaCSV(texto){
-  const linhas=texto.split(/\r?\n/);
-  const ih=linhas.findIndex(l=>/^\s*Carteira;Pagador/i.test(l));
+// Relatório extrato de boletos do banco (CSV ou Excel): colunas Pagador, Vencimento, Valor Inicial, Descrição de Operações
+// (baixa / liquidação / entrada / juros) e, no cabeçalho, a "Data Movimentação" (= dia do pagamento).
+function parseFrancesinhaTabela(rows){
+  const cel=c=>String(c==null?'':c).trim();
+  const ih=rows.findIndex(r=>r.some(c=>/^pagador$/i.test(cel(c)))&&r.some(c=>/^vencimento$/i.test(cel(c))));
   if(ih<0)return null;
-  let dtMov=null;
-  for(let i=0;i<ih;i++){if(/Data Movimenta/i.test(linhas[i])&&linhas[i+1]){dtMov=frData(linhas[i+1].split(';')[2]);break;}}
-  const col=linhas[ih].split(';').map(s=>normNome(s));
+  const col=rows[ih].map(c=>normNome(cel(c)));
   const ix=n=>col.findIndex(c=>c.startsWith(n));
   const iP=ix('pagador'),iV=ix('vencimento'),iVal=ix('valor inicial'),iOp=ix('descricao');
+  if(iP<0||iV<0||iVal<0||iOp<0)return null;
+  let dtMov=null;
+  for(let i=0;i<ih&&!dtMov;i++){const j=rows[i].findIndex(c=>/data movimenta/i.test(cel(c)));if(j>=0&&rows[i+1])dtMov=frData(rows[i+1][j]);}
   const itens=[];let entradas=0;
-  for(let i=ih+1;i<linhas.length;i++){
-    const c=linhas[i].split(';');
-    const nome=(c[iP]||'').trim();
-    if(!nome||!c[iV])continue;                       // linhas de "juros" não têm pagador
-    const op=normNome(c[iOp]||'');
+  for(let i=ih+1;i<rows.length;i++){
+    const c=rows[i],nome=cel(c[iP]);
+    if(!nome||!cel(c[iV]))continue;                    // linhas de "juros" não têm pagador
+    const op=normNome(cel(c[iOp]));
     const hist=op.startsWith('liquid')?'L':op.startsWith('baixa')?'B':null;
     if(!hist){if(op.startsWith('entrada'))entradas++;continue;}   // entrada = boleto novo registrado, não é pagamento
-    itens.push({nome,venc:frData(c[iV]),valor:frNum(c[iVal]),hist,dia:'',dtpag:dtMov,outros:null,credito:null,seun:(c[4]||'').trim()});
+    itens.push({nome,venc:frData(c[iV]),valor:frNum(c[iVal]),hist,dia:'',dtpag:dtMov,outros:null,credito:null});
   }
   return{itens,emissao:dtMov,entradas};
+}
+function parseFrancesinhaCSV(texto){
+  const sep=(texto.match(/;/g)||[]).length>=(texto.match(/\t/g)||[]).length?';':'\t';
+  return parseFrancesinhaTabela(texto.split(/\r?\n/).map(l=>l.split(sep)));
 }
 function lerFrancesinha(){
   const file=document.getElementById('baixa-file').files[0],texto=document.getElementById('baixa-texto').value;
@@ -3493,7 +3512,17 @@ function lerFrancesinha(){
     if(!itens.length){document.getElementById('baixa-resumo').innerHTML='<span style="color:#dc2626">Nenhuma baixa ou liquidação reconhecida. Confira se é a "Movimentação de boletos" / "Relatório extrato de boletos" do banco.</span>';document.getElementById('tbody-baixa').innerHTML='';_baixaPrev=[];baixaContar();return;}
     _baixaPrev=casarFrancesinha(itens,emissao);renderBaixaPrev(emissao,entradas);
   };
-  const processarRows=rows=>{const {itens,emissao}=parseFrancesinhaRows(rows);mostrar(itens,emissao,0);};
+  const processarRows=rows=>{
+    const tab=parseFrancesinhaTabela(rows);
+    if(tab&&tab.itens.length)return mostrar(tab.itens,tab.emissao,tab.entradas);
+    const {itens,emissao}=parseFrancesinhaRows(rows);
+    if(!itens.length){
+      const amostra=rows.filter(r=>r.some(c=>String(c).trim())).slice(0,4).map(r=>r.filter(c=>String(c).trim()).slice(0,8).join(' | ')).join('<br>');
+      document.getElementById('baixa-resumo').innerHTML='<span style="color:#dc2626">Nenhuma baixa ou liquidação reconhecida neste arquivo.</span><div style="font-size:11px;color:var(--text2);margin-top:4px">O que o sistema leu no começo do arquivo:<br>'+esc(amostra).replace(/&lt;br&gt;/g,'<br>')+'</div>';
+      document.getElementById('tbody-baixa').innerHTML='';_baixaPrev=[];baixaContar();return;
+    }
+    mostrar(itens,emissao,0);
+  };
   const processarTexto=t=>{
     const csv=parseFrancesinhaCSV(t);
     if(csv)return mostrar(csv.itens,csv.emissao,csv.entradas);
@@ -3507,14 +3536,25 @@ function lerFrancesinha(){
         else processarTexto(t);};
       r.readAsText(file,'UTF-8');
     }else if(/\.html?$/.test(nome)){
-      r.onload=e=>{const doc=new DOMParser().parseFromString(e.target.result,'text/html');
-        processarRows([...doc.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('td,th')].map(c=>c.textContent.replace(/\s+/g,' ').trim())).concat([[doc.body?doc.body.textContent.replace(/\s+/g,' '):'']]));};
-      r.readAsText(file);
+      lerComoPagina();
     }else{
+      // .xls que na verdade é uma página HTML (comum em bancos): o leitor de Excel trocaria dia e mês das datas
+      const sniff=new FileReader();
+      sniff.onload=ev=>{if(/^\s*<(!doctype|html|table|meta|head|body)/i.test(ev.target.result))lerComoPagina();else lerComoExcel();};
+      sniff.readAsText(file.slice(0,400));
+      return;
+    }
+    function lerComoPagina(){
+      const rd=new FileReader();
+      rd.onload=e=>{const doc=new DOMParser().parseFromString(e.target.result,'text/html');
+        processarRows([...doc.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('td,th')].map(c=>c.textContent.replace(/\s+/g,' ').trim())).concat([[doc.body?doc.body.textContent.replace(/\s+/g,' '):'']]));};
+      rd.readAsText(file);
+    }
+    function lerComoExcel(){
       if(typeof XLSX==='undefined'){alert('Biblioteca de Excel não carregada. Recarregue a página.');return;}
-      r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary'});
-        const rows=[];wb.SheetNames.forEach(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''}).forEach(l=>rows.push(l.map(c=>String(c).trim()))));
-        processarRows(rows);}catch(err){alert('Erro ao ler o arquivo: '+err.message);}};
+      r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary',dateNF:'dd/mm/yyyy'});
+        const rows=[];wb.SheetNames.forEach(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:'',dateNF:'dd/mm/yyyy'}).forEach(l=>rows.push(l.map(c=>String(c).trim()))));
+        processarRows(rows);}catch(err){document.getElementById('baixa-resumo').innerHTML='<span style="color:#dc2626">Erro ao ler o arquivo: '+esc(err.message)+'</span>';console.error(err);}};
       r.readAsBinaryString(file);
     }
   }else if(texto.trim()){
