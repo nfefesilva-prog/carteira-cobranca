@@ -505,6 +505,42 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 .rd-tbl th{font-size:10.5px;color:var(--text2);text-align:left;padding:6px 6px;border-bottom:1px solid var(--border);text-transform:uppercase}
 .rd-tbl td{padding:8px 6px;border-bottom:1px solid #f1f5f9}
 .rd-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+/* ===== SAÚDE DA CARTEIRA ===== */
+.sc-filtros{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+.sc-filtros label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+.sc-filtros select,.sc-filtros input{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff;color:var(--text);outline:none;text-transform:none;font-weight:400}
+.sc-ref{font-size:12px;color:var(--text2);margin:-6px 0 14px}
+.sc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}
+.sc-kpi{background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 4px 16px #1b2a5012}
+.sc-kpi .l{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.sc-kpi .v{font-size:34px;font-weight:800;color:var(--text);line-height:1.15;margin:6px 0 4px}
+.sc-kpi .s{font-size:12.5px;color:var(--text2)}
+.sc-kpi.alerta{background:#fde8e8}
+.sc-kpi.alerta .l,.sc-kpi.alerta .v,.sc-kpi.alerta .s{color:#991b1b}
+.sc-kpi.alerta.zero{background:#ecfdf5}
+.sc-kpi.alerta.zero .l,.sc-kpi.alerta.zero .v,.sc-kpi.alerta.zero .s{color:#166534}
+.sc-sec{font-size:16px;font-weight:800;color:var(--text);margin:8px 0 10px}
+.sc-tbl{background:#fff;border-radius:16px;padding:8px 22px 14px;box-shadow:0 4px 16px #1b2a5012;margin-bottom:26px}
+.sc-row{display:grid;grid-template-columns:110px 1fr 120px 70px 70px 80px 150px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid #eef1f5;cursor:pointer;transition:background .15s}
+.sc-row:first-of-type{border-top:none}
+.sc-row:hover{background:#f8fafc}
+.sc-row.head{cursor:default;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-top:none;padding:10px 0 6px}
+.sc-row.head:hover{background:none}
+.sc-row .n{text-align:right;font-variant-numeric:tabular-nums}
+.sc-row .lab{font-weight:600;color:var(--text)}
+.sc-row .lab small{display:block;font-weight:400;color:var(--text2);font-size:11px}
+.sc-bar{height:22px;border-radius:7px;background:#f1f5f9;position:relative;overflow:hidden}
+.sc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
+.sc-tag{display:inline-block;padding:4px 14px;border-radius:999px;font-size:12px;font-weight:700;text-align:center}
+.sc-jrow{display:grid;grid-template-columns:90px 1fr 80px 120px 210px;gap:14px;align-items:center;padding:13px 10px;border-top:1px solid #eef1f5;cursor:pointer}
+.sc-jrow:hover{background:#f8fafc}
+.sc-jrow.head{cursor:default;font-size:12.5px;color:var(--text2);border-top:none;border-bottom:2px solid #e5e7eb}
+.sc-jrow.head:hover{background:none}
+.sc-jrow .n{text-align:right}
+.sc-jrow.crit{background:#fde8e8;color:#991b1b;font-weight:700}
+.sc-jrow.crit:hover{background:#fbd5d5}
+.sc-note{font-size:11.5px;color:var(--text2);line-height:1.6;margin-top:6px}
+@media(max-width:1000px){.sc-kpis{grid-template-columns:1fr}.sc-row{grid-template-columns:80px 1fr 90px}.sc-row>:nth-child(n+4){display:none}.sc-jrow{grid-template-columns:1fr 60px 100px}.sc-jrow>:nth-child(1),.sc-jrow>:nth-child(5){display:none}}
 </style>
 </head>
 <body>
@@ -577,6 +613,9 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
     <div class="sidebar-section">Gestão</div>
     <button class="nav-item" id="nav-indicadores" onclick="showTab('indicadores',this)">
       <span class="nav-icon">📈</span> Indicadores
+    </button>
+    <button class="nav-item" id="nav-saude" onclick="showTab('saude',this)">
+      <span class="nav-icon">🩺</span> Saúde da Carteira
     </button>
     <button class="nav-item" id="nav-relatorio-menu" onclick="showTab('relatorio',this)">
       <span class="nav-icon">📋</span> Fechamento
@@ -864,6 +903,21 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
       </div>
 
       <!-- RELATÓRIO -->
+      <!-- SAÚDE DA CARTEIRA -->
+      <div id="panel-saude" class="panel">
+        <div class="page-header"><h2>🩺 Saúde da Carteira</h2><div class="page-sub">Painel gerencial · eficiência da carteira de boleto e cheque</div></div>
+        <div class="page-divider"></div>
+        <div class="sc-filtros">
+          <label>Data de referência <input type="date" id="sc-ref" onchange="renderSaude()"></label>
+          <label>Tipo <select id="sc-tipo" onchange="renderSaude()"><option value="">Boleto + Cheque</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select></label>
+          <label>Responsável <select id="sc-resp" onchange="renderSaude()"><option value="">Todos</option></select></label>
+          <label>Situação jurídica <select id="sc-jur" onchange="renderSaude()"><option value="">Todas</option><option value="no">No jurídico</option><option value="nao">Fora do jurídico</option></select></label>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';renderSaude()">Hoje</button>
+          <button class="btn btn-outline btn-sm" onclick="exportarSaude()">⬇ Exportar Excel</button>
+        </div>
+        <div id="sc-conteudo"></div>
+      </div>
+
       <div id="panel-relatorio" class="panel">
         <div class="page-header"><h2>Relatório</h2><div class="page-sub">Fechamento mensal por carteira — acesso restrito</div></div>
         <div class="page-divider"></div>
@@ -1321,6 +1375,25 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
   </div>
 </div>
 
+<!-- MODAL DADOS JURÍDICOS -->
+<div class="modal-bg" id="modal-jur-bg">
+  <div class="modal" style="max-width:520px">
+    <h2>⚖ Dados jurídicos do título</h2>
+    <div id="jur-titulo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+    <input type="hidden" id="jur-tipo"><input type="hidden" id="jur-uid">
+    <div class="form-row">
+      <div class="form-group"><label>Situação</label><select id="jur-status"><option value="">Não encaminhado</option><option value="SIM">Encaminhado ao jurídico</option></select></div>
+      <div class="form-group"><label>Data do encaminhamento</label><input type="date" id="jur-data"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Responsável pelo processo</label><input id="jur-resp" placeholder="Advogado / escritório"></div>
+      <div class="form-group"><label>Prazo da próxima providência</label><input type="date" id="jur-prazo"></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label>Valor recuperado (R$)</label><input type="number" step="0.01" id="jur-rec"></div></div>
+    <div class="modal-actions"><button class="btn btn-danger" onclick="closeModal('jur')">Cancelar</button><button class="btn btn-primary" onclick="salvarJur()">Salvar</button></div>
+  </div>
+</div>
+
 <div id="print-area"></div>
 
 <div class="modal-bg" id="cliente-modal-bg">
@@ -1521,6 +1594,7 @@ async function initApp(){
   const fil=g('fil-crm-cob');if(fil)fil.style.display=isCob?'none':'';
   const btnAc=g('btn-novo-acionamento');if(btnAc)btnAc.style.display=u.role==='editor'?'none':'inline-block';
   const navInd=g('nav-indicadores');if(navInd)navInd.style.display=u.role==='admin'?'flex':'none';
+  const navSaude=g('nav-saude');if(navSaude)navSaude.style.display=u.role==='admin'?'flex':'none';
   await loadAll();
   populateFilters();
   renderDashboard();
@@ -1528,7 +1602,7 @@ async function initApp(){
 }
 
 // ===== TABS =====
-const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',relatorio:'Relatório',crm:'CRM de Cobrança',retorno:'Retornos',indicadores:'Indicadores',sextou:'Campanha Sextou'};
+const TAB_TITLES={dashboard:'Painel',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',relatorio:'Relatório',crm:'CRM de Cobrança',retorno:'Retornos',indicadores:'Indicadores',saude:'Saúde da Carteira',sextou:'Campanha Sextou'};
 async function showTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
@@ -1543,6 +1617,7 @@ async function showTab(name,btn){
   else if(name==='retorno'){renderRetorno();const rdEl=document.getElementById('rel-data');if(rdEl)rdEl.value=new Date().toISOString().split('T')[0];renderRelatorioDiario();}
   else if(name==='relatorio'){initRelatorio();}
   else if(name==='indicadores'){renderIndicadores();}
+  else if(name==='saude'){renderSaude();}
   else if(name==='sextou'){const el=document.getElementById('sex-data');if(!el.value)el.value=nearestFriday();renderSextou();}
 }
 
@@ -3916,6 +3991,133 @@ function getCobradoraAtrib(titulo){
   acs.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   return acs[0].cobradora||null;
 }
+
+// ===== SAÚDE DA CARTEIRA (etapas 1 e 2: faixas de atraso e cruzamento com o jurídico) =====
+// Classificação por título, pelos dias de atraso na data de referência. Os alertas orientam; o sistema não encaminha nada sozinho.
+const SC_FAIXAS=[
+  {k:'em',l:'Em dia',sub:'a vencer',min:-1e9,max:0,tag:'saudável',tc:'#166534',tb:'#dcfce7',bar:'#cbd5e1'},
+  {k:'1-5',l:'1 a 5',min:1,max:5,tag:'risco baixo',tc:'#166534',tb:'#dcfce7',bar:'#b4d0f2'},
+  {k:'6-30',l:'6 a 30',min:6,max:30,tag:'risco moderado',tc:'#854d0e',tb:'#fef3c7',bar:'#8ab8ee'},
+  {k:'31-60',l:'31 a 60',min:31,max:60,tag:'risco médio',tc:'#9a3412',tb:'#ffedd5',bar:'#5b9be6'},
+  {k:'61-89',l:'61 a 89',min:61,max:89,tag:'risco alto',tc:'#991b1b',tb:'#fee2e2',bar:'#3b82e0'},
+  {k:'90-179',l:'90 a 179',min:90,max:179,tag:'elegível ao jurídico',tc:'#1e40af',tb:'#dbeafe',bar:'#2563c9'},
+  {k:'180+',l:'180+',min:180,max:1e9,tag:'perda potencial',tc:'#374151',tb:'#fff',bar:'#1d4e91',outline:1}
+];
+const SC_JUR=[
+  {k:'prazo',f:'90 a 179',sit:'No jurídico, no prazo',acao:'Acompanhar'},
+  {k:'fora',f:'90 a 179',sit:'No jurídico, fora do prazo',acao:'Cobrar atualização do responsável'},
+  {k:'semprazo',f:'90 a 179',sit:'No jurídico, sem prazo informado',acao:'Informar o prazo da providência',opc:1},
+  {k:'deveria',f:'90 a 179',sit:'Deveria estar e não está',acao:'Encaminhar agora',crit:1},
+  {k:'comproc',f:'180+',sit:'Perda com processo',acao:'Manter a ação e avaliar perda'},
+  {k:'semproc',f:'180+',sit:'Perda sem processo',acao:'Avaliar providência jurídica ou baixa'}
+];
+let _scTit=[],_scRef='',_scSemVenc=0,_scUltima=null;
+const scMi=v=>v>=1e6?'R$ '+(v/1e6).toFixed(2).replace('.',',')+' mi':v>=1e3?'R$ '+Math.round(v/1e3).toLocaleString('pt-BR')+' mil':fmtR(v);
+const scPct=v=>(v*100).toFixed(1).replace('.',',')+'%';
+function scColetar(){
+  const gv=id=>(document.getElementById(id)||{}).value||'';
+  const ref=gv('sc-ref')||hojeISO(),tipoSel=gv('sc-tipo'),resp=gv('sc-resp'),sj=gv('sc-jur');
+  const refD=new Date(ref+'T00:00:00'),out=[];let semVenc=0;
+  ['boleto','cheque'].forEach(t=>{
+    if(tipoSel&&tipoSel!==t)return;
+    (DB[t]||[]).forEach(r=>{
+      const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag);
+      if(pago&&(!dtp||dtp<=ref))return;                 // já estava pago na data de referência
+      const saldo=Math.max(0,(parseFloat(r.valor)||0)-(pago?0:(parseFloat(r.vpago)||0)));
+      if(saldo<=0)return;
+      if(!r.venc){semVenc++;return;}
+      const dd=Math.round((refD-new Date(r.venc+'T00:00:00'))/86400000),dias=Math.max(0,dd);
+      const faixa=dd<=0?SC_FAIXAS[0]:SC_FAIXAS.find(f=>f.k!=='em'&&dias>=f.min&&dias<=f.max);
+      const jur=(r.atrib||'').toUpperCase()==='JURÍDICO'||r.jur==='SIM';
+      if(sj==='no'&&!jur)return;if(sj==='nao'&&jur)return;
+      const prazo=r.jurPrazo?dOnly(r.jurPrazo):'';
+      let jsit='';
+      if(dias>=180)jsit=jur?'comproc':'semproc';
+      else if(dias>=90)jsit=jur?(!prazo?'semprazo':prazo<ref?'fora':'prazo'):'deveria';
+      if(resp&&getCobradoraAtrib(r)!==resp)return;
+      out.push({tipo:t,uid:r._uid,r,cliente:r.cliente||'—',id:r.id,venc:r.venc,dias,saldo,faixa:faixa?faixa.k:'em',jur,jsit});
+    });
+  });
+  _scTit=out;_scRef=ref;_scSemVenc=semVenc;return out;
+}
+function renderSaude(){
+  const sel=document.getElementById('sc-resp');
+  if(sel&&sel.options.length===1)getCobradoras().forEach(c=>sel.insertAdjacentHTML('beforeend',`<option>${esc(c)}</option>`));
+  const tit=scColetar(),el=document.getElementById('sc-conteudo');if(!el)return;
+  const soma=a=>a.reduce((s,t)=>s+t.saldo,0);
+  const carteira=soma(tit),venc=soma(tit.filter(t=>t.dias>0)),v90=soma(tit.filter(t=>t.dias>=90)),v180=tit.filter(t=>t.dias>=180);
+  const pond=venc>0?tit.filter(t=>t.dias>0).reduce((s,t)=>s+t.saldo*t.dias,0)/venc:0;
+  const gap=tit.filter(t=>t.jsit==='deveria');
+  const kpi=(l,v,s,cls)=>`<div class="sc-kpi ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  const porF=SC_FAIXAS.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:soma(a),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});
+  const maxV=Math.max(...porF.map(f=>f.v),1);
+  const faixasHTML=`<div class="sc-row head"><span>Faixa (dias)</span><span></span><span class="n">Montante</span><span class="n">Títulos</span><span class="n">Clientes</span><span class="n">% cart.</span><span></span></div>`+
+    porF.map(f=>`<div class="sc-row" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa">
+      <span class="lab">${f.l}${f.sub?`<small>${f.sub}</small>`:''}</span>
+      <span class="sc-bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${f.bar}"></i></span>
+      <span class="n" title="${fmtR(f.v)}">${scMi(f.v)}</span><span class="n">${f.n}</span><span class="n">${f.c}</span><span class="n">${carteira>0?scPct(f.v/carteira):'—'}</span>
+      <span><span class="sc-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${f.tag}</span></span></div>`).join('');
+  const jurHTML=`<div class="sc-jrow head"><span>Faixa</span><span>Situação</span><span class="n">Títulos</span><span class="n">Montante</span><span>Ação</span></div>`+
+    SC_JUR.filter(j=>!j.opc||tit.some(t=>t.jsit===j.k)).map(j=>{const a=tit.filter(t=>t.jsit===j.k);
+      return `<div class="sc-jrow ${j.crit&&a.length?'crit':''}" onclick="scAbrirLista('jur','${j.k}')"><span>${j.f}</span><span>${j.sit}</span><span class="n">${a.length}</span><span class="n" title="${fmtR(soma(a))}">${scMi(soma(a))}</span><span>${j.acao}</span></div>`;}).join('');
+  el.innerHTML=`<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
+    <div class="sc-kpis">
+      ${kpi('Carteira em aberto',scMi(carteira),tit.length+' títulos')}
+      ${kpi('Inadimplência',carteira>0?scPct(venc/carteira):'—',scMi(venc)+' vencidos')}
+      ${kpi('Inadimplência 90+',carteira>0?scPct(v90/carteira):'—',scMi(v90))}
+      ${kpi('Atraso médio ponderado',Math.round(pond)+' dias','sobre o vencido, pelo valor')}
+      ${kpi('Exposição 180+',scMi(soma(v180)),v180.length+' títulos · perda potencial')}
+      ${kpi('Gap de encaminhamento',scMi(soma(gap)),gap.length+' título'+(gap.length!==1?'s':'')+' sem processo',gap.length?'alerta':'alerta zero')}
+    </div>
+    <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML}</div>
+    <div class="sc-sec">Cruzamento com o jurídico (90 dias ou mais)</div><div class="sc-tbl">${jurHTML}</div>
+    <div class="sc-note">• Classificação por título, pelos dias de atraso na data de referência (a vencer = zero dia). Saldo em aberto = valor − pago parcial.<br>
+    • "No jurídico" = título com atribuição JURÍDICO ou marcado como encaminhado em ⚖. Prazo vem do campo "próxima providência".<br>
+    • 90 dias não é encaminhamento automático e 180 dias não é perda contábil: os alertas orientam a equipe, o sistema não encaminha nem baixa nada sozinho.<br>
+    • Para validar com o relatório financeiro, use ⬇ Exportar Excel (títulos em aberto, faixa e situação jurídica).</div>`;
+}
+function fecharSc(){const d=document.getElementById('sc-bg');if(d)d.classList.remove('open');}
+function scAbrirLista(modo,k){
+  _scUltima={modo,k};
+  const lista=_scTit.filter(t=>modo==='faixa'?t.faixa===k:t.jsit===k).sort((a,b)=>b.saldo-a.saldo);
+  const nome=modo==='faixa'?'Faixa '+(SC_FAIXAS.find(f=>f.k===k)||{}).l+' dias':(SC_JUR.find(j=>j.k===k)||{}).sit;
+  const cli=new Set(lista.map(t=>normNome(t.cliente))).size;
+  let d=document.getElementById('sc-bg');
+  if(!d){d=document.createElement('div');d.id='sc-bg';d.className='rd-bg';d.addEventListener('click',e=>{if(e.target===d)fecharSc();});document.body.appendChild(d);}
+  const linhas=lista.slice(0,300).map(t=>{const q=t.cliente.replace(/'/g,"\\'");
+    return `<tr><td><a href="#" onclick="fecharSc();openClienteModal('${q}','${esc(t.id||'')}');return false" style="color:#1d4ed8;font-weight:600">${esc(t.cliente)}</a></td><td>${esc(t.id||'—')}</td><td>${t.tipo.toUpperCase()}</td><td>${fmtDate(t.venc)}</td><td style="text-align:right">${t.dias||'—'}</td><td style="text-align:right"><b>${fmtR(t.saldo)}</b></td>
+      <td>${t.jur?'<span class="badge bg-blue">⚖ jurídico</span>':''}<button class="btn btn-outline btn-sm" style="padding:1px 7px" title="Dados jurídicos" onclick="abrirJur('${t.tipo}','${t.uid}')">⚖</button></td></tr>`;}).join('');
+  d.innerHTML=`<div class="rd-panel" style="width:820px"><div class="rd-head"><div><h3>${esc(nome)}</h3><div class="rd-sub">${lista.length} títulos · ${cli} clientes · ${fmtR(lista.reduce((s,t)=>s+t.saldo,0))} · ref. ${fmtDate(_scRef)}</div></div><button class="fd-x" type="button" onclick="fecharSc()">✕</button></div>
+    <table class="rd-tbl" style="margin-top:14px"><thead><tr><th>Cliente</th><th>ID</th><th>Tipo</th><th>Vencimento</th><th style="text-align:right">Dias</th><th style="text-align:right">Saldo</th><th>Jurídico</th></tr></thead><tbody>${linhas||'<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">Nenhum título.</td></tr>'}</tbody></table>
+    ${lista.length>300?`<div class="rd-sub">+ ${lista.length-300} título(s) não exibidos — use ⬇ Exportar Excel para ver todos.</div>`:''}</div>`;
+  d.classList.add('open');
+}
+function abrirJur(tipo,uid){
+  const r=(DB[tipo]||[]).find(x=>x._uid===uid);if(!r)return;
+  document.getElementById('jur-tipo').value=tipo;document.getElementById('jur-uid').value=uid;
+  document.getElementById('jur-titulo').textContent=(r.cliente||'—')+' · ID '+(r.id||'—')+' · '+tipo.toUpperCase()+' · '+fmtR(r.valor)+' · venc. '+fmtDate(r.venc);
+  const ja=(r.atrib||'').toUpperCase()==='JURÍDICO'||r.jur==='SIM';
+  document.getElementById('jur-status').value=ja?'SIM':'';
+  document.getElementById('jur-data').value=r.jurData||'';document.getElementById('jur-resp').value=r.jurResp||'';
+  document.getElementById('jur-prazo').value=r.jurPrazo||'';document.getElementById('jur-rec').value=r.jurRecuperado||'';
+  document.getElementById('modal-jur-bg').classList.add('open');
+}
+async function salvarJur(){
+  const tipo=v('jur-tipo'),r=(DB[tipo]||[]).find(x=>x._uid===v('jur-uid'));if(!r)return;
+  r.jur=v('jur-status');r.jurData=v('jur-data')||null;r.jurResp=v('jur-resp')||'';r.jurPrazo=v('jur-prazo')||null;r.jurRecuperado=v('jur-rec')||null;
+  await sbSave(tipo,r);
+  closeModal('jur');renderSaude();if(_scUltima&&document.getElementById('sc-bg')&&document.getElementById('sc-bg').classList.contains('open'))scAbrirLista(_scUltima.modo,_scUltima.k);
+}
+function exportarSaude(){
+  if(!_scTit.length){alert('Nada para exportar.');return;}
+  if(typeof XLSX==='undefined'){alert('Biblioteca de Excel não carregada. Recarregue a página.');return;}
+  const fx=Object.fromEntries(SC_FAIXAS.map(f=>[f.k,f.l+' dias']));const js=Object.fromEntries(SC_JUR.map(j=>[j.k,j.sit]));
+  const rows=_scTit.sort((a,b)=>b.dias-a.dias).map(t=>({Cliente:t.cliente,ID:t.id||'',Tipo:t.tipo.toUpperCase(),Vencimento:fmtDate(t.venc),'Dias de atraso':t.dias,Faixa:fx[t.faixa],'Saldo em aberto':+t.saldo.toFixed(2),'No jurídico':t.jur?'SIM':'','Situação jurídica':js[t.jsit]||'','Responsável pelo processo':t.r.jurResp||'','Prazo da providência':t.r.jurPrazo?fmtDate(t.r.jurPrazo):''}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Carteira em aberto');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Data de referência':fmtDate(_scRef),Títulos:rows.length,'Carteira em aberto':+_scTit.reduce((s,t)=>s+t.saldo,0).toFixed(2)}]),'Resumo');
+  XLSX.writeFile(wb,`LeoMT_SaudeCarteira_${_scRef}.xlsx`);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharSc();});
 
 // ===== INDICADORES =====
 function renderIndicadores(){try{
