@@ -531,7 +531,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 .sc-row .lab small{display:block;font-weight:400;color:var(--text2);font-size:11px}
 .sc-bar{height:22px;border-radius:7px;background:#f1f5f9;position:relative;overflow:hidden}
 .sc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
-.sc-tag{display:inline-block;padding:4px 14px;border-radius:999px;font-size:12px;font-weight:700;text-align:center}
+.sc-tag{display:inline-block;padding:4px 14px;border-radius:999px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}
 .sc-jrow{display:grid;grid-template-columns:90px 1fr 80px 120px 210px;gap:14px;align-items:center;padding:13px 10px;border-top:1px solid #eef1f5;cursor:pointer}
 .sc-jrow:hover{background:#f8fafc}
 .sc-jrow.head{cursor:default;font-size:12.5px;color:var(--text2);border-top:none;border-bottom:2px solid #e5e7eb}
@@ -905,15 +905,21 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
       <!-- RELATÓRIO -->
       <!-- SAÚDE DA CARTEIRA -->
       <div id="panel-saude" class="panel">
-        <div class="page-header"><h2>🩺 Saúde da Carteira</h2><div class="page-sub">Painel gerencial · eficiência da carteira de boleto e cheque</div></div>
-        <div class="page-divider"></div>
+        <div class="page-sub" style="margin-bottom:10px">Painel gerencial · eficiência da carteira de boleto e cheque</div>
         <div class="sc-filtros">
-          <label>Data de referência <input type="date" id="sc-ref" onchange="renderSaude()"></label>
+          <label>Data de referência <input type="text" id="sc-ref" placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" oninput="scMascaraData(this)" style="width:120px"></label>
+          <label>Período (inadimplência) <select id="sc-per" onchange="renderSaude()"></select></label>
           <label>Tipo <select id="sc-tipo" onchange="renderSaude()"><option value="">Boleto + Cheque</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select></label>
           <label>Responsável <select id="sc-resp" onchange="renderSaude()"><option value="">Todos</option></select></label>
           <label>Situação jurídica <select id="sc-jur" onchange="renderSaude()"><option value="">Todas</option><option value="no">No jurídico</option><option value="nao">Fora do jurídico</option></select></label>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';renderSaude()">Hoje</button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';document.getElementById('sc-per').dataset.set='';renderSaude()">Hoje</button>
           <button class="btn btn-outline btn-sm" onclick="exportarSaude()">⬇ Exportar Excel</button>
+        </div>
+        <div class="sc-filtros" style="margin-top:-6px">
+          <button class="btn btn-primary btn-sm" onclick="abrirPagosDia()">📥 Pagos em dia</button>
+          <button class="btn btn-primary btn-sm" onclick="abrirProcessos()">⚖ Processos (Painel Jurídico)</button>
+          <button class="btn btn-outline btn-sm" onclick="scMostrarRetratos()">📸 Retratos</button>
+          <button class="btn btn-outline btn-sm" onclick="abrirParametros()">⚙ Parâmetros</button>
         </div>
         <div id="sc-conteudo"></div>
       </div>
@@ -1390,6 +1396,12 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
       <div class="form-group"><label>Prazo da próxima providência</label><input type="date" id="jur-prazo"></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Valor recuperado (R$)</label><input type="number" step="0.01" id="jur-rec"></div></div>
+    <div id="exc-bloco" style="border-top:1px solid var(--border);margin-top:8px;padding-top:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;cursor:pointer"><input type="checkbox" id="exc-marcar" style="width:16px;height:16px"> Exceção ao encaminhamento (sai do gap jurídico)</label>
+      <div class="form-row" style="margin-top:8px"><div class="form-group"><label>Motivo</label><select id="exc-motivo"><option>acordo em andamento</option><option>disputa comercial</option><option>valor abaixo do mínimo</option><option>outro</option></select></div>
+      <div class="form-group" style="flex:2"><label>Observação (obrigatória se "outro")</label><input id="exc-obs"></div></div>
+      <div id="exc-info" style="font-size:11px;color:var(--text2)"></div>
+    </div>
     <div class="modal-actions"><button class="btn btn-danger" onclick="closeModal('jur')">Cancelar</button><button class="btn btn-primary" onclick="salvarJur()">Salvar</button></div>
   </div>
 </div>
@@ -3850,6 +3862,8 @@ function importExcel(type,input){
       if(!rows.length){alert('Planilha vazia.');return;}
       const mapped=rows.map(row=>{
         const r={_uid:uid()};const rl={};Object.keys(row).forEach(k=>rl[k.toLowerCase().trim()]=row[k]);
+        // chave do título do Viasoft (estabelecimento + número + parcela), quando o relatório trouxer essas colunas
+        {const num=rl['número do título']||rl['numero do titulo']||rl['nº título']||rl['nº titulo']||rl['número']||rl['numero']||rl['documento']||'';if(num!==''&&(type==='boleto'||type==='cheque')){r.chave=[rl['estabelecimento']||rl['estab'],num,rl['parcela']].filter(x=>x!==''&&x!=null&&x!==undefined).join('-');r.docNum=String(num);}}
         if(type==='boleto'){
           r.id=parseId(rl['id']||rl['código']||rl['codigo']||'');
           r.cliente=rl['cliente']||rl['nome']||'';
@@ -3938,6 +3952,7 @@ function importExcel(type,input){
           if(!res.ok){const txt=await res.text();console.error('Erro save import',type,nr.id||nr.num,res.status,txt);}
         }catch(e){console.error('Falha rede import',type,e);}
       }
+      if(type==='boleto'||type==='cheque')scGravarRetrato('importação de '+type).then(r=>{if(r&&r.ok&&!r.ignorado)showToast('📸 Retrato da carteira gravado ('+r.n+' títulos)','ok');});
       renderTable(type);alert(`Importação concluída!\n${added} adicionados | ${updated} atualizados\n\nSe os dados sumirem após recarregar, abra o Console (F12) e verifique os erros em vermelho.`);
     }catch(err){alert('Erro: '+err.message);}
   };
@@ -3992,132 +4007,592 @@ function getCobradoraAtrib(titulo){
   return acs[0].cobradora||null;
 }
 
-// ===== SAÚDE DA CARTEIRA (etapas 1 e 2: faixas de atraso e cruzamento com o jurídico) =====
-// Classificação por título, pelos dias de atraso na data de referência. Os alertas orientam; o sistema não encaminha nada sozinho.
-const SC_FAIXAS=[
-  {k:'em',l:'Em dia',sub:'a vencer',min:-1e9,max:0,tag:'saudável',tc:'#166534',tb:'#dcfce7',bar:'#cbd5e1'},
-  {k:'1-5',l:'1 a 5',min:1,max:5,tag:'risco baixo',tc:'#166534',tb:'#dcfce7',bar:'#b4d0f2'},
-  {k:'6-30',l:'6 a 30',min:6,max:30,tag:'risco moderado',tc:'#854d0e',tb:'#fef3c7',bar:'#8ab8ee'},
-  {k:'31-60',l:'31 a 60',min:31,max:60,tag:'risco médio',tc:'#9a3412',tb:'#ffedd5',bar:'#5b9be6'},
-  {k:'61-89',l:'61 a 89',min:61,max:89,tag:'risco alto',tc:'#991b1b',tb:'#fee2e2',bar:'#3b82e0'},
-  {k:'90-179',l:'90 a 179',min:90,max:179,tag:'elegível ao jurídico',tc:'#1e40af',tb:'#dbeafe',bar:'#2563c9'},
-  {k:'180+',l:'180+',min:180,max:1e9,tag:'perda potencial',tc:'#374151',tb:'#fff',bar:'#1d4e91',outline:1}
-];
-const SC_JUR=[
-  {k:'prazo',f:'90 a 179',sit:'No jurídico, no prazo',acao:'Acompanhar'},
-  {k:'fora',f:'90 a 179',sit:'No jurídico, fora do prazo',acao:'Cobrar atualização do responsável'},
-  {k:'semprazo',f:'90 a 179',sit:'No jurídico, sem prazo informado',acao:'Informar o prazo da providência',opc:1},
-  {k:'deveria',f:'90 a 179',sit:'Deveria estar e não está',acao:'Encaminhar agora',crit:1},
-  {k:'comproc',f:'180+',sit:'Perda com processo',acao:'Manter a ação e avaliar perda'},
-  {k:'semproc',f:'180+',sit:'Perda sem processo',acao:'Avaliar providência jurídica ou baixa'}
-];
-let _scTit=[],_scRef='',_scSemVenc=0,_scUltima=null;
+// ===== SAÚDE DA CARTEIRA =====
+// Etapas 1 e 2 (faixas de atraso e cruzamento com o jurídico). Os alertas orientam; o sistema não encaminha nem baixa nada sozinho.
+
+// ---------- armazenamento das tabelas novas (API; se o servidor recusar, guarda neste navegador e avisa) ----------
+const EX={};
+function exLocal(t){try{return JSON.parse(localStorage.getItem('leoEx_'+t)||'[]');}catch(e){return [];}}
+function exLocalSalvar(t,arr){try{localStorage.setItem('leoEx_'+t,JSON.stringify(arr));}catch(e){showToast('⚠️ Armazenamento local cheio ('+t+')','error');}}
+async function exCarregar(t,forcar){
+  if(EX[t]&&EX[t].ok&&!forcar)return EX[t];
+  let dados=null,origem='servidor';
+  try{const res=await fetch(`${API_URL}/api/${t}`);if(res.ok){const d=await res.json();if(Array.isArray(d))dados=d;}}catch(e){}
+  const loc=exLocal(t);
+  if(dados===null){dados=loc;origem=loc.length||true?'local':'servidor';}
+  else if(loc.length){const ids=new Set(dados.map(x=>x._uid));loc.forEach(x=>{if(!ids.has(x._uid))dados.push(x);});origem='servidor+local';}
+  EX[t]={ok:true,dados,origem};return EX[t];
+}
+async function exSalvar(t,obj){
+  const c=EX[t]||(EX[t]={ok:true,dados:[],origem:'servidor'});
+  const i=c.dados.findIndex(x=>x._uid===obj._uid);if(i>=0)c.dados[i]=obj;else c.dados.push(obj);
+  let ok=false;
+  try{const res=await fetch(`${API_URL}/api/${t}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});ok=res.ok;}catch(e){}
+  if(!ok){c.origem='local';exLocalSalvar(t,c.dados);}
+  return ok;
+}
+const exOrigem=t=>(EX[t]&&EX[t].origem)||'—';
+
+// ---------- parâmetros (editáveis pelo admin; cada alteração fica registrada) ----------
+const SC_PARAM_PADRAO={
+  faixas:[
+    {id:'f0',min:-1e9,tag:'saudável'},{id:'f1',min:1,tag:'risco baixo'},{id:'f2',min:6,tag:'risco moderado'},{id:'f3',min:31,tag:'risco médio'},
+    {id:'f4',min:61,tag:'risco alto'},{id:'f5',min:90,tag:'elegível ao jurídico',role:'jur'},{id:'f6',min:180,tag:'perda potencial',role:'perda'}],
+  perfil:[{l:'Saudável',max:0},{l:'Baixo',max:5},{l:'Moderado',max:10},{l:'Médio',max:30},{l:'Alto',max:1e9}],
+  janelaHist:12,filtroHist:6,minPagamentos:3,recAtrasos:3,recJanela:6,recPct:40,
+  alertaDias:150,valorMinAjuizar:0,diasSemAndamento:60,feriadosExtras:'',urlJuridico:'',historico:[]
+};
+function scParams(){
+  const rec=EX.parametros&&EX.parametros.dados.find(x=>x._uid==='sc_params');
+  const P=JSON.parse(JSON.stringify(SC_PARAM_PADRAO));
+  if(rec){Object.keys(rec).forEach(k=>{if(k[0]!=='_'&&rec[k]!=null)P[k]=rec[k];});P.faixas=P.faixas.map((f,i)=>({...SC_PARAM_PADRAO.faixas[i],...f}));}
+  return P;
+}
+const SC_CORES=[
+  {bar:'#cbd5e1',tb:'#dcfce7',tc:'#166534'},{bar:'#b4d0f2',tb:'#d1fae5',tc:'#065f46'},{bar:'#8ab8ee',tb:'#fde047',tc:'#713f12'},
+  {bar:'#5b9be6',tb:'#ea580c',tc:'#ffffff'},{bar:'#3b82e0',tb:'#dc2626',tc:'#ffffff'},{bar:'#2563c9',tb:'#dbeafe',tc:'#1e40af'},{bar:'#1d4e91',tb:'#ffffff',tc:'#374151',outline:1}];
+function scFaixas(){
+  const fx=scParams().faixas;
+  return fx.map((f,i)=>{
+    const prox=fx[i+1],min=i===0?-1e9:f.min,max=prox?prox.min-1:1e9;
+    const rot=f.rotulo||(i===0?'Em dia':(max>=1e9?min+'+':min+' a '+max));
+    return{k:f.id,l:rot,sub:i===0?'a vencer':'',min,max,tag:f.tag,role:f.role||'',...SC_CORES[i]};
+  });
+}
+
+// ---------- dias úteis (feriados nacionais + extras dos parâmetros) ----------
+function pascoa(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;return new Date(y,mes-1,dia);}
+const _isoD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const _feriadosCache={};
+function feriadosAno(y){
+  if(_feriadosCache[y])return _feriadosCache[y];
+  const s=new Set(['01-01','04-21','05-01','09-07','10-12','11-02','11-15','11-20','12-25'].map(x=>y+'-'+x));
+  const p=pascoa(y),add=n=>{const d=new Date(p);d.setDate(d.getDate()+n);return _isoD(d);};
+  [-48,-47,-2,60].forEach(n=>s.add(add(n)));   // carnaval (seg/ter), sexta-feira santa, corpus christi
+  (scParams().feriadosExtras||'').split(/[,;\s]+/).filter(Boolean).forEach(t=>{const m=t.match(/^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/);if(m&&(!m[3]||m[3]==String(y)))s.add(`${y}-${m[2]}-${m[1]}`);});
+  return _feriadosCache[y]=s;
+}
+function ehDiaUtil(iso){const d=new Date(iso+'T00:00:00'),w=d.getDay();return w!==0&&w!==6&&!feriadosAno(d.getFullYear()).has(iso);}
+function proxDiaUtil(iso){const d=new Date(iso+'T00:00:00');do{d.setDate(d.getDate()+1);}while(!ehDiaUtil(_isoD(d)));return _isoD(d);}
+// pago em dia = pagamento até o vencimento; se o vencimento cai em fim de semana/feriado, vale até o próximo dia útil
+function pagoEmDia(venc,dtpag){if(!venc||!dtpag)return false;if(dtpag<=venc)return true;return !ehDiaUtil(venc)&&dtpag<=proxDiaUtil(venc);}
+
+// ---------- chave do título ----------
+// Usa a chave do Viasoft (estabelecimento+número+parcela) quando existir; senão a mesma regra da importação da carteira.
+function tituloChave(t,r){
+  if(r.chave)return String(r.chave);
+  const cents=Math.round((parseFloat(r.valor)||0)*100);
+  return t==='cheque'&&r.num?`cheque|${r.num}`:`${t}|${normalizeId(r.id)}|${dOnly(r.venc)}|${cents}`;
+}
+
+// ---------- leitura de arquivos/colagem (CSV, Excel, HTML ou texto) ----------
+function csvParse(txt){
+  const lin=txt.split(/\r?\n/).filter(l=>l.trim()!=='');if(!lin.length)return [];
+  const c=l=>({';':(l.match(/;/g)||[]).length,'\t':(l.match(/\t/g)||[]).length,',':(l.match(/,/g)||[]).length});
+  const cc=c(lin.slice(0,5).join('\n')),sep=Object.keys(cc).sort((a,b)=>cc[b]-cc[a])[0];
+  return lin.map(l=>{const o=[];let cur='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===sep&&!q){o.push(cur);cur='';}else cur+=ch;}o.push(cur);return o.map(x=>x.trim());});
+}
+function scLerTabela(file,texto){
+  return new Promise((res,rej)=>{
+    if(!file){res(texto&&texto.trim()?csvParse(texto):[]);return;}
+    const nome=file.name.toLowerCase(),r=new FileReader();
+    if(/\.(csv|txt)$/.test(nome)){r.onload=e=>{let t=e.target.result;if(t.includes('�')){const r2=new FileReader();r2.onload=e2=>res(csvParse(e2.target.result));r2.readAsText(file,'windows-1252');}else res(csvParse(t));};r.readAsText(file,'UTF-8');}
+    else{
+      const sn=new FileReader();
+      sn.onload=ev=>{
+        if(/^\s*<(!doctype|html|table|meta|head|body)/i.test(ev.target.result)){const rd=new FileReader();rd.onload=e=>{const doc=new DOMParser().parseFromString(e.target.result,'text/html');res([...doc.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('td,th')].map(c=>c.textContent.replace(/\s+/g,' ').trim())));};rd.readAsText(file);return;}
+        if(typeof XLSX==='undefined'){rej(new Error('Biblioteca de Excel não carregada. Recarregue a página.'));return;}
+        r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary',dateNF:'dd/mm/yyyy'});const rows=[];wb.SheetNames.forEach(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:'',dateNF:'dd/mm/yyyy'}).forEach(l=>rows.push(l.map(c=>String(c).trim()))));res(rows);}catch(err){rej(err);}};
+        r.readAsBinaryString(file);
+      };
+      sn.readAsText(file.slice(0,400));
+    }
+  });
+}
+// procura a linha de cabeçalho e devolve objetos {campo:valor} usando apelidos de coluna
+function scObjetos(rows,aliases){
+  const norm=s=>normNome(String(s||'')).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  let ih=-1,mapa={};
+  for(let i=0;i<Math.min(rows.length,40);i++){
+    const m={};rows[i].forEach((c,j)=>{const n=norm(c);if(!n)return;Object.keys(aliases).forEach(k=>{if(m[k]==null&&aliases[k].some(a=>n===a))m[k]=j;});});
+    if(Object.keys(m).length>=3&&Object.keys(m).length>Object.keys(mapa).length){ih=i;mapa=m;}
+  }
+  if(ih<0)return{objs:[],mapa:{},cab:null};
+  const objs=rows.slice(ih+1).filter(r=>r.some(c=>String(c).trim())).map(r=>{const o={};Object.keys(mapa).forEach(k=>o[k]=String(r[mapa[k]]==null?'':r[mapa[k]]).trim());return o;});
+  return{objs,mapa,cab:rows[ih]};
+}
+
+// ---------- pagos em dia: base separada (não aparece no CRM nem na régua) ----------
+const PD_ALIAS={
+  estab:['estabelecimento','estab','filial','empresa'],
+  numero:['numero','numero titulo','n titulo','titulo','documento','n documento','numero documento','duplicata','nf','numero do titulo'],
+  parcela:['parcela','parc','n parcela','numero parcela'],
+  codcli:['codigo cliente','cod cliente','cod cli','codigo do cliente','cliente codigo','cod do cliente'],
+  cliente:['cliente','nome cliente','nome do cliente','razao social','nome','cliente nome'],
+  tipo:['tipo','tipo titulo','especie','tipo de titulo','tipo cobranca','tipo de cobranca'],
+  valor:['valor','valor titulo','valor do titulo','vlr titulo','valor original'],
+  venc:['vencimento','data vencimento','dt vencimento','data de vencimento'],
+  pagto:['data pagamento','dt pagamento','pagamento','data credito','dt credito','data de credito','credito','data do credito','data de pagamento'],
+  sit:['situacao','status','situacao titulo','tipo baixa','motivo baixa','origem','observacao']
+};
+function pdTipo(s,padrao){const t=normNome(s||'');if(/cheq|chq/.test(t))return 'cheque';if(/bol|cobr|duplic/.test(t))return 'boleto';return padrao||'';}
+function pdExcluir(sit){const s=normNome(sit||'');if(!s)return '';if(/reneg/.test(s))return 'renegociado';if(/devolv/.test(s))return 'cheque devolvido';if(/cancel/.test(s))return 'cancelado';if(/baix/.test(s)&&!/pag|liquid|credit/.test(s))return 'baixado';return '';}
+function pdProcessar(rows,tipoPadrao){
+  const {objs,cab}=scObjetos(rows,PD_ALIAS);
+  const out={lidas:objs.length,validos:[],atraso:0,excl:{},invalidas:0,semChaveViasoft:0,cab};
+  objs.forEach(o=>{
+    let cod=o.codcli,nome=o.cliente;
+    if(!cod){const m=String(nome||'').match(/^(\d+)\s*[-–:]\s*(.+)$/);if(m){cod=m[1];nome=m[2];}}
+    const venc=frData(o.venc),pag=frData(o.pagto),valor=frNum(o.valor),tipo=pdTipo(o.tipo,tipoPadrao);
+    if(!venc||!pag||!(valor>0)||!tipo){out.invalidas++;return;}
+    const ex=pdExcluir(o.sit);if(ex){out.excl[ex]=(out.excl[ex]||0)+1;return;}
+    if(!pagoEmDia(venc,pag)){out.atraso++;return;}
+    let chave;
+    if(o.numero){chave=[o.estab,o.numero,o.parcela].filter(Boolean).join('-');}
+    else{chave=`${tipo}|${normalizeId(cod||normNome(nome))}|${venc}|${Math.round(valor*100)}`;out.semChaveViasoft++;}
+    out.validos.push({chave,tipo,valor,venc,pag,cod:cod||'',nome:nome||''});
+  });
+  return out;
+}
+async function pdGravar(validos){
+  await exCarregar('pagos_dia');
+  const porMes={};validos.forEach(v=>{(porMes[v.venc.slice(0,7)]=porMes[v.venc.slice(0,7)]||[]).push(v);});
+  let novos=0,jaTinha=0,falhas=0;
+  for(const mes of Object.keys(porMes)){
+    const uidM='pd_'+mes;
+    const ant=EX.pagos_dia.dados.find(x=>x._uid===uidM);
+    const itens=ant?{...ant.itens}:{};
+    porMes[mes].forEach(v=>{if(itens[v.chave])jaTinha++;else novos++;itens[v.chave]=[Math.round(v.valor*100),v.venc,v.pag,v.tipo,v.cod,v.nome.slice(0,40)];});
+    const ok=await exSalvar('pagos_dia',{_uid:uidM,mes,itens,atualizadoEm:new Date().toISOString()});
+    if(!ok)falhas++;
+  }
+  return{novos,jaTinha,falhas,meses:Object.keys(porMes).length};
+}
+function pdBase(){ // mes -> {chave:[cents,venc,pag,tipo,cod,nome]}
+  const m={};((EX.pagos_dia&&EX.pagos_dia.dados)||[]).forEach(r=>{if(r.mes&&r.itens)m[r.mes]=r.itens;});return m;
+}
+
+// ---------- processos do Painel Jurídico (fonte única do processo) ----------
+const PJ_ALIAS={
+  processo:['processo','numero processo','n processo','numero do processo','cnj','nº processo'],
+  cliente:['cliente','devedor','nome cliente','nome','parte contraria','reu'],
+  titulo:['titulo','numero titulo','n titulo','documento','duplicata','chave','numero do titulo'],
+  venc:['vencimento','data vencimento','dt vencimento'],
+  valor:['valor','valor titulo','valor do titulo'],
+  dataEnc:['data encaminhamento','data ajuizamento','data distribuicao','data de encaminhamento','data entrada','data do encaminhamento'],
+  responsavel:['responsavel','advogado','escritorio','responsavel processo','responsavel pelo processo'],
+  prazo:['prazo','proximo prazo','prazo proxima providencia','prazo da proxima providencia','proxima providencia','data proxima providencia'],
+  status:['status','situacao','fase'],
+  recuperado:['valor recuperado','recuperado'],
+  ultAndamento:['ultimo andamento','data ultimo andamento','data do ultimo andamento']
+};
+function pjProcessar(rows){
+  const {objs}=scObjetos(rows,PJ_ALIAS);
+  return objs.filter(o=>o.cliente||o.processo).map(o=>({processo:o.processo||'',cliente:o.cliente||'',titulo:o.titulo||'',venc:frData(o.venc)||'',valor:frNum(o.valor)||0,dataEnc:frData(o.dataEnc)||'',responsavel:o.responsavel||'',prazo:frData(o.prazo)||'',status:o.status||'',recuperado:frNum(o.recuperado)||0,ultAndamento:frData(o.ultAndamento)||''}));
+}
+// vínculo processo -> título: chave/número do título > cliente+vencimento+valor > só cliente (a confirmar)
+function pjLigar(titulos){
+  const procs=(EX.processos_jur&&EX.processos_jur.dados)||[],porCli={};
+  procs.forEach(p=>{const k=normNome(p.cliente);(porCli[k]=porCli[k]||[]).push(p);});
+  const mapa={};
+  titulos.forEach(t=>{
+    let melhor=null;
+    (porCli[normNome(t.cliente)]||[]).forEach(p=>{
+      let nivel=0;
+      if(p.titulo&&(String(p.titulo)===String(t.chave)||String(p.titulo)===String(t.r.num||'')||String(p.titulo)===String(t.r.docNum||'')))nivel=3;
+      else if(p.venc&&p.valor&&p.venc===dOnly(t.venc)&&Math.round(p.valor*100)===Math.round((parseFloat(t.r.valor)||0)*100))nivel=2;
+      else if(!p.titulo&&!p.venc&&!p.valor)nivel=1;
+      if(nivel&&(!melhor||nivel>melhor.nivel))melhor={p,nivel};
+    });
+    if(melhor)mapa[t.uid]=melhor;
+  });
+  return mapa;
+}
+
+// ---------- classificação ----------
+const SC_EXC_MOTIVOS=['acordo em andamento','disputa comercial','valor abaixo do mínimo','outro'];
+let _scTit=[],_scRef='',_scSemVenc=0,_scUltima=null,_scFx=[];
 const scMi=v=>v>=1e6?'R$ '+(v/1e6).toFixed(2).replace('.',',')+' mi':v>=1e3?'R$ '+Math.round(v/1e3).toLocaleString('pt-BR')+' mil':fmtR(v);
+const scMiT=v=>'R$ '+(v/1000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' mil';
 const scPct=v=>(v*100).toFixed(1).replace('.',',')+'%';
-function scColetar(){
-  const gv=id=>(document.getElementById(id)||{}).value||'';
-  const ref=gv('sc-ref')||hojeISO(),tipoSel=gv('sc-tipo'),resp=gv('sc-resp'),sj=gv('sc-jur');
-  const refD=new Date(ref+'T00:00:00'),out=[];let semVenc=0;
+function scRefISO(){const t=((document.getElementById('sc-ref')||{}).value||'').trim();if(!t)return hojeISO();const m=t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:hojeISO();}
+function scMascaraData(el){let v=el.value.replace(/\D/g,'').slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);el.value=v;if(v.length===10||v.length===0)renderSaude();}
+// títulos em aberto na data de referência (sem filtros de tela) — usado nos KPIs, retratos e bases
+function scAbertosEm(ref,opc){
+  opc=opc||{};const refD=new Date(ref+'T00:00:00'),fx=_scFx.length?_scFx:scFaixas(),out=[];let semVenc=0;
   ['boleto','cheque'].forEach(t=>{
-    if(tipoSel&&tipoSel!==t)return;
+    if(opc.tipo&&opc.tipo!==t)return;
     (DB[t]||[]).forEach(r=>{
       const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag);
-      if(pago&&(!dtp||dtp<=ref))return;                 // já estava pago na data de referência
+      if(pago&&(!dtp||dtp<=ref))return;
       const saldo=Math.max(0,(parseFloat(r.valor)||0)-(pago?0:(parseFloat(r.vpago)||0)));
       if(saldo<=0)return;
       if(!r.venc){semVenc++;return;}
       const dd=Math.round((refD-new Date(r.venc+'T00:00:00'))/86400000),dias=Math.max(0,dd);
-      const faixa=dd<=0?SC_FAIXAS[0]:SC_FAIXAS.find(f=>f.k!=='em'&&dias>=f.min&&dias<=f.max);
-      const jur=(r.atrib||'').toUpperCase()==='JURÍDICO'||r.jur==='SIM';
-      if(sj==='no'&&!jur)return;if(sj==='nao'&&jur)return;
-      const prazo=r.jurPrazo?dOnly(r.jurPrazo):'';
-      let jsit='';
-      if(dias>=180)jsit=jur?'comproc':'semproc';
-      else if(dias>=90)jsit=jur?(!prazo?'semprazo':prazo<ref?'fora':'prazo'):'deveria';
-      if(resp&&getCobradoraAtrib(r)!==resp)return;
-      out.push({tipo:t,uid:r._uid,r,cliente:r.cliente||'—',id:r.id,venc:r.venc,dias,saldo,faixa:faixa?faixa.k:'em',jur,jsit});
+      const faixa=dd<=0?fx[0]:fx.find((f,i)=>i>0&&dias>=f.min&&dias<=f.max);
+      out.push({tipo:t,uid:r._uid,r,cliente:r.cliente||'—',id:r.id,chave:tituloChave(t,r),venc:r.venc,dias,saldo,faixa:faixa?faixa.k:fx[0].k,aprox:pago});
     });
   });
-  _scTit=out;_scRef=ref;_scSemVenc=semVenc;return out;
+  out.semVenc=semVenc;return out;
 }
-function renderSaude(){
+function scColetar(){
+  const gv=id=>(document.getElementById(id)||{}).value||'';
+  const ref=scRefISO(),tipoSel=gv('sc-tipo'),resp=gv('sc-resp'),sj=gv('sc-jur');
+  _scFx=scFaixas();const P=scParams();
+  const jurMin=(_scFx.find(f=>f.role==='jur')||{min:90}).min,perdaMin=(_scFx.find(f=>f.role==='perda')||{min:180}).min;
+  let tit=scAbertosEm(ref,{tipo:tipoSel});_scSemVenc=tit.semVenc;
+  const lig=pjLigar(tit);
+  tit.forEach(t=>{
+    const r=t.r,lp=lig[t.uid],p=lp?lp.p:null;
+    t.proc=p;t.nivel=lp?lp.nivel:0;
+    t.jurOrigem=p?'painel':(r.jur==='SIM'?'manual':((r.atrib||'').toUpperCase()==='JURÍDICO'?'atrib':''));
+    t.jur=!!t.jurOrigem;
+    t.prazo=dOnly(p?p.prazo:r.jurPrazo);
+    t.exc=!p&&r.excecao&&r.excecao.motivo?r.excecao:null;
+    let jsit='';
+    if(t.dias>=perdaMin)jsit=t.jur?'comproc':'semproc';
+    else if(t.dias>=jurMin)jsit=t.jur?(!t.prazo?'semprazo':t.prazo<ref?'fora':'prazo'):(t.exc?'excecao':'deveria');
+    t.jsit=jsit;
+  });
+  if(sj==='no')tit=tit.filter(t=>t.jur);if(sj==='nao')tit=tit.filter(t=>!t.jur);
+  if(resp)tit=tit.filter(t=>getCobradoraAtrib(t.r)===resp);
+  _scTit=tit;_scRef=ref;return tit;
+}
+
+// ---------- inadimplência com base (pagos em dia) ----------
+function scMesesJanela(ref,n){const out=[];const d=new Date(ref.slice(0,7)+'-01T00:00:00');for(let i=0;i<n;i++){out.push(_isoD(d).slice(0,7));d.setMonth(d.getMonth()-1);}return out;}
+// total que venceu nos meses indicados (até "ate"): abertos + pagos com atraso + pagos em dia (carteira + base, sem duplicar por chave)
+function scVenceuNosMeses(meses,ref,ate,tipoSel){
+  const set=new Set(meses),base=pdBase(),vistos=new Set();
+  let aberto=0,atraso=0,emDia=0;
+  ['boleto','cheque'].forEach(t=>{
+    if(tipoSel&&tipoSel!==t)return;
+    (DB[t]||[]).forEach(r=>{
+      if(!r.venc||!set.has(r.venc.slice(0,7))||r.venc>ate)return;
+      const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag),v=parseFloat(r.valor)||0,ch=tituloChave(t,r);
+      if(pago&&dtp&&dtp<=ref){vistos.add(ch);if(pagoEmDia(dOnly(r.venc),dtp))emDia+=v;else atraso+=v;}
+      else{const s=Math.max(0,v-(pago?0:(parseFloat(r.vpago)||0)));aberto+=s;vistos.add(ch);}
+    });
+  });
+  meses.forEach(m=>{const it=base[m];if(!it)return;Object.keys(it).forEach(ch=>{const x=it[ch];if(vistos.has(ch)||x[1]>ate||x[2]>ref)return;if(tipoSel&&x[3]!==tipoSel)return;emDia+=x[0]/100;});});
+  return{aberto,atraso,emDia,total:aberto+atraso+emDia};
+}
+function scInadimplencias(ref,per,tipoSel){
+  const base=pdBase();
+  const cobertoPer=!!base[per];
+  const r1=scVenceuNosMeses([per],ref,ref,tipoSel);
+  const fim90=_isoD(new Date(new Date(ref+'T00:00:00').getTime()-90*86400000));
+  const mesesJan=scMesesJanela(fim90,12),faltam=mesesJan.filter(m=>!base[m]);
+  const ini=mesesJan[mesesJan.length-1]+'-01';
+  const r2=scVenceuNosMeses(mesesJan,ref,fim90,tipoSel);
+  // numerador 90+: saldo em aberto cujo vencimento está na mesma janela
+  const jurMin=(scFaixas().find(f=>f.role==='jur')||{min:90}).min;
+  let n90=0;scAbertosEm(ref,{tipo:tipoSel}).forEach(t=>{if(t.dias>=jurMin&&t.venc>=ini&&t.venc<=fim90)n90+=t.saldo;});
+  return{per,cobertoPer,aberto:r1.aberto,total:r1.total,
+    inad:cobertoPer&&r1.total>0?r1.aberto/r1.total:null,
+    janela:{ini,fim:fim90,faltam,coberta:faltam.length===0,n90,total:r2.total,inad90:faltam.length===0&&r2.total>0?n90/r2.total:null}};
+}
+
+// ---------- retratos (posição datada da carteira; nunca apaga) ----------
+async function scGravarRetrato(origem,refISO,aprox,soVencidos){
+  try{
+    await exCarregar('retratos');await exCarregar('processos_jur');
+    const ref=refISO||hojeISO();_scFx=scFaixas();
+    const tit=scAbertosEm(ref).filter(t=>!soVencidos||t.dias>0),lig=pjLigar(tit);
+    const linhas=tit.map(t=>{const p=lig[t.uid]&&lig[t.uid].p,jur=p?'painel':(t.r.jur==='SIM'?'manual':((t.r.atrib||'').toUpperCase()==='JURÍDICO'?'atrib':''));
+      return[t.chave,t.cliente,t.tipo,Math.round(t.saldo*100),t.dias,t.faixa,t.r.atrib||'',jur];});
+    const rec={_uid:'ret_'+ref,ref,geradoEm:new Date().toISOString(),origem,aproximado:!!aprox,colunas:['chave','cliente','tipo','saldo_centavos','dias','faixa','atribuicao','juridico'],titulos:linhas};
+    const ant=EX.retratos.dados.find(x=>x._uid===rec._uid);
+    if(ant&&aprox&&!ant.aproximado)return{ok:true,ignorado:true};      // nunca troca um retrato real por reconstruído
+    rec.versao=(ant&&ant.versao||0)+1;
+    const ok=await exSalvar('retratos',rec);return{ok,n:linhas.length};
+  }catch(e){console.error('retrato',e);return{ok:false};}
+}
+// reconstrução aproximada: abertos hoje (que já estavam vencidos na data) + pagos depois da data
+async function scReconstruir(ref){
+  await exCarregar('retratos');
+  const ja=EX.retratos.dados.find(x=>x._uid==='ret_'+ref);
+  if(ja&&!ja.aproximado)return{status:'real'};
+  const n=scAbertosEm(ref).filter(t=>t.dias>0).length;
+  if(!n){const rec={_uid:'ret_'+ref,ref,geradoEm:new Date().toISOString(),origem:'reconstruído',aproximado:true,indisponivel:true,titulos:[]};await exSalvar('retratos',rec);return{status:'indisponivel'};}
+  const r=await scGravarRetrato('reconstruído',ref,true,true);   // só vencidos: não dá para saber se um título a vencer já existia na data
+  return{status:r.ok?'ok':'erro',n:r.n};
+}
+async function scMostrarRetratos(){
+  await exCarregar('retratos');_scFx=scFaixas();
+  const lista=EX.retratos.dados.slice().sort((a,b)=>b.ref.localeCompare(a.ref));
+  const fx=_scFx;
+  const linhas=lista.map(r=>{
+    if(r.indisponivel)return `<tr><td>${fmtDate(r.ref)}</td><td>${esc(r.origem)}</td><td colspan="6" style="color:#b45309">Indisponível — não há títulos para reconstruir essa data</td></tr>`;
+    const T=r.titulos||[];const sm=a=>a.reduce((s,x)=>s+x[3],0)/100;
+    const venc=T.filter(x=>x[4]>0),jurMin=(fx.find(f=>f.role==='jur')||{min:90}).min,perdaMin=(fx.find(f=>f.role==='perda')||{min:180}).min;
+    return `<tr><td>${fmtDate(r.ref)}</td><td>${esc(r.origem)}${r.aproximado?' <span class="badge bg-warn" title="Reconstruído a partir dos abertos de hoje e dos pagos depois da data; não enxerga baixas, renegociações ou parciais posteriores">aproximado</span>':''}</td><td style="text-align:right">${T.length}</td><td style="text-align:right" title="${fmtR(sm(venc))}">${scMiT(sm(venc))}</td><td style="text-align:right">${scMiT(sm(T.filter(x=>x[4]>=jurMin)))}</td><td style="text-align:right">${scMiT(sm(T.filter(x=>x[4]>=perdaMin)))}</td><td style="font-size:11px;color:var(--text2)">${r.versao>1?'v'+r.versao+' · ':''}${new Date(r.geradoEm).toLocaleString('pt-BR')}</td></tr>`;}).join('');
+  scModal('📸 Retratos da carteira',`<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Posição datada de boleto e cheque, gravada a cada importação da carteira. Um retrato por data (reimportar no mesmo dia atualiza o do dia); nenhum é apagado. As faixas são recalculadas com os parâmetros vigentes.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="scRetratoAgora()">📸 Gerar retrato agora</button><button class="btn btn-outline btn-sm" onclick="scRetratoRecon()">♻ Reconstruir 31/10/2026</button></div>
+    <div style="max-height:380px;overflow:auto"><table class="rd-tbl"><thead><tr><th>Data</th><th>Origem</th><th style="text-align:right">Títulos</th><th style="text-align:right">Vencido</th><th style="text-align:right">90+</th><th style="text-align:right">180+</th><th>Gravado</th></tr></thead><tbody>${linhas||'<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text2)">Nenhum retrato ainda. Eles passam a ser gravados a cada importação de boleto ou cheque.</td></tr>'}</tbody></table></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:8px">Armazenamento: ${exOrigem('retratos')}</div>
+    <div class="modal-actions"><button class="btn btn-danger" onclick="scFecharModal()">Fechar</button></div>`,820);
+}
+async function scRetratoAgora(){const r=await scGravarRetrato('manual');showToast(r.ok?'✅ Retrato gravado ('+r.n+' títulos)':'⚠️ Não foi possível gravar o retrato',r.ok?'ok':'error');scMostrarRetratos();}
+async function scRetratoRecon(){const r=await scReconstruir('2026-10-31');showToast(r.status==='ok'?'✅ Retrato de 31/10/2026 reconstruído (aproximado)':r.status==='real'?'Já existe um retrato real de 31/10/2026':r.status==='indisponivel'?'Retrato de 31/10/2026 indisponível':'⚠️ Erro ao reconstruir',r.status==='ok'||r.status==='real'?'ok':'error');scMostrarRetratos();}
+
+// ---------- modal genérico ----------
+function scModal(titulo,corpo,larg){
+  let m=document.getElementById('sc-modal-bg');
+  if(!m){m=document.createElement('div');m.id='sc-modal-bg';m.className='modal-bg';m.addEventListener('click',e=>{if(e.target===m)scFecharModal();});document.body.appendChild(m);}
+  m.innerHTML=`<div class="modal" style="max-width:${larg||760}px"><h2>${titulo}</h2>${corpo}</div>`;m.classList.add('open');
+}
+function scFecharModal(){const m=document.getElementById('sc-modal-bg');if(m)m.classList.remove('open');}
+
+// ---------- importar pagos em dia ----------
+let _pdPrev=null;
+function abrirPagosDia(){
+  _pdPrev=null;
+  scModal('📥 Pagos em dia (base para a inadimplência)',`<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">Relatório do Viasoft de títulos <b>pagos</b> com: chave do título (estabelecimento + número + parcela), cliente (código e nome), tipo, valor, data de vencimento e data de pagamento (crédito). Pago em dia = pagamento até o vencimento (com tolerância do próximo dia útil se o vencimento cair em fim de semana ou feriado). Renegociados, baixados e cheques devolvidos ficam de fora. Os dados ficam numa base separada, não aparecem no CRM nem na régua, e a reimportação não duplica (grava por chave).</div>
+    <div class="form-row" style="align-items:flex-end"><div class="form-group"><label>Arquivo (.xlsx, .xls, .csv, .html)</label><input type="file" id="pd-file" accept=".xlsx,.xls,.csv,.txt,.html,.htm"></div>
+    <div class="form-group"><label>Tipo, se o relatório não trouxer</label><select id="pd-tipo"><option value="">— (usar a coluna)</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select></div></div>
+    <div class="form-group" style="margin-bottom:8px"><label>…ou cole o relatório</label><textarea id="pd-texto" style="min-height:60px" placeholder="Cole aqui (Ctrl+V)"></textarea></div>
+    <button class="btn btn-primary btn-sm" onclick="pdLer()">Ler relatório</button>
+    <div id="pd-resumo" style="margin:12px 0;font-size:12px;line-height:1.7"></div>
+    <div class="modal-actions"><button class="btn btn-danger" onclick="scFecharModal()">Fechar</button><button class="btn btn-primary" id="pd-confirmar" disabled onclick="pdConfirmar()">✔ Gravar na base</button></div>`,780);
+}
+async function pdLer(){
+  const el=document.getElementById('pd-resumo');el.innerHTML='Lendo…';
+  try{
+    const rows=await scLerTabela(document.getElementById('pd-file').files[0],document.getElementById('pd-texto').value);
+    const p=pdProcessar(rows,document.getElementById('pd-tipo').value);
+    if(!p.cab){el.innerHTML='<span style="color:#dc2626">Cabeçalho não reconhecido. São necessárias ao menos 3 colunas entre: estabelecimento, número, parcela, cliente, tipo, valor, vencimento, data de pagamento.</span>';return;}
+    await exCarregar('pagos_dia');const base=pdBase();
+    let dup=0;p.validos.forEach(v=>{const it=base[v.venc.slice(0,7)];if(it&&it[v.chave])dup++;});
+    const meses={};p.validos.forEach(v=>{const m=v.venc.slice(0,7);meses[m]=(meses[m]||0)+v.valor;});
+    _pdPrev=p;
+    const excl=Object.keys(p.excl).map(k=>`${p.excl[k]} ${k}(s)`).join(', ');
+    el.innerHTML=`<b>${p.lidas}</b> linhas · <span style="color:#166534"><b>${p.validos.length}</b> pagos em dia (${fmtR(p.validos.reduce((s,v)=>s+v.valor,0))})</span> · <b>${dup}</b> já estavam na base · <b>${p.atraso}</b> pagos com atraso (ignorados: já constam na carteira)${excl?' · excluídos: '+excl:''} · <span style="color:#b45309">${p.invalidas}</span> linhas sem data/valor/tipo válidos<br>
+      ${p.semChaveViasoft?`<span style="color:#b45309">⚠ ${p.semChaveViasoft} linha(s) sem coluna de número do título: usei a chave de reserva (tipo + cliente + vencimento + valor).</span><br>`:''}
+      Por mês de vencimento: ${Object.keys(meses).sort().map(m=>`${m.slice(5)}/${m.slice(0,4)}: ${scMiT(meses[m])}`).join(' · ')||'—'}`;
+    document.getElementById('pd-confirmar').disabled=!p.validos.length;
+  }catch(e){el.innerHTML='<span style="color:#dc2626">Erro ao ler: '+esc(e.message)+'</span>';}
+}
+async function pdConfirmar(){
+  if(!_pdPrev||!_pdPrev.validos.length)return;
+  const r=await pdGravar(_pdPrev.validos);
+  scFecharModal();renderSaude();
+  showToast(`✅ ${r.novos} novos · ${r.jaTinha} já existiam${r.falhas?' · ⚠ '+r.falhas+' mês(es) só no navegador':''}`,r.falhas?'error':'ok');
+}
+
+// ---------- importar processos do Painel Jurídico ----------
+let _pjPrev=null;
+function abrirProcessos(){
+  _pjPrev=null;const P=scParams();
+  scModal('⚖ Processos do Painel Jurídico',`<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">O <b>Painel Jurídico é a fonte do processo</b>: situação, responsável, data e prazo vêm dele. Cada processo é ligado ao título por <b>cliente + número do título</b> (ou cliente + vencimento + valor). Se o processo só tiver o cliente, o vínculo é "por cliente" e fica sinalizado para confirmação. Colunas aceitas: processo, cliente, título, vencimento, valor, data de encaminhamento, responsável (advogado), prazo da próxima providência, status, valor recuperado, último andamento.</div>
+    <div class="form-row" style="align-items:flex-end"><div class="form-group"><label>Arquivo (.xlsx, .csv, .html)</label><input type="file" id="pj-file" accept=".xlsx,.xls,.csv,.txt,.html,.htm"></div></div>
+    <div class="form-group" style="margin-bottom:8px"><label>…ou cole a tabela</label><textarea id="pj-texto" style="min-height:50px"></textarea></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="pjLer()">Ler processos</button>${P.urlJuridico?`<button class="btn btn-outline btn-sm" onclick="pjSincronizar()">🔄 Sincronizar do endereço do Painel</button>`:''}</div>
+    <div id="pj-resumo" style="margin:12px 0;font-size:12px;line-height:1.7"></div>
+    <details style="font-size:11.5px;color:var(--text2);margin-bottom:6px"><summary style="cursor:pointer;font-weight:700">Como a Carteira pode ler o Painel Jurídico (proposta)</summary><div style="padding:6px 2px;line-height:1.6"><b>Opção A — endereço de leitura (recomendada):</b> o Worker do Painel Jurídico expõe <code>GET /api/processos</code> devolvendo uma lista JSON com <code>processo, cliente, titulo (chave ou número), vencimento, valor, dataEncaminhamento, responsavel, prazo, status, valorRecuperado, ultimoAndamento</code>. O endereço é cadastrado em ⚙ Parâmetros e o botão 🔄 sincroniza (precisa liberar CORS para este site).<br><b>Opção B — CSV:</b> exportar o Painel e importar aqui sempre que atualizar. Já funciona.<br><b>Campo de vínculo:</b> cliente + número do título (hoje a carteira não guarda o número do título; ver pendências).</div></details>
+    <div class="modal-actions"><button class="btn btn-danger" onclick="scFecharModal()">Fechar</button><button class="btn btn-primary" id="pj-confirmar" disabled onclick="pjConfirmar()">✔ Gravar processos</button></div>`,800);
+}
+function pjMostrarPrev(procs){
+  _pjPrev=procs;
+  const fake=scAbertosEm(hojeISO()).filter(t=>t.dias>0);const salvo=EX.processos_jur.dados;EX.processos_jur.dados=procs.map((p,i)=>({...p,_uid:'x'+i}));
+  const lig=pjLigar(fake);EX.processos_jur.dados=salvo;
+  const niv={3:0,2:0,1:0};const comTit=new Set();Object.values(lig).forEach(l=>{niv[l.nivel]++;comTit.add(l.p._uid);});
+  const semLig=procs.filter((p,i)=>!comTit.has('x'+i));
+  document.getElementById('pj-resumo').innerHTML=`<b>${procs.length}</b> processos · ligados a títulos: <span style="color:#166534"><b>${niv[3]}</b> por número do título</span> · <b>${niv[2]}</b> por cliente+vencimento+valor · <span style="color:#b45309"><b>${niv[1]}</b> só por cliente (confirmar)</span> · <span style="color:#dc2626"><b>${semLig.length}</b> processos sem título na carteira</span>${semLig.length?'<div style="font-size:11px;color:var(--text2)">Sem título: '+esc(semLig.slice(0,6).map(p=>p.cliente).join(', '))+(semLig.length>6?'…':'')+'</div>':''}`;
+  document.getElementById('pj-confirmar').disabled=!procs.length;
+}
+async function pjLer(){
+  try{await exCarregar('processos_jur');const rows=await scLerTabela(document.getElementById('pj-file').files[0],document.getElementById('pj-texto').value);
+    const procs=pjProcessar(rows);if(!procs.length){document.getElementById('pj-resumo').innerHTML='<span style="color:#dc2626">Nenhum processo reconhecido (precisa de cabeçalho com cliente e/ou processo).</span>';return;}
+    pjMostrarPrev(procs);}catch(e){document.getElementById('pj-resumo').innerHTML='<span style="color:#dc2626">Erro: '+esc(e.message)+'</span>';}
+}
+async function pjSincronizar(){
+  const url=scParams().urlJuridico;
+  try{await exCarregar('processos_jur');const res=await fetch(url);if(!res.ok)throw new Error('HTTP '+res.status);const d=await res.json();
+    const arr=Array.isArray(d)?d:(d.processos||[]);
+    const procs=arr.map(o=>({processo:o.processo||'',cliente:o.cliente||'',titulo:o.titulo||o.chave||'',venc:frData(o.vencimento)||o.vencimento||'',valor:frNum(o.valor)||0,dataEnc:frData(o.dataEncaminhamento)||o.dataEncaminhamento||'',responsavel:o.responsavel||'',prazo:frData(o.prazo)||o.prazo||'',status:o.status||'',recuperado:frNum(o.valorRecuperado)||0,ultAndamento:frData(o.ultimoAndamento)||o.ultimoAndamento||''}));
+    pjMostrarPrev(procs);}catch(e){document.getElementById('pj-resumo').innerHTML='<span style="color:#dc2626">Não foi possível ler o endereço: '+esc(e.message)+' (verifique o endereço e a liberação de CORS).</span>';}
+}
+async function pjConfirmar(){
+  if(!_pjPrev)return;let falhas=0;
+  for(let i=0;i<_pjPrev.length;i+=8){await Promise.all(_pjPrev.slice(i,i+8).map(async p=>{const ok=await exSalvar('processos_jur',{...p,_uid:'pj_'+(p.processo?normNome(p.processo).replace(/\W+/g,'_'):normNome(p.cliente).replace(/\W+/g,'_')+'_'+(p.titulo||p.venc||''))});if(!ok)falhas++;}));}
+  scFecharModal();renderSaude();showToast(`✅ ${_pjPrev.length} processos gravados${falhas?' · ⚠ '+falhas+' só no navegador':''}`,falhas?'error':'ok');
+}
+
+// ---------- parâmetros ----------
+function abrirParametros(){
+  const P=scParams(),fx=scFaixas();
+  const linhaF=fx.map((f,i)=>`<tr><td>${i===0?'—':`<input type="number" id="pm-fmin-${i}" value="${f.min}" style="width:70px">`}</td><td><input id="pm-frot-${i}" value="${esc(f.l)}" style="width:110px"></td><td><input id="pm-ftag-${i}" value="${esc(f.tag)}" style="width:170px"></td></tr>`).join('');
+  const linhaP=P.perfil.map((x,i)=>`<tr><td><input id="pm-pl-${i}" value="${esc(x.l)}" style="width:110px"></td><td>${i===4?'acima':'até'} <input type="number" id="pm-pmax-${i}" value="${i===4?P.perfil[3].max:x.max}" ${i===4?'disabled':''} style="width:70px"> dias de atraso médio</td></tr>`).join('');
+  const hist=(P.historico||[]).slice().reverse().slice(0,12).map(h=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #f1f5f9"><b>${new Date(h.em).toLocaleString('pt-BR')}</b> · ${esc(h.por)}<br>${h.mudancas.map(esc).join('<br>')}</div>`).join('')||'<div style="font-size:11px;color:var(--text2)">Nenhuma alteração ainda.</div>';
+  const inp=(id,l,v,extra)=>`<div class="form-group"><label>${l}</label><input id="${id}" value="${esc(v)}" ${extra||''}></div>`;
+  scModal('⚙ Parâmetros da Saúde da Carteira',`<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Só o perfil admin edita. Cada alteração grava data e usuário. Os indicadores e os retratos são recalculados com a regra vigente (os dias de atraso ficam guardados; a faixa é refeita na hora).</div>
+    <div class="rd-sec">Faixas de atraso (dias)</div><table class="rd-tbl"><thead><tr><th>A partir de</th><th>Rótulo</th><th>Classificação</th></tr></thead><tbody>${linhaF}</tbody></table>
+    <div class="rd-sec">Perfil do pagador (média histórica de atraso)</div><table class="rd-tbl"><tbody>${linhaP}</tbody></table>
+    <div class="rd-sec">Histórico de pagamento e recorrência</div>
+    <div class="form-row">${inp('pm-janela','Janela do histórico (meses)',P.janelaHist,'type="number"')}${inp('pm-filtro','Filtro curto (meses)',P.filtroHist,'type="number"')}${inp('pm-minpag','Mínimo de pagamentos',P.minPagamentos,'type="number"')}</div>
+    <div class="form-row">${inp('pm-recat','Atraso recorrente: atrasos',P.recAtrasos,'type="number"')}${inp('pm-recjan','em (meses)',P.recJanela,'type="number"')}${inp('pm-recpct','ou % dos pagos',P.recPct,'type="number"')}</div>
+    <div class="rd-sec">Jurídico e alertas</div>
+    <div class="form-row">${inp('pm-alerta','Alerta de proximidade da perda (dias)',P.alertaDias,'type="number"')}${inp('pm-minaj','Valor mínimo para ajuizar (R$) — a definir pela Nara',P.valorMinAjuizar,'type="number" step="0.01"')}${inp('pm-semand','Dias sem andamento',P.diasSemAndamento,'type="number"')}</div>
+    <div class="form-row">${inp('pm-feriados','Feriados extras (dd/mm ou dd/mm/aaaa, separados por vírgula)',P.feriadosExtras)}</div>
+    <div class="form-row">${inp('pm-url','Endereço de leitura do Painel Jurídico (opcional)',P.urlJuridico)}</div>
+    <div class="rd-sec">Histórico de alterações</div><div style="max-height:130px;overflow:auto">${hist}</div>
+    <div class="modal-actions"><button class="btn btn-danger" onclick="scFecharModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarParametros()">Salvar parâmetros</button></div>`,760);
+}
+async function salvarParametros(){
+  if(!currentUser||currentUser.role!=='admin'){alert('Somente o perfil admin altera os parâmetros.');return;}
+  const old=scParams(),oldFx=scFaixas(),P=JSON.parse(JSON.stringify(old)),mud=[];
+  const num=id=>parseFloat(document.getElementById(id).value);
+  for(let i=1;i<P.faixas.length;i++){const m=num('pm-fmin-'+i);if(!(m>0)||(i>1&&m<=P.faixas[i-1].min)&&false){}P.faixas[i].min=m;}
+  for(let i=1;i<P.faixas.length;i++){if(!(P.faixas[i].min>P.faixas[i-1].min)||(i===1&&!(P.faixas[1].min>=1))){alert('Os limites das faixas precisam ser crescentes (a primeira faixa de atraso começa em 1 ou mais).');return;}}
+  P.faixas.forEach((f,i)=>{const rot=document.getElementById('pm-frot-'+i).value.trim();f.rotulo=(rot&&rot!==oldFx[i].l)?rot:(old.faixas[i].rotulo||'');f.tag=document.getElementById('pm-ftag-'+i).value.trim()||f.tag;});
+  P.perfil.forEach((x,i)=>{x.l=document.getElementById('pm-pl-'+i).value.trim()||x.l;if(i<4)x.max=num('pm-pmax-'+i);});P.perfil[4].max=1e9;
+  const campos=[['janelaHist','pm-janela','Janela do histórico'],['filtroHist','pm-filtro','Filtro curto'],['minPagamentos','pm-minpag','Mínimo de pagamentos'],['recAtrasos','pm-recat','Recorrência: atrasos'],['recJanela','pm-recjan','Recorrência: meses'],['recPct','pm-recpct','Recorrência: %'],['alertaDias','pm-alerta','Alerta (dias)'],['valorMinAjuizar','pm-minaj','Valor mínimo para ajuizar'],['diasSemAndamento','pm-semand','Dias sem andamento']];
+  campos.forEach(([k,id])=>{const v=num(id);P[k]=isNaN(v)?old[k]:v;});
+  P.feriadosExtras=document.getElementById('pm-feriados').value.trim();P.urlJuridico=document.getElementById('pm-url').value.trim();
+  // lista do que mudou
+  P.faixas.forEach((f,i)=>{if(i>0&&f.min!==old.faixas[i].min)mud.push(`Faixa ${oldFx[i].l}: início ${old.faixas[i].min} → ${f.min}`);if((f.rotulo||'')!==(old.faixas[i].rotulo||''))mud.push(`Faixa ${i+1}: rótulo "${oldFx[i].l}" → "${f.rotulo||'(padrão)'}"`);if(f.tag!==old.faixas[i].tag)mud.push(`Faixa ${i+1}: classificação "${old.faixas[i].tag}" → "${f.tag}"`);});
+  P.perfil.forEach((x,i)=>{if(x.l!==old.perfil[i].l||x.max!==old.perfil[i].max)mud.push(`Perfil ${old.perfil[i].l}: ${old.perfil[i].max}d → ${x.l} ${x.max}d`);});
+  campos.forEach(([k,,l])=>{if(P[k]!==old[k])mud.push(`${l}: ${old[k]} → ${P[k]}`);});
+  if(P.feriadosExtras!==old.feriadosExtras)mud.push('Feriados extras alterados');if(P.urlJuridico!==old.urlJuridico)mud.push('Endereço do Painel Jurídico alterado');
+  if(!mud.length){scFecharModal();return;}
+  P.historico=(old.historico||[]).concat([{em:new Date().toISOString(),por:currentUser.nome,mudancas:mud}]);
+  const rec={_uid:'sc_params',...P,atualizadoEm:new Date().toISOString(),atualizadoPor:currentUser.nome};
+  Object.keys(_feriadosCache).forEach(k=>delete _feriadosCache[k]);
+  await exCarregar('parametros');const ok=await exSalvar('parametros',rec);
+  scFecharModal();renderSaude();showToast(ok?'✅ Parâmetros salvos':'⚠️ Parâmetros salvos só neste navegador',ok?'ok':'error');
+}
+
+// ---------- renderização ----------
+let _scCarregando=false;
+async function renderSaude(){
   const sel=document.getElementById('sc-resp');
   if(sel&&sel.options.length===1)getCobradoras().forEach(c=>sel.insertAdjacentHTML('beforeend',`<option>${esc(c)}</option>`));
+  const refEl=document.getElementById('sc-ref');if(refEl&&refEl.dataset.init!=='1'){refEl.dataset.init='1';}
+  if(!_scCarregando){_scCarregando=true;try{await Promise.all(['parametros','processos_jur','pagos_dia'].map(t=>exCarregar(t)));}finally{_scCarregando=false;}}
+  const per=document.getElementById('sc-per');
+  if(per&&per.options.length===0){scMesesJanela(hojeISO(),14).forEach(m=>per.insertAdjacentHTML('beforeend',`<option value="${m}">${m.slice(5)}/${m.slice(0,4)}</option>`));}
   const tit=scColetar(),el=document.getElementById('sc-conteudo');if(!el)return;
+  if(per&&!per.dataset.set){per.value=_scRef.slice(0,7);per.dataset.set='1';}
+  const P=scParams(),fx=_scFx,jurF=fx.find(f=>f.role==='jur'),perdaF=fx.find(f=>f.role==='perda');
   const soma=a=>a.reduce((s,t)=>s+t.saldo,0);
-  const carteira=soma(tit),venc=soma(tit.filter(t=>t.dias>0)),v90=soma(tit.filter(t=>t.dias>=90)),v180=tit.filter(t=>t.dias>=180);
-  const pond=venc>0?tit.filter(t=>t.dias>0).reduce((s,t)=>s+t.saldo*t.dias,0)/venc:0;
+  const vencidos=tit.filter(t=>t.dias>0),venc=soma(vencidos),v90=soma(tit.filter(t=>t.dias>=jurF.min)),v180=tit.filter(t=>t.dias>=perdaF.min);
+  const pond=venc>0?vencidos.reduce((s,t)=>s+t.saldo*t.dias,0)/venc:0;
   const gap=tit.filter(t=>t.jsit==='deveria');
+  const tipoSel=(document.getElementById('sc-tipo')||{}).value||'';
+  const inad=scInadimplencias(_scRef,(per&&per.value)||_scRef.slice(0,7),tipoSel);
   const kpi=(l,v,s,cls)=>`<div class="sc-kpi ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
-  const porF=SC_FAIXAS.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:soma(a),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});
+  const ate89=soma(vencidos.filter(t=>t.dias<jurF.min));
+  const kInad=inad.inad!=null
+    ?kpi(`Inadimplência do período (${inad.per.slice(5)}/${inad.per.slice(0,4)})`,scPct(inad.inad),`${scMi(inad.aberto)} em aberto ÷ ${scMi(inad.total)} que venceu`)
+    :kpi(`Vencido até ${jurF.min-1} dias · % do vencido`,venc>0?scPct(ate89/venc):'—',`${scMi(ate89)} · base de pagos em dia pendente`);
+  const k90=inad.janela.inad90!=null
+    ?kpi('Inadimplência 90+ (janela de 12 meses)',scPct(inad.janela.inad90),`${scMi(inad.janela.n90)} ÷ ${scMi(inad.janela.total)} que venceu até 90 dias antes`)
+    :kpi(`Vencido ${jurF.min}+ dias · % do vencido`,venc>0?scPct(v90/venc):'—',`${scMi(v90)} · base de pagos em dia ${inad.janela.faltam.length?'incompleta ('+inad.janela.faltam.length+' meses sem dados)':'pendente'}`);
+  const porF=fx.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:soma(a),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});
   const maxV=Math.max(...porF.map(f=>f.v),1);
-  const faixasHTML=`<div class="sc-row head"><span>Faixa (dias)</span><span></span><span class="n">Montante</span><span class="n">Títulos</span><span class="n">Clientes</span><span class="n">% cart.</span><span></span></div>`+
-    porF.map(f=>`<div class="sc-row" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa">
-      <span class="lab">${f.l}${f.sub?`<small>${f.sub}</small>`:''}</span>
+  const faixasHTML=`<div class="sc-row head"><span>Faixa (dias)</span><span></span><span class="n">Montante</span><span class="n">Títulos</span><span class="n">Clientes</span><span class="n">% do vencido</span><span></span></div>`+
+    porF.filter(f=>!(f.min<=0&&f.n===0)).map(f=>`<div class="sc-row" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa">
+      <span class="lab">${esc(f.l)}${f.sub?`<small>${f.sub}</small>`:''}</span>
       <span class="sc-bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${f.bar}"></i></span>
-      <span class="n" title="${fmtR(f.v)}">${scMi(f.v)}</span><span class="n">${f.n}</span><span class="n">${f.c}</span><span class="n">${carteira>0?scPct(f.v/carteira):'—'}</span>
-      <span><span class="sc-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${f.tag}</span></span></div>`).join('');
+      <span class="n" title="${fmtR(f.v)}">${scMiT(f.v)}</span><span class="n">${f.n}</span><span class="n">${f.c}</span><span class="n">${f.min<=0?'—':(venc>0?scPct(f.v/venc):'—')}</span>
+      <span><span class="sc-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${esc(f.tag)}</span></span></div>`).join('');
+  const jurRotulo=`${jurF.min} a ${perdaF.min-1}`,perdaRotulo=`${perdaF.min}+`;
+  const SC_JUR=[
+    {k:'prazo',f:jurRotulo,sit:'No jurídico, no prazo',acao:'Acompanhar'},
+    {k:'fora',f:jurRotulo,sit:'No jurídico, fora do prazo',acao:'Cobrar atualização do responsável'},
+    {k:'semprazo',f:jurRotulo,sit:'No jurídico, sem prazo informado',acao:'Informar o prazo da providência',opc:1},
+    {k:'excecao',f:jurRotulo,sit:'Exceção registrada',acao:'Acompanhar a exceção',opc:1},
+    {k:'deveria',f:jurRotulo,sit:'Deveria estar e não está',acao:'Encaminhar agora',crit:1},
+    {k:'comproc',f:perdaRotulo,sit:'Perda com processo',acao:'Manter a ação e avaliar perda'},
+    {k:'semproc',f:perdaRotulo,sit:'Perda sem processo',acao:'Avaliar providência jurídica ou baixa'}];
+  window._SC_JUR=SC_JUR;
   const jurHTML=`<div class="sc-jrow head"><span>Faixa</span><span>Situação</span><span class="n">Títulos</span><span class="n">Montante</span><span>Ação</span></div>`+
     SC_JUR.filter(j=>!j.opc||tit.some(t=>t.jsit===j.k)).map(j=>{const a=tit.filter(t=>t.jsit===j.k);
-      return `<div class="sc-jrow ${j.crit&&a.length?'crit':''}" onclick="scAbrirLista('jur','${j.k}')"><span>${j.f}</span><span>${j.sit}</span><span class="n">${a.length}</span><span class="n" title="${fmtR(soma(a))}">${scMi(soma(a))}</span><span>${j.acao}</span></div>`;}).join('');
-  el.innerHTML=`<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
+      return `<div class="sc-jrow ${j.crit&&a.length?'crit':''}" onclick="scAbrirLista('jur','${j.k}')"><span>${j.f}</span><span>${esc(j.sit)}</span><span class="n">${a.length}</span><span class="n" title="${fmtR(soma(a))}">${scMiT(soma(a))}</span><span>${j.acao}</span></div>`;}).join('');
+  const minAj=parseFloat(P.valorMinAjuizar)||0,abaixoMin=minAj>0?gap.filter(t=>t.saldo<minAj):[];
+  const baseMeses=Object.keys(pdBase()).sort();
+  el.innerHTML=`<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
     <div class="sc-kpis">
-      ${kpi('Carteira em aberto',scMi(carteira),tit.length+' títulos')}
-      ${kpi('Inadimplência',carteira>0?scPct(venc/carteira):'—',scMi(venc)+' vencidos')}
-      ${kpi('Inadimplência 90+',carteira>0?scPct(v90/carteira):'—',scMi(v90))}
+      ${kpi('Vencido em aberto',scMi(venc),vencidos.length+' títulos vencidos')}
+      ${kInad}
+      ${k90}
       ${kpi('Atraso médio ponderado',Math.round(pond)+' dias','sobre o vencido, pelo valor')}
-      ${kpi('Exposição 180+',scMi(soma(v180)),v180.length+' títulos · perda potencial')}
-      ${kpi('Gap de encaminhamento',scMi(soma(gap)),gap.length+' título'+(gap.length!==1?'s':'')+' sem processo',gap.length?'alerta':'alerta zero')}
+      ${kpi(`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos · perda potencial')}
+      ${kpi('Gap de encaminhamento',scMi(soma(gap)),gap.length+' título'+(gap.length!==1?'s':'')+' sem processo e sem exceção',gap.length?'alerta':'alerta zero')}
     </div>
-    <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML}</div>
-    <div class="sc-sec">Cruzamento com o jurídico (90 dias ou mais)</div><div class="sc-tbl">${jurHTML}</div>
-    <div class="sc-note">• Classificação por título, pelos dias de atraso na data de referência (a vencer = zero dia). Saldo em aberto = valor − pago parcial.<br>
-    • "No jurídico" = título com atribuição JURÍDICO ou marcado como encaminhado em ⚖. Prazo vem do campo "próxima providência".<br>
-    • 90 dias não é encaminhamento automático e 180 dias não é perda contábil: os alertas orientam a equipe, o sistema não encaminha nem baixa nada sozinho.<br>
-    • Para validar com o relatório financeiro, use ⬇ Exportar Excel (títulos em aberto, faixa e situação jurídica).</div>`;
+    ${minAj>0?`<div class="sc-note" style="margin:-14px 0 16px">Valor mínimo para ajuizar: <b>${fmtR(minAj)}</b> — ${abaixoMin.length} título(s) do gap estão abaixo dele e podem receber a exceção "valor abaixo do mínimo" (o sistema não aplica sozinho).</div>`:''}
+    <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML||'<div class="sc-note" style="padding:14px">Nenhum título em aberto.</div>'}</div>
+    <div class="sc-sec">Cruzamento com o jurídico (${jurF.min} dias ou mais)</div><div class="sc-tbl">${jurHTML}</div>
+    <div class="sc-note">• Classificação por título, pelos dias de atraso na data de referência. Saldo em aberto = valor − pago parcial. Renegociação, chargeback e caderneta ficam fora.<br>
+    • "No jurídico": processo do Painel Jurídico (fonte do processo), registro manual ⚖ ou atribuição JURÍDICO. Prazo igual ou posterior à data de referência = no prazo; anterior = fora do prazo; vazio = sem prazo informado.<br>
+    • ${jurF.min} dias não é encaminhamento automático e ${perdaF.min} dias não é perda contábil: os alertas orientam a equipe, o sistema não encaminha nem baixa nada sozinho.<br>
+    • Base de pagos em dia: ${baseMeses.length?baseMeses.length+' mês(es) importado(s) ('+baseMeses[0].slice(5)+'/'+baseMeses[0].slice(0,4)+' a '+baseMeses[baseMeses.length-1].slice(5)+'/'+baseMeses[baseMeses.length-1].slice(0,4)+')':'nenhuma importada'}${inad.janela.faltam.length&&baseMeses.length?' · faltam para a janela de 12 meses: '+inad.janela.faltam.slice(0,6).map(m=>m.slice(5)+'/'+m.slice(0,4)).join(', ')+(inad.janela.faltam.length>6?' e outros '+(inad.janela.faltam.length-6):''):''}.<br>
+    • Armazenamento — pagos em dia: ${exOrigem('pagos_dia')} · retratos: ${exOrigem('retratos')} · processos: ${exOrigem('processos_jur')} · parâmetros: ${exOrigem('parametros')}${[exOrigem('pagos_dia'),exOrigem('retratos'),exOrigem('processos_jur'),exOrigem('parametros')].some(o=>o==='local')?' <b style="color:#b45309">(“local” = só neste navegador: o servidor ainda não aceita essa tabela)</b>':''}.</div>`;
 }
 function fecharSc(){const d=document.getElementById('sc-bg');if(d)d.classList.remove('open');}
+const SC_ORIGEM={painel:['bg-blue','Painel Jurídico'],manual:['bg-purple','registro manual'],atrib:['bg-gray','atribuição JURÍDICO']};
 function scAbrirLista(modo,k){
   _scUltima={modo,k};
   const lista=_scTit.filter(t=>modo==='faixa'?t.faixa===k:t.jsit===k).sort((a,b)=>b.saldo-a.saldo);
-  const nome=modo==='faixa'?'Faixa '+(SC_FAIXAS.find(f=>f.k===k)||{}).l+' dias':(SC_JUR.find(j=>j.k===k)||{}).sit;
+  const nome=modo==='faixa'?'Faixa '+(_scFx.find(f=>f.k===k)||{}).l+' dias':((window._SC_JUR||[]).find(j=>j.k===k)||{}).sit;
   const cli=new Set(lista.map(t=>normNome(t.cliente))).size;
   let d=document.getElementById('sc-bg');
   if(!d){d=document.createElement('div');d.id='sc-bg';d.className='rd-bg';d.addEventListener('click',e=>{if(e.target===d)fecharSc();});document.body.appendChild(d);}
-  const linhas=lista.slice(0,300).map(t=>{const q=t.cliente.replace(/'/g,"\\'");
+  const linhas=lista.slice(0,300).map(t=>{const q=t.cliente.replace(/'/g,"\\'"),o=SC_ORIGEM[t.jurOrigem];
     return `<tr><td><a href="#" onclick="fecharSc();openClienteModal('${q}','${esc(t.id||'')}');return false" style="color:#1d4ed8;font-weight:600">${esc(t.cliente)}</a></td><td>${esc(t.id||'—')}</td><td>${t.tipo.toUpperCase()}</td><td>${fmtDate(t.venc)}</td><td style="text-align:right">${t.dias||'—'}</td><td style="text-align:right"><b>${fmtR(t.saldo)}</b></td>
-      <td>${t.jur?'<span class="badge bg-blue">⚖ jurídico</span>':''}<button class="btn btn-outline btn-sm" style="padding:1px 7px" title="Dados jurídicos" onclick="abrirJur('${t.tipo}','${t.uid}')">⚖</button></td></tr>`;}).join('');
-  d.innerHTML=`<div class="rd-panel" style="width:820px"><div class="rd-head"><div><h3>${esc(nome)}</h3><div class="rd-sub">${lista.length} títulos · ${cli} clientes · ${fmtR(lista.reduce((s,t)=>s+t.saldo,0))} · ref. ${fmtDate(_scRef)}</div></div><button class="fd-x" type="button" onclick="fecharSc()">✕</button></div>
-    <table class="rd-tbl" style="margin-top:14px"><thead><tr><th>Cliente</th><th>ID</th><th>Tipo</th><th>Vencimento</th><th style="text-align:right">Dias</th><th style="text-align:right">Saldo</th><th>Jurídico</th></tr></thead><tbody>${linhas||'<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">Nenhum título.</td></tr>'}</tbody></table>
+      <td>${o?`<span class="badge ${o[0]}" title="Origem do dado jurídico">${o[1]}</span>${t.proc&&t.nivel===1?' <span class="badge bg-warn" title="Processo ligado só pelo cliente: confirmar o título">confirmar</span>':''}`:''}${t.exc?` <span class="badge bg-gray" title="${esc(t.exc.motivo)}">exceção</span>`:''} <button class="btn btn-outline btn-sm" style="padding:1px 7px" title="Dados jurídicos / exceção" onclick="abrirJur('${t.tipo}','${t.uid}')">⚖</button></td></tr>`;}).join('');
+  d.innerHTML=`<div class="rd-panel" style="width:860px"><div class="rd-head"><div><h3>${esc(nome)}</h3><div class="rd-sub">${lista.length} títulos · ${cli} clientes · ${fmtR(lista.reduce((s,t)=>s+t.saldo,0))} · ref. ${fmtDate(_scRef)}</div></div><button class="fd-x" type="button" onclick="fecharSc()">✕</button></div>
+    <table class="rd-tbl" style="margin-top:14px"><thead><tr><th>Cliente</th><th>ID</th><th>Tipo</th><th>Vencimento</th><th style="text-align:right">Dias</th><th style="text-align:right">Saldo</th><th>Jurídico (origem)</th></tr></thead><tbody>${linhas||'<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">Nenhum título.</td></tr>'}</tbody></table>
     ${lista.length>300?`<div class="rd-sub">+ ${lista.length-300} título(s) não exibidos — use ⬇ Exportar Excel para ver todos.</div>`:''}</div>`;
   d.classList.add('open');
 }
+
+// ---------- ⚖ dados jurídicos e exceção (por título) ----------
 function abrirJur(tipo,uid){
   const r=(DB[tipo]||[]).find(x=>x._uid===uid);if(!r)return;
+  const t=_scTit.find(x=>x.uid===uid),p=t&&t.proc,P=scParams(),minAj=parseFloat(P.valorMinAjuizar)||0;
   document.getElementById('jur-tipo').value=tipo;document.getElementById('jur-uid').value=uid;
-  document.getElementById('jur-titulo').textContent=(r.cliente||'—')+' · ID '+(r.id||'—')+' · '+tipo.toUpperCase()+' · '+fmtR(r.valor)+' · venc. '+fmtDate(r.venc);
-  const ja=(r.atrib||'').toUpperCase()==='JURÍDICO'||r.jur==='SIM';
-  document.getElementById('jur-status').value=ja?'SIM':'';
-  document.getElementById('jur-data').value=r.jurData||'';document.getElementById('jur-resp').value=r.jurResp||'';
-  document.getElementById('jur-prazo').value=r.jurPrazo||'';document.getElementById('jur-rec').value=r.jurRecuperado||'';
+  document.getElementById('jur-titulo').innerHTML=esc((r.cliente||'—')+' · ID '+(r.id||'—')+' · '+tipo.toUpperCase()+' · '+fmtR(r.valor)+' · venc. '+fmtDate(r.venc))+
+    (p?`<div style="margin-top:6px;padding:8px 10px;background:#eff6ff;border-radius:8px;color:#1e40af">⚖ Processo <b>${esc(p.processo||'—')}</b> no <b>Painel Jurídico</b> (fonte do dado): responsável ${esc(p.responsavel||'—')} · prazo ${p.prazo?fmtDate(p.prazo):'—'} · status ${esc(p.status||'—')}. Os campos abaixo ficam bloqueados; altere no Painel Jurídico e reimporte.</div>`:'');
+  const ja=!p&&(r.jur==='SIM'||(r.atrib||'').toUpperCase()==='JURÍDICO');
+  const bloq=!!p;
+  ['jur-status','jur-data','jur-resp','jur-prazo','jur-rec'].forEach(id=>document.getElementById(id).disabled=bloq);
+  document.getElementById('jur-status').value=(p||ja)?'SIM':'';
+  document.getElementById('jur-data').value=p?(p.dataEnc||''):(r.jurData||'');document.getElementById('jur-resp').value=p?(p.responsavel||''):(r.jurResp||'');
+  document.getElementById('jur-prazo').value=p?(p.prazo||''):(r.jurPrazo||'');document.getElementById('jur-rec').value=p?(p.recuperado||''):(r.jurRecuperado||'');
+  const ex=r.excecao||{};
+  document.getElementById('exc-marcar').checked=!!ex.motivo;document.getElementById('exc-motivo').value=ex.motivo||'acordo em andamento';document.getElementById('exc-obs').value=ex.obs||'';
+  document.getElementById('exc-info').textContent=ex.motivo?`Marcada por ${ex.por||'—'} em ${ex.data?fmtDate(ex.data):'—'}.`:(minAj>0&&(parseFloat(r.valor)||0)<minAj?`Saldo abaixo do valor mínimo para ajuizar (${fmtR(minAj)}): você pode registrar a exceção "valor abaixo do mínimo".`:'');
+  document.getElementById('exc-bloco').style.display=p?'none':'';
   document.getElementById('modal-jur-bg').classList.add('open');
 }
 async function salvarJur(){
   const tipo=v('jur-tipo'),r=(DB[tipo]||[]).find(x=>x._uid===v('jur-uid'));if(!r)return;
-  r.jur=v('jur-status');r.jurData=v('jur-data')||null;r.jurResp=v('jur-resp')||'';r.jurPrazo=v('jur-prazo')||null;r.jurRecuperado=v('jur-rec')||null;
-  await sbSave(tipo,r);
-  closeModal('jur');renderSaude();if(_scUltima&&document.getElementById('sc-bg')&&document.getElementById('sc-bg').classList.contains('open'))scAbrirLista(_scUltima.modo,_scUltima.k);
+  const t=_scTit.find(x=>x.uid===r._uid);
+  if(!(t&&t.proc)){
+    r.jur=v('jur-status');r.jurData=v('jur-data')||null;r.jurResp=v('jur-resp')||'';r.jurPrazo=v('jur-prazo')||null;r.jurRecuperado=v('jur-rec')||null;
+    const marcar=document.getElementById('exc-marcar').checked,atual=r.excecao&&r.excecao.motivo;
+    if(marcar){
+      const motivo=v('exc-motivo'),obs=v('exc-obs');
+      if(motivo==='outro'&&!obs.trim()){alert('Descreva o motivo da exceção no campo de observação.');return;}
+      if(!atual||r.excecao.motivo!==motivo||(r.excecao.obs||'')!==obs){r.excecao={motivo,obs,por:currentUser.nome,data:hojeISO()};r.excecaoHist=(r.excecaoHist||[]).concat([{acao:'marcou',motivo,por:currentUser.nome,data:hojeISO()}]);}
+    }else if(atual){r.excecaoHist=(r.excecaoHist||[]).concat([{acao:'removeu',motivo:r.excecao.motivo,por:currentUser.nome,data:hojeISO()}]);r.excecao=null;}
+    await sbSave(tipo,r);
+  }
+  closeModal('jur');renderSaude();if(_scUltima&&document.getElementById('sc-bg')&&document.getElementById('sc-bg').classList.contains('open'))setTimeout(()=>scAbrirLista(_scUltima.modo,_scUltima.k),50);
 }
 function exportarSaude(){
   if(!_scTit.length){alert('Nada para exportar.');return;}
   if(typeof XLSX==='undefined'){alert('Biblioteca de Excel não carregada. Recarregue a página.');return;}
-  const fx=Object.fromEntries(SC_FAIXAS.map(f=>[f.k,f.l+' dias']));const js=Object.fromEntries(SC_JUR.map(j=>[j.k,j.sit]));
-  const rows=_scTit.sort((a,b)=>b.dias-a.dias).map(t=>({Cliente:t.cliente,ID:t.id||'',Tipo:t.tipo.toUpperCase(),Vencimento:fmtDate(t.venc),'Dias de atraso':t.dias,Faixa:fx[t.faixa],'Saldo em aberto':+t.saldo.toFixed(2),'No jurídico':t.jur?'SIM':'','Situação jurídica':js[t.jsit]||'','Responsável pelo processo':t.r.jurResp||'','Prazo da providência':t.r.jurPrazo?fmtDate(t.r.jurPrazo):''}));
+  const fx=Object.fromEntries(_scFx.map(f=>[f.k,f.l+' dias']));const js=Object.fromEntries((window._SC_JUR||[]).map(j=>[j.k,j.sit]));
+  const rows=_scTit.slice().sort((a,b)=>b.dias-a.dias).map(t=>({Cliente:t.cliente,ID:t.id||'',Chave:t.chave,Tipo:t.tipo.toUpperCase(),Vencimento:fmtDate(t.venc),'Dias de atraso':t.dias,Faixa:fx[t.faixa],'Saldo em aberto':+t.saldo.toFixed(2),'No jurídico':t.jur?'SIM':'','Origem do dado jurídico':(SC_ORIGEM[t.jurOrigem]||[])[1]||'','Processo':t.proc?t.proc.processo:'','Situação jurídica':js[t.jsit]||'','Responsável pelo processo':t.proc?t.proc.responsavel:(t.r.jurResp||''),'Prazo da providência':t.prazo?fmtDate(t.prazo):'','Exceção (motivo)':t.exc?t.exc.motivo:'','Exceção marcada por':t.exc?t.exc.por:'','Exceção em':t.exc&&t.exc.data?fmtDate(t.exc.data):''}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Carteira em aberto');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Data de referência':fmtDate(_scRef),Títulos:rows.length,'Carteira em aberto':+_scTit.reduce((s,t)=>s+t.saldo,0).toFixed(2)}]),'Resumo');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Data de referência':fmtDate(_scRef),Títulos:rows.length,'Vencido em aberto':+_scTit.filter(t=>t.dias>0).reduce((s,t)=>s+t.saldo,0).toFixed(2)}]),'Resumo');
   XLSX.writeFile(wb,`LeoMT_SaudeCarteira_${_scRef}.xlsx`);
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharSc();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharSc();scFecharModal();}});
+
 
 // ===== INDICADORES =====
 function renderIndicadores(){try{
