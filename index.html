@@ -3509,7 +3509,7 @@ function montarFechamentoHTML(mes,ano){
   const head=at.tent?`${at.tent} tentativas no mês: ${pc(at.efet,at.tent)} viraram contato efetivo${at.carteira&&at.acionadosTrab/at.carteira<0.5?', mas só':' e'} ${pc(at.acionadosTrab,at.carteira)} da carteira foi trabalhada`:'Nenhum acionamento registrado no mês';
   slides.push(fsSlide('EQUIPE DE COBRANÇA — ATIVIDADE',`<div class="fs-head2">${head}</div>${fsSec('PRODUTIVIDADE')}
     <div class="fs-row6">${[['users','Clientes acionados',at.acionados],['phone','Ligações',at.lig],['chat','WhatsApp',at.wpp],['repeat','Tentativas',at.tent],['check','Contatos efetivos',at.efet],['xcircle','Sem contato',at.semC]].map(([i,l,v])=>`<div class="fs-mini"><div class="fs-ico" style="background:#e6f4d7">${fsIcon(i,'#4f9d0a')}</div><div class="fs-kl">${l}</div><div class="fs-kv" style="font-size:32px;margin-top:14px">${v}</div></div>`).join('')}</div>
-    ${fsSec('EFICIÊNCIA')}<div class="fs-row4">${fsKpi('target','teal',at.baseLista?'% da cobrança gerada trabalhada':'% da carteira trabalhada',pc(at.acionadosTrab,at.carteira),`${at.acionadosTrab} de ${at.carteira} clientes`)}${fsKpi('check','teal','% de contato efetivo',pc(at.efet,at.tent),`${at.efet} de ${at.tent} tentativas`)}${fsKpi('percent','teal','Taxa de eficiência',pc(at.recuperados,at.acionados),`${at.recuperados} recuperados de ${at.acionados} acionados`)}${fsKpi('up','green','Valor recuperado',fmtR(recuperado),'cheque + boleto',{vsize:'22px'})}</div>
+    ${fsSec('EFICIÊNCIA')}<div class="fs-row4">${fsKpi('target','teal','% da carteira trabalhada',pc(at.acionadosTrab,at.carteira),`${at.acionadosTrab} de ${at.carteira} clientes`)}${fsKpi('check','teal','% de contato efetivo',pc(at.efet,at.tent),`${at.efet} de ${at.tent} tentativas`)}${fsKpi('percent','teal','Taxa de eficiência',pc(at.recuperados,at.acionados),`${at.recuperados} recuperados de ${at.acionados} acionados`)}${fsKpi('up','green','Valor recuperado',fmtR(recuperado),'cheque + boleto',{vsize:'22px'})}</div>
     ${fsSec('PONTOS DE ATENÇÃO')}<div class="fs-row2">${fsKpi('clock','amber','+15 dias sem acionamento',`${at.semAcion15} clientes`,'',{vsize:'26px'})}${fsKpi('userx','red','Nunca acionados',`${at.nunca} clientes`,'',{vsize:'26px'})}</div>`));
   // encerramento
   slides.push(`<div class="fs-slide fs-dark"><div class="fs-cover"><div class="fs-quote">Com força no coração e disciplina na rotina,<br>nenhum obstáculo pode frear o nosso avanço.</div></div><div class="fs-logo"><div><div><span>Leo</span></div></div></div></div>`);
@@ -4028,7 +4028,7 @@ function renderIndicadores(){try{
     if(ls.length){
       const base=new Set();ls.forEach(l=>(l.clientes||[]).forEach(c=>base.add(c)));
       const trab=new Set(acs.map(r=>normNome(r.cliente)).filter(c=>base.has(c)));
-      basePerc=base.size;numPerc=trab.size;baseTxt='da cobrança gerada';baseLabel='% Cobrança Gerada Trabalhada';
+      basePerc=base.size;numPerc=trab.size;baseTxt='da cobrança gerada';
     }
   }
   const percTrabalhada=basePerc>0?((numPerc/basePerc)*100).toFixed(1):0;
@@ -4096,7 +4096,7 @@ function renderIndicadores(){try{
       <table style="border-collapse:collapse;min-width:500px;width:100%">
         <thead><tr>
           <th ${thLS}>Mês</th>
-          <th ${thS} title="Clientes acionados ÷ clientes da cobrança gerada (lista por faixa). Meses sem lista gerada usam a carteira total.">% Cobrança Trabalhada</th>
+          <th ${thS} title="Clientes acionados ÷ clientes da cobrança gerada (lista por faixa). Meses sem lista gerada usam a carteira total.">% Carteira Trabalhada</th>
           <th ${thS}>Valor Recuperado</th>
           <th ${thS} title="Clientes Recuperados ÷ Clientes Acionados × 100">Taxa de Eficiência da Cobrança</th>
           <th ${thS}>Promessas Cumpridas</th>
