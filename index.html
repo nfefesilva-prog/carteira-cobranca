@@ -518,7 +518,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
       onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-err" id="login-err"></div>
-    <div class="login-hint">Informe seu nome: Bruna, Grécia, Nara, Kelly ou Paulo</div>
+    <div class="login-hint">Informe seu nome: Simone, Joseane, Nara, Kelly ou Paulo</div>
   </div>
 </div>
 
@@ -1385,7 +1385,8 @@ async function loadAll(){
   for(const k of STORE_KEYS){
     try{
       const res=await fetch(`${API_URL}/api/${k}`);
-      const data=await res.json();
+      let data=await res.json();
+      if(k==='cobrancas'&&Array.isArray(data)){DB.listasGeradas=data.filter(r=>r.tipo==='__LISTA__');data=data.filter(r=>r.tipo!=='__LISTA__');}
       if(Array.isArray(data)){
         if(['boleto','cheque','caderneta'].includes(k))data.forEach(normalizeMes);
         if(['boleto','cheque','caderneta','renegociacao','chargeback'].includes(k))data.forEach(normalizeIdAno);
@@ -1463,9 +1464,6 @@ async function sbDel(table,uid_val){
 
 // ===== USERS — acesso por nome ou email Leo =====
 const USERS={
-  'bruna':  {nome:'Bruna', role:'cobradora'},
-  'grecia': {nome:'Grécia',role:'cobradora'},
-  'grécia': {nome:'Grécia',role:'cobradora'},
   'nara':   {nome:'Nara',  role:'admin'},
   'kelly':  {nome:'Kelly', role:'editor'},
   'paulo':  {nome:'Paulo', role:'editor'},
@@ -1487,7 +1485,7 @@ function doLogin(){
   const val=document.getElementById('login-name').value;
   const err=document.getElementById('login-err');
   const user=resolveUser(val);
-  if(!user){err.textContent='Nome não reconhecido. Tente: Bruna, Grécia, Nara, Kelly ou Paulo.';return;}
+  if(!user){err.textContent='Nome não reconhecido. Tente: Simone, Joseane, Nara, Kelly ou Paulo.';return;}
   err.textContent='';
   currentUser={...user};
   sessionStorage.setItem('leoUser',JSON.stringify(currentUser));
@@ -2655,7 +2653,18 @@ function getListaFixaHoje(){
     return obj;
   }catch(e){return null;}
 }
+// Registra, para cada cobradora e dia, quais clientes entraram na lista gerada (base do indicador de eficiência)
+function salvarSnapshotLista(itens,filtros){
+  if(!currentUser||!itens||!itens.length)return;   // lista vazia não conta
+  const hoje=hojeISO(),uidL='lista_'+hoje+'_'+normNome(currentUser.nome).replace(/\s+/g,'_');
+  const ant=(DB.listasGeradas||[]).find(l=>l._uid===uidL);
+  const clientes=[...new Set([...(ant?ant.clientes:[]),...itens.map(r=>normNome(r.cliente)).filter(Boolean)])];
+  const snap={_uid:uidL,tipo:'__LISTA__',cobradora:currentUser.nome,data:hoje,faixa:(filtros&&filtros.faixa)||'',qtd:clientes.length,valor:itens.reduce((s,r)=>s+(r.valor||0),0),clientes};
+  DB.listasGeradas=(DB.listasGeradas||[]).filter(l=>l._uid!==uidL).concat([snap]);
+  sbSave('cobrancas',snap);
+}
 function salvarListaFixa(itens,filtros){
+  salvarSnapshotLista(itens,filtros);
   try{
     localStorage.setItem(chaveListaFixa(),JSON.stringify({data:new Date().toISOString().split('T')[0],itens,filtros,geradaEm:new Date().toISOString()}));
   }catch(e){console.error('Erro ao salvar carteira fixa do dia:',e);}
@@ -3439,7 +3448,11 @@ function fsAtividade(ano,mIdx){
   const ultimo={};(DB.cobrancas||[]).forEach(c=>{const n=nm(c),d=dOnly(c.data);if(n&&(!ultimo[n]||d>ultimo[n]))ultimo[n]=d;});
   const lim=new Date();lim.setDate(lim.getDate()-15);const limISO=`${lim.getFullYear()}-${String(lim.getMonth()+1).padStart(2,'0')}-${String(lim.getDate()).padStart(2,'0')}`;
   let semAcion15=0,nunca=0;carteira.forEach(n=>{if(!ultimo[n])nunca++;else if(ultimo[n]<limISO)semAcion15++;});
-  return{tent:cobs.length,acionados:acionados.size,lig,wpp,semC,efet:cobs.length-semC,carteira:carteira.size,recuperados,prom:prom.length,cump,semAcion15,nunca};
+  // base = clientes das listas geradas no mês; sem lista gerada, usa a carteira em aberto
+  const snaps=(DB.listasGeradas||[]).filter(l=>(l.data||'').startsWith(pref));
+  let baseCarteira=carteira.size,acionadosTrab=acionados.size,baseLista=false;
+  if(snaps.length){const bs=new Set();snaps.forEach(l=>(l.clientes||[]).forEach(c=>bs.add(c)));baseCarteira=bs.size;acionadosTrab=[...acionados].filter(c=>bs.has(normNome(c))).length;baseLista=true;}
+  return{baseLista,acionadosTrab,tent:cobs.length,acionados:acionados.size,lig,wpp,semC,efet:cobs.length-semC,carteira:baseCarteira,recuperados,prom:prom.length,cump,semAcion15,nunca};
 }
 
 // ---------- slides ----------
@@ -3493,10 +3506,10 @@ function montarFechamentoHTML(mes,ano){
     <table class="fs-tbl fs-tbl2"><thead><tr><th>ID</th><th>Cliente</th><th class="n">Total aberto</th><th>Ano</th><th>Cento</th><th>Status</th><th>Dt pagamento</th></tr></thead><tbody>${cb.slice(0,9).map(r=>`<tr><td>${esc(r.id||'—')}</td><td>${esc(r.cliente||'—')}</td><td class="n">${fmtR(r.taberto)}</td><td>${esc(r.ano||'')}</td><td>${esc(r.cento||'—')}</td><td><span class="fs-st ${(r.status||'').toUpperCase()==='PAGO'?'ok':'ab'}">${esc(r.status||'—')}</span></td><td>${r.dtpag?fmtDate(r.dtpag):'—'}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center">Nenhum chargeback no ano.</td></tr>'}</tbody></table>${cb.length>9?`<div class="fs-note">+ ${cb.length-9} título(s) não exibido(s)</div>`:''}`));
   // equipe
   const pc=(a,b)=>b>0?fsPct1(a/b*100):'—';
-  const head=at.tent?`${at.tent} tentativas no mês: ${pc(at.efet,at.tent)} viraram contato efetivo${at.carteira&&at.acionados/at.carteira<0.5?', mas só':' e'} ${pc(at.acionados,at.carteira)} da carteira foi trabalhada`:'Nenhum acionamento registrado no mês';
+  const head=at.tent?`${at.tent} tentativas no mês: ${pc(at.efet,at.tent)} viraram contato efetivo${at.carteira&&at.acionadosTrab/at.carteira<0.5?', mas só':' e'} ${pc(at.acionadosTrab,at.carteira)} da carteira foi trabalhada`:'Nenhum acionamento registrado no mês';
   slides.push(fsSlide('EQUIPE DE COBRANÇA — ATIVIDADE',`<div class="fs-head2">${head}</div>${fsSec('PRODUTIVIDADE')}
     <div class="fs-row6">${[['users','Clientes acionados',at.acionados],['phone','Ligações',at.lig],['chat','WhatsApp',at.wpp],['repeat','Tentativas',at.tent],['check','Contatos efetivos',at.efet],['xcircle','Sem contato',at.semC]].map(([i,l,v])=>`<div class="fs-mini"><div class="fs-ico" style="background:#e6f4d7">${fsIcon(i,'#4f9d0a')}</div><div class="fs-kl">${l}</div><div class="fs-kv" style="font-size:32px;margin-top:14px">${v}</div></div>`).join('')}</div>
-    ${fsSec('EFICIÊNCIA')}<div class="fs-row4">${fsKpi('target','teal','% da carteira trabalhada',pc(at.acionados,at.carteira),`${at.acionados} de ${at.carteira} clientes`)}${fsKpi('check','teal','% de contato efetivo',pc(at.efet,at.tent),`${at.efet} de ${at.tent} tentativas`)}${fsKpi('percent','teal','Taxa de eficiência',pc(at.recuperados,at.acionados),`${at.recuperados} recuperados de ${at.acionados} acionados`)}${fsKpi('up','green','Valor recuperado',fmtR(recuperado),'cheque + boleto',{vsize:'22px'})}</div>
+    ${fsSec('EFICIÊNCIA')}<div class="fs-row4">${fsKpi('target','teal',at.baseLista?'% da cobrança gerada trabalhada':'% da carteira trabalhada',pc(at.acionadosTrab,at.carteira),`${at.acionadosTrab} de ${at.carteira} clientes`)}${fsKpi('check','teal','% de contato efetivo',pc(at.efet,at.tent),`${at.efet} de ${at.tent} tentativas`)}${fsKpi('percent','teal','Taxa de eficiência',pc(at.recuperados,at.acionados),`${at.recuperados} recuperados de ${at.acionados} acionados`)}${fsKpi('up','green','Valor recuperado',fmtR(recuperado),'cheque + boleto',{vsize:'22px'})}</div>
     ${fsSec('PONTOS DE ATENÇÃO')}<div class="fs-row2">${fsKpi('clock','amber','+15 dias sem acionamento',`${at.semAcion15} clientes`,'',{vsize:'26px'})}${fsKpi('userx','red','Nunca acionados',`${at.nunca} clientes`,'',{vsize:'26px'})}</div>`));
   // encerramento
   slides.push(`<div class="fs-slide fs-dark"><div class="fs-cover"><div class="fs-quote">Com força no coração e disciplina na rotina,<br>nenhum obstáculo pode frear o nosso avanço.</div></div><div class="fs-logo"><div><div><span>Leo</span></div></div></div></div>`);
@@ -4001,7 +4014,24 @@ function renderIndicadores(){try{
   // (mede resultado sobre o que foi trabalhado — não é % do valor recuperado)
   const taxaRecup=nAcionados>0?((nPagaram/nAcionados)*100).toFixed(1):0;
   const vlMedioAcio=acs.length>0?(valorRecuperado/acs.length):0;
-  const percTrabalhada=totalCarteira>0?((nAcionados/totalCarteira)*100).toFixed(1):0;
+  // % da cobrança gerada trabalhada: base = clientes das listas que as cobradoras geraram (por faixa) no período.
+  // Sem lista gerada no período (dados antigos), usa a carteira total como antes.
+  let basePerc=totalCarteira,numPerc=nAcionados,baseTxt='(carteira total — sem lista gerada no período)',baseLabel='% Carteira Trabalhada';
+  {
+    let ls=DB.listasGeradas||[];
+    if(filCob)ls=ls.filter(l=>l.cobradora===filCob);
+    if(filData)ls=ls.filter(l=>l.data===filData);
+    else{
+      if(filAno)ls=ls.filter(l=>(l.data||'').startsWith(filAno));
+      if(filMesIdx!==''){const mnL=String(parseInt(filMesIdx)+1).padStart(2,'0');ls=ls.filter(l=>(l.data||'').slice(5,7)===mnL);}
+    }
+    if(ls.length){
+      const base=new Set();ls.forEach(l=>(l.clientes||[]).forEach(c=>base.add(c)));
+      const trab=new Set(acs.map(r=>normNome(r.cliente)).filter(c=>base.has(c)));
+      basePerc=base.size;numPerc=trab.size;baseTxt='da cobrança gerada';baseLabel='% Cobrança Gerada Trabalhada';
+    }
+  }
+  const percTrabalhada=basePerc>0?((numPerc/basePerc)*100).toFixed(1):0;
 
   // promessas
   const nPromessas=acs.filter(r=>(r.status||'').toUpperCase()==='PROMETEU PAGAR').length;
@@ -4016,10 +4046,7 @@ function renderIndicadores(){try{
 
   // ── EVOLUÇÃO MÊS A MÊS ─────────────────────────────────────────────
   // colaboradoras que já saíram da equipe, mas cujo histórico é mantido no cadastro
-  const COBRADORAS_INATIVAS=['Bruna','Grécia'];
-  const filSoAtivos=(document.getElementById('ind-fil-evol-ativos')||{}).checked;
   let cobradoras=filCob?[filCob]:getCobradoras();
-  if(filSoAtivos)cobradoras=cobradoras.filter(c=>!COBRADORAS_INATIVAS.includes(c));
   const mesesEvol=[...new Set((DB.cobrancas||[]).map(r=>(r.data||'').slice(0,7)).filter(Boolean))].sort();
 
   function calcMes(mesYM,cob){
@@ -4028,8 +4055,13 @@ function renderIndicadores(){try{
     const acion=new Set(a.map(r=>(r.cliente||'').toLowerCase().trim())).size;
     const pag=new Set(a.filter(r=>(r.status||'').toUpperCase()==='PAGO').map(r=>(r.cliente||'').toLowerCase().trim())).size;
     const taxa=acion>0?((pag/acion)*100).toFixed(0)+'%':'—';
-    const cartM=carteiraAberta.length;
-    const perc=cartM>0?((acion/cartM)*100).toFixed(0)+'%':'—';
+    let perc;
+    const lsM=(DB.listasGeradas||[]).filter(l=>(l.data||'').startsWith(mesYM)&&(!cob||l.cobradora===cob));
+    if(lsM.length){
+      const baseM=new Set();lsM.forEach(l=>(l.clientes||[]).forEach(c=>baseM.add(c)));
+      const trabM=new Set(a.map(r=>normNome(r.cliente)).filter(c=>baseM.has(c)));
+      perc=baseM.size>0?((trabM.size/baseM.size)*100).toFixed(0)+'%':'—';
+    }else{const cartM=carteiraAberta.length;perc=cartM>0?((acion/cartM)*100).toFixed(0)+'%':'—';}
     let vRec=0;
     todosBC.filter(r=>(r.sit||'').toUpperCase()==='PAGO'&&(r.dtpag||'').startsWith(mesYM)).forEach(r=>{
       if(!cob||getCobradoraAtrib(r)===cob)vRec+=parseFloat(r.vpago||r.valor||0);
@@ -4064,7 +4096,7 @@ function renderIndicadores(){try{
       <table style="border-collapse:collapse;min-width:500px;width:100%">
         <thead><tr>
           <th ${thLS}>Mês</th>
-          <th ${thS}>% Carteira Trabalhada</th>
+          <th ${thS} title="Clientes acionados ÷ clientes da cobrança gerada (lista por faixa). Meses sem lista gerada usam a carteira total.">% Cobrança Trabalhada</th>
           <th ${thS}>Valor Recuperado</th>
           <th ${thS} title="Clientes Recuperados ÷ Clientes Acionados × 100">Taxa de Eficiência da Cobrança</th>
           <th ${thS}>Promessas Cumpridas</th>
@@ -4117,12 +4149,12 @@ function renderIndicadores(){try{
     <!-- EFICIÊNCIA (esforço vs resultado — maior destaque) -->
     <div class="ind-block-title">🎯 Eficiência</div>
     <div class="card-row ind-row-lg" style="margin-bottom:8px">
-      <div class="kcard accent"><div class="klabel">% Carteira Trabalhada</div><div class="kvalue">${percTrabalhada}%</div><div class="kmeta">${nAcionados} de ${totalCarteira} clientes</div></div>
+      <div class="kcard accent"><div class="klabel">${baseLabel}</div><div class="kvalue">${percTrabalhada}%</div><div class="kmeta">${numPerc} de ${basePerc} clientes ${baseTxt}</div></div>
       <div class="kcard accent"><div class="klabel">% Contato Efetivo</div><div class="kvalue">${percContatoEfetivo}%</div><div class="kmeta">${nContatosEfetivos} de ${nTentativas} tentativas</div></div>
       <div class="kcard green"><div class="klabel">Taxa de Eficiência da Cobrança</div><div class="kvalue">${taxaRecup}%</div><div class="kmeta">${nPagaram} de ${nAcionados} acionados</div></div>
       <div class="kcard"><div class="klabel">Valor Médio / Acionamento</div><div class="kvalue">${fmtR(vlMedioAcio)}</div></div>
     </div>
-    <div class="ind-formula-note">📐 Taxa de Eficiência da Cobrança = Clientes Recuperados ÷ Clientes Acionados × 100 — mede resultado sobre o que foi trabalhado, não é % do valor recuperado.</div>
+    <div class="ind-formula-note">📐 Taxa de Eficiência da Cobrança = Clientes Recuperados ÷ Clientes Acionados × 100 — mede resultado sobre o que foi trabalhado, não é % do valor recuperado. A % trabalhada é medida sobre a cobrança gerada (lista por faixa de atraso).</div>
 
     <!-- RESULTADO (maior destaque) -->
     <div class="ind-block-title">💰 Resultado</div>
@@ -4140,17 +4172,15 @@ function renderIndicadores(){try{
     <!-- EVOLUÇÃO -->
     <div class="ind-block-title-row" style="margin-bottom:14px">
       <div class="ind-block-title" style="margin-bottom:0">📈 Evolução Mês a Mês</div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
-        <input type="checkbox" id="ind-fil-evol-ativos" ${filSoAtivos?'checked':''} onchange="renderIndicadores()">
-        Somente colaboradoras ativas hoje
-      </label>
     </div>
     ${evolHTML||'<div style="color:#6b7280;font-size:13px">Sem dados para o período selecionado.</div>'}
   `;
 }catch(e){document.getElementById('ind-conteudo').innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px;background:#fee2e2;border-radius:8px;margin:16px 0">⚠️ Erro nos Indicadores: '+e.message+'</div>';console.error(e);}}
 
 // Funções auxiliares para filtros dinâmicos
-function getCobradoras(){const padroes=['Simone','Bruna','Grécia','Nara','Joseane'];const set=new Set(padroes);(DB.cobrancas||[]).forEach(r=>{if(r.cobradora)set.add(r.cobradora);});return Array.from(set).sort();}
+// colaboradoras que saíram da empresa: o histórico fica nos dados, mas elas não aparecem em filtros, ranking nem evolução
+const COBRADORAS_INATIVAS_G=['Bruna','Grécia','Grecia'];
+function getCobradoras(){const padroes=['Simone','Nara','Joseane'];const set=new Set(padroes);(DB.cobrancas||[]).forEach(r=>{if(r.cobradora&&!COBRADORAS_INATIVAS_G.includes(r.cobradora))set.add(r.cobradora);});return Array.from(set).sort();}
 function populateCobradoras(){const cobs=getCobradoras();['ind-fil-cob','fil-crm-cob','fil-ret-cob','rel-cob'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const val=el.value;const opts=el.querySelectorAll('option:not(:first-child)');const exist=new Set(Array.from(opts).map(o=>o.value));cobs.forEach(c=>{if(!exist.has(c)){const opt=document.createElement('option');opt.value=c;opt.textContent=c;el.appendChild(opt);}});});}
 
 
