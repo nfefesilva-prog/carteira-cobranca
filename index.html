@@ -541,6 +541,23 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 .sc-jrow.crit:hover{background:#fbd5d5}
 .sc-note{font-size:11.5px;color:var(--text2);line-height:1.6;margin-top:6px}
 @media(max-width:1000px){.sc-kpis{grid-template-columns:1fr}.sc-row{grid-template-columns:80px 1fr 90px}.sc-row>:nth-child(n+4){display:none}.sc-jrow{grid-template-columns:1fr 60px 100px}.sc-jrow>:nth-child(1),.sc-jrow>:nth-child(5){display:none}}
+/* ===== SAÚDE: ano de vencimento, evolução semanal e cobradoras ===== */
+.sc-fora{background:#fff7ed;color:#9a3412;border-radius:10px;padding:8px 14px;font-size:12.5px;margin-bottom:8px}
+.sc-fora span{color:inherit;opacity:.8}
+.sc-evo{width:100%;border-collapse:collapse;font-size:12px}
+.sc-evo th{font-size:11px;color:var(--text2);text-align:left;padding:8px 8px;border-bottom:2px solid #e5e7eb;white-space:nowrap;vertical-align:bottom}
+.sc-evo td{padding:8px;border-bottom:1px solid #eef1f5;vertical-align:top}
+.sc-evo .sc-rl{font-weight:700;color:var(--text);white-space:nowrap}
+.sc-evo .sc-nd{color:#cbd5e1}
+.sc-evo .sc-sb{font-size:10.5px;color:#94a3b8;font-style:italic}
+.sc-evo tr.sc-tot td{background:#f8fafc;font-size:11.5px}
+.sc-d{font-size:10.5px;color:var(--text2)}
+.sc-d.bom{color:#16a34a}.sc-d.ruim{color:#dc2626}
+.sc-meta{font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 8px}
+.sc-meta.ok{background:#dcfce7;color:#166534}.sc-meta.x{background:#fee2e2;color:#991b1b}
+.sc-mini{display:inline-flex;width:130px;height:9px;border-radius:5px;overflow:hidden;background:#eef1f5;vertical-align:middle}
+.sc-mini i{display:block;height:100%}
+.sc-cob td{vertical-align:middle}
 </style>
 </head>
 <body>
@@ -669,7 +686,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
         <!-- AGING -->
         <div class="dash-block dash-block-narrow">
           <div class="dash-block-title-row"><div class="dash-block-title">📊 Aging da Carteira</div>
-            <label style="font-size:12px;color:var(--text2)">Ano <select id="dash-aging-ano" onchange="renderDashboard()"><option value="">Todos</option></select></label></div>
+            <label style="font-size:12px;color:var(--text2)">Ano de vencimento <select id="dash-aging-ano" onchange="renderAgingPainel()"><option value="">Todos</option></select></label></div>
           <div id="dash-aging"></div>
         </div>
 
@@ -909,6 +926,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
         <div class="sc-filtros">
           <label>Data de referência <input type="text" id="sc-ref" placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" oninput="scMascaraData(this)" style="width:120px"></label>
           <label>Período (inadimplência) <select id="sc-per" onchange="renderSaude()"></select></label>
+          <label>Ano de vencimento <select id="sc-ano" onchange="renderSaude()"></select></label>
           <label>Tipo <select id="sc-tipo" onchange="renderSaude()"><option value="">Boleto + Cheque</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select></label>
           <label>Responsável <select id="sc-resp" onchange="renderSaude()"><option value="">Todos</option></select></label>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';document.getElementById('sc-per').dataset.set='';renderSaude()">Hoje</button>
@@ -3333,13 +3351,12 @@ function renderDashboard(){
 
   // ---- filtros de ano (carteira consolidada e aging) ----
   const anosDash=[...new Set(['boleto','cheque','caderneta','renegociacao','chargeback'].flatMap(t=>(DB[t]||[]).map(r=>String(r.ano||'')).filter(Boolean)))].sort();
-  ['dash-cart-ano','dash-aging-ano'].forEach(id=>{
+  ['dash-cart-ano'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const cur=el.value;
     el.innerHTML='<option value="">Todos</option>'+anosDash.map(a=>`<option${a===cur?' selected':''}>${a}</option>`).join('');
   });
   const cartAno=(document.getElementById('dash-cart-ano')||{}).value||'';
-  const agAno=(document.getElementById('dash-aging-ano')||{}).value||'';
   const okAno=(r,a)=>!a||String(r.ano||'')===a;
 
   // ---- CARTEIRA CONSOLIDADA (5 tipos + total boleto+cheque) ----
@@ -3363,41 +3380,20 @@ function renderDashboard(){
     <div class="dct-item"><span class="dct-ico">💳</span><div class="dct-label">Chargeback</div><div class="dct-value"><span class="dct-arrow">▼</span>${fmtR(cbAberto)}</div><div class="dct-meta">${cbClientes} cliente${cbClientes!==1?'s':''}</div></div>
   `;
 
-  // ---- AGING (barras horizontais com valor + clientes + %) ----
-  const aging={d30:0,d60:0,d90:0,d180:0,d180p:0,n30:0,n60:0,n90:0,n180:0,n180p:0};
-  ['boleto','cheque'].forEach(t=>{
-    (DB[t]||[]).filter(r=>okAno(r,agAno)&&(r.sit||'').toUpperCase()!=='PAGO'&&r.venc).forEach(r=>{
-      const diff=Math.floor((now-new Date(r.venc+'T00:00:00'))/86400000);
-      if(diff<0)return;
-      const v=parseFloat(r.valor||0);
-      if(diff<=30){aging.d30+=v;aging.n30++;}
-      else if(diff<=60){aging.d60+=v;aging.n60++;}
-      else if(diff<=90){aging.d90+=v;aging.n90++;}
-      else if(diff<=180){aging.d180+=v;aging.n180++;}
-      else{aging.d180p+=v;aging.n180p++;}
-    });
-  });
-  const agingTotal=aging.d30+aging.d60+aging.d90+aging.d180+aging.d180p;
-  const pct=v=>agingTotal>0?(v/agingTotal*100):0;
-  const bucket=(label,v,n,color)=>`
-    <div class="aging-row">
-      <div class="aging-row-left">
-        <span class="aging-dot" style="background:${color}"></span>
-        <span class="aging-label">${label}</span>
-      </div>
-      <div class="aging-row-right">
-        <span class="aging-value">${fmtR(v)}</span>
-        <span class="aging-meta">${n} cliente${n!==1?'s':''} · ${pct(v).toFixed(1)}%</span>
-      </div>
-    </div>`;
-  document.getElementById('dash-aging').innerHTML=
-    bucket('1 a 30 dias',aging.d30,aging.n30,'#facc15')+
-    bucket('31 a 60 dias',aging.d60,aging.n60,'#f97316')+
-    bucket('61 a 90 dias',aging.d90,aging.n90,'#dc6020')+
-    bucket('91 a 180 dias',aging.d180,aging.n180,'#dc2626')+
-    bucket('Acima de 180 dias',aging.d180p,aging.n180p,'#991b1b');
+  // ---- AGING: mesma classificação, limites e filtro de ano da Saúde da Carteira (função compartilhada) ----
+  renderAgingPainel();
+  if(!EX.parametros)exCarregar('parametros').then(()=>renderAgingPainel());
 }
 
+function renderAgingPainel(){
+  const el=document.getElementById('dash-aging'),sel=document.getElementById('dash-aging-ano');if(!el||!sel)return;
+  const cur=sel.value;sel.innerHTML=scAnoOpcoes().map(([v,l])=>`<option value="${v}"${v===cur?' selected':''}>${l}</option>`).join('');
+  const c=carteiraClassificada({ref:hojeISO(),ano:sel.value}),dist=distribuicaoFaixas(c.tit,c.fx);
+  const venc=dist.filter(f=>f.min>0).reduce((s,f)=>s+f.v,0),cores=['#94a3b8','#facc15','#fb923c','#f97316','#dc2626','#b91c1c','#7f1d1d'];
+  const rows=dist.map((f,i)=>({...f,cor:cores[i]})).filter(f=>f.min>0||f.n>0);
+  el.innerHTML=rows.map(f=>`<div class="aging-row"><div class="aging-row-left"><span class="aging-dot" style="background:${f.cor}"></span><span class="aging-label">${esc(f.l)}${f.min>0?' dias':''}</span></div>
+    <div class="aging-row-right"><span class="aging-value">${fmtR(f.v)}</span><span class="aging-meta">${f.c} cliente${f.c!==1?'s':''} · ${f.n} título${f.n!==1?'s':''} · ${f.min>0&&venc>0?(f.v/venc*100).toFixed(1).replace('.',',')+'%':'—'}</span></div></div>`).join('')||'<div class="tbl-empty">Nenhum título em aberto.</div>';
+}
 function initRelatorio(){
   const anosSet=new Set();
   ['boleto','cheque','caderneta'].forEach(t=>(DB[t]||[]).forEach(r=>{if(r.ano)anosSet.add(String(r.ano));}));
@@ -4038,7 +4034,7 @@ const SC_PARAM_PADRAO={
     {id:'f4',min:61,tag:'risco alto'},{id:'f5',min:90,tag:'elegível ao jurídico',role:'jur'},{id:'f6',min:180,tag:'perda potencial',role:'perda'}],
   perfil:[{l:'Saudável',max:0},{l:'Baixo',max:5},{l:'Moderado',max:10},{l:'Médio',max:30},{l:'Alto',max:1e9}],
   janelaHist:12,filtroHist:6,minPagamentos:3,recAtrasos:3,recJanela:6,recPct:40,
-  alertaDias:150,valorMinAjuizar:0,diasSemAndamento:60,feriadosExtras:'',urlJuridico:'',historico:[]
+  alertaDias:150,anoCorte:2026,metaRecuperacaoPct:null,metaRolagemPct:null,valorMinAjuizar:0,diasSemAndamento:60,feriadosExtras:'',urlJuridico:'',historico:[]
 };
 function scParams(){
   const rec=EX.parametros&&EX.parametros.dados.find(x=>x._uid==='sc_params');
@@ -4233,44 +4229,195 @@ function scAbertosEm(ref,opc){
   });
   out.semVenc=semVenc;return out;
 }
+// ---------- filtro "ano de vencimento" e classificação compartilhada (Saúde da Carteira + Painel Geral) ----------
+const scCorte=()=>parseInt(scParams().anoCorte)||2026;
+function scAnoOpcoes(){const c=scCorte();return[['','Todos'],['cobranca',String(c)],['fora',(c-1)+' e anteriores']];}
+function scAnoOk(venc,ano){if(!ano||!venc)return true;const y=parseInt(String(venc).slice(0,4));return ano==='cobranca'?y>=scCorte():y<scCorte();}
+const scEhJurR=r=>r.jur==='SIM'||(r.atrib||'').toUpperCase()==='JURÍDICO';
+const scRespAtiva=n=>!!n&&getCobradoras().includes(n);
+// ÚNICA função de classificação da carteira em aberto: o Painel Geral e a Saúde da Carteira usam esta mesma.
+// Título no jurídico aparece sempre (mesmo de anos fora de cobrança).
+function carteiraClassificada(o){
+  o=o||{};const ref=o.ref||hojeISO();_scFx=scFaixas();const corte=scCorte();
+  const base=scAbertosEm(ref,{tipo:o.tipo||''});
+  base.forEach(t=>{t.anoVenc=parseInt(String(t.venc).slice(0,4));t.emCobranca=t.anoVenc>=corte;t.jurFlag=scEhJurR(t.r);});
+  const fora=base.filter(t=>!t.emCobranca&&!t.jurFlag),mantidosJur=base.filter(t=>!t.emCobranca&&t.jurFlag);
+  let tit=base;
+  if(o.ano==='cobranca')tit=base.filter(t=>t.emCobranca||t.jurFlag);
+  else if(o.ano==='fora')tit=base.filter(t=>!t.emCobranca);
+  return{tit,fora,mantidosJur,semVenc:base.semVenc||0,corte,ref,fx:_scFx};
+}
+function distribuicaoFaixas(tit,fx){return fx.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:a.reduce((s,t)=>s+t.saldo,0),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});}
+const scResumoTipo=a=>{const s=t=>a.filter(x=>x.tipo===t).reduce((m,x)=>m+x.saldo,0);return{b:s('boleto'),c:s('cheque')};};
+
 function scColetar(){
   const gv=id=>(document.getElementById(id)||{}).value||'';
-  const ref=scRefISO(),tipoSel=gv('sc-tipo'),resp=gv('sc-resp');
-  _scFx=scFaixas();const P=scParams();
-  let tit=scAbertosEm(ref,{tipo:tipoSel});_scSemVenc=tit.semVenc;
-  if(resp)tit=tit.filter(t=>getCobradoraAtrib(t.r)===resp);
-  _scTit=tit;_scRef=ref;return tit;
+  const ref=scRefISO(),tipoSel=gv('sc-tipo'),resp=gv('sc-resp'),ano=gv('sc-ano');
+  const c=carteiraClassificada({ref,tipo:tipoSel,ano});
+  _scSemVenc=c.semVenc;
+  const ativas=getCobradoras();
+  c.tit.forEach(t=>{const r=getCobradoraAtrib(t.r)||'';t.respOrig=r;t.resp=ativas.includes(r)?r:'';});   // sem responsável = ninguém ativo
+  _scBaseResp=c.tit;
+  let tit=c.tit;
+  if(resp==='__sem')tit=tit.filter(t=>!t.resp);else if(resp)tit=tit.filter(t=>t.resp===resp);
+  c.fora.forEach(t=>{});
+  _scFora=c.fora;_scMantidos=c.mantidosJur;_scTit=tit;_scRef=ref;return tit;
+}
+let _scBaseResp=[],_scFora=[],_scMantidos=[];
+
+// ---------- retratos: leitura e semana ----------
+const _retDec={};
+function scRetDecode(ret){
+  const key=ret._uid+'#'+(ret.versao||1);if(_retDec[key])return _retDec[key];
+  const col=ret.colunas||['chave','cliente','tipo','saldo_centavos','dias','faixa','atribuicao','juridico'],ix=n=>col.indexOf(n);
+  const fx=scFaixas();
+  const out=(ret.titulos||[]).map(x=>{
+    const dias=x[ix('dias')];let venc=ix('venc')>=0?x[ix('venc')]:'';
+    if(!venc&&dias>0){const d=new Date(ret.ref+'T00:00:00');d.setDate(d.getDate()-dias);venc=_isoD(d);}
+    const faixa=dias<=0?fx[0]:fx.find((f,i)=>i>0&&dias>=f.min&&dias<=f.max)||fx[fx.length-1];
+    return{chave:x[ix('chave')],cliente:x[ix('cliente')],tipo:x[ix('tipo')],saldo:x[ix('saldo_centavos')]/100,dias,venc,faixa:faixa.k,fi:fx.indexOf(faixa),resp:ix('resp')>=0?(x[ix('resp')]||''):'',jur:ix('juridico')>=0?x[ix('juridico')]:(x[ix('atribuicao')]||'').toUpperCase()==='JURÍDICO'};
+  });
+  return _retDec[key]=out;
+}
+function scSemanaISO(ref){const d=new Date(ref+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return _isoD(d);}
+// últimas n semanas (mais antiga → mais nova); em cada semana vale o ÚLTIMO retrato dela
+function scSemanas(n){
+  const por={};((EX.retratos&&EX.retratos.dados)||[]).filter(r=>!r.indisponivel&&r.titulos).forEach(r=>{const s=scSemanaISO(r.ref);if(!por[s]||r.ref>por[s].ref)por[s]=r;});
+  const seg=scSemanaISO(hojeISO()),out=[];
+  for(let i=n-1;i>=0;i--){const d=new Date(seg+'T00:00:00');d.setDate(d.getDate()-7*i);const s=_isoD(d);out.push({semana:s,ret:por[s]||null});}
+  return out;
+}
+// responsável do título no último retrato anterior ou igual à data (histórico fixo: não muda se o título trocar de responsável)
+function scRespNoRetrato(chave,dt){
+  const rets=((EX.retratos&&EX.retratos.dados)||[]).filter(r=>!r.indisponivel&&r.titulos&&r.ref<=dt).sort((a,b)=>b.ref.localeCompare(a.ref));
+  for(const r of rets){const x=scRetDecode(r).find(y=>y.chave===chave);if(x)return x.resp||'';}
+  return '';
+}
+function scFiltroLinha(o){
+  const corte=scCorte();
+  return x=>{
+    if(o.tipo&&x.tipo!==o.tipo)return false;
+    if(o.ano){const y=parseInt(String(x.venc).slice(0,4));if(o.ano==='cobranca'&&!(y>=corte||x.jur))return false;if(o.ano==='fora'&&!(y<corte))return false;}
+    if(o.resp==='__sem'&&scRespAtiva(x.resp))return false;
+    if(o.resp&&o.resp!=='__sem'&&x.resp!==o.resp)return false;
+    return true;
+  };
+}
+// métricas de uma semana (w) comparada com a anterior (p). F = filtro completo; F0 = filtro sem responsável
+function scMetSemana(w,p,F,F0){
+  const fx=scFaixas(),soma=a=>a.reduce((s,x)=>s+x.saldo,0),out={semana:w.semana,tem:!!w.ret,aprox:!!(w.ret&&w.ret.aproximado)};
+  const fim=_isoD(new Date(new Date(w.semana+'T00:00:00').getTime()+6*86400000));
+  // recuperado na semana: títulos vencidos que foram pagos com atraso na semana (valor pago)
+  let rv=0,rn=0;
+  ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    if((r.sit||'').toUpperCase()!=='PAGO')return;
+    const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
+    if(!dtp||!venc||dtp<w.semana||dtp>fim||pagoEmDia(venc,dtp))return;
+    const row={tipo:t,venc,jur:scEhJurR(r),resp:scRespNoRetrato(tituloChave(t,r),dtp)};
+    if(!F(row))return;rv+=parseFloat(r.vpago||r.valor)||0;rn++;
+  }));
+  out.rec={v:rv,n:rn};
+  if(!w.ret)return out;
+  const todas=scRetDecode(w.ret).filter(x=>x.dias>0),rows=todas.filter(F),all0=todas.filter(F0);
+  out.v=soma(rows);out.n=rows.length;
+  out.porFaixa={};fx.forEach(f=>{const a=rows.filter(x=>x.faixa===f.k);out.porFaixa[f.k]={v:soma(a),n:a.length};});
+  out.comp=scResumoTipo(rows);
+  if(p&&p.ret){
+    const pAll=scRetDecode(p.ret).filter(x=>x.dias>0),prevAll=new Map(pAll.filter(F0).map(x=>[x.chave,x])),prevRows=pAll.filter(F),curKeys=new Set(all0.map(x=>x.chave));
+    out.prevV=soma(prevRows);out.prevN=prevRows.length;
+    const novos=rows.filter(x=>!prevAll.has(x.chave)&&x.venc>p.ret.ref);
+    const rol=rows.filter(x=>{const q=prevAll.get(x.chave);return q&&x.fi>q.fi;});
+    const reg=prevRows.filter(x=>!curKeys.has(x.chave));
+    const pagos=new Set();['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{if((r.sit||'').toUpperCase()==='PAGO')pagos.add(tituloChave(t,r));}));
+    out.novos={v:soma(novos),n:novos.length};out.rol={v:soma(rol),n:rol.length};out.reg={v:soma(reg),n:reg.length,pagos:reg.filter(x=>pagos.has(x.chave)).length};
+  }
+  return out;
+}
+// ---------- blocos da aba: evolução semanal e visão por cobradora ----------
+const scDelta=(a,b,bomSeSobe)=>{if(b==null||a==null)return '';const d=a-b;if(Math.abs(d)<0.005)return '<span class="sc-d">= 0</span>';const cls=(d>0)===bomSeSobe?'bom':'ruim';return `<span class="sc-d ${cls}">${d>0?'▲':'▼'} ${scMiT(Math.abs(d))}${b>0?' ('+(d>0?'+':'−')+Math.abs(d/b*100).toFixed(0)+'%)':''}</span>`;};
+function scBlocosSemanais(){
+  const gv=id=>(document.getElementById(id)||{}).value||'';
+  const o={tipo:gv('sc-tipo'),ano:gv('sc-ano'),resp:gv('sc-resp')},P=scParams(),fx=scFaixas();
+  const sem=scSemanas(8),F=scFiltroLinha(o),F0=scFiltroLinha({...o,resp:''});
+  const mets=sem.map((w,i)=>scMetSemana(w,i>0?sem[i-1]:null,F,F0));
+  const lab=m=>'sem '+m.semana.slice(8)+'/'+m.semana.slice(5,7)+(m.aprox?' ≈':'');
+  const semBase='<span class="sc-sb">sem base de comparação</span>';
+  const cel=(m,i,get,bom)=>{
+    if(!m.tem)return '<td class="sc-nd">—</td>';
+    const x=get(m);if(x===undefined)return `<td>${semBase}</td>`;
+    const prev=i>0?get(mets[i-1]):undefined;
+    return `<td><b title="${fmtR(x.v)}">${scMiT(x.v)}</b> · ${x.n} tít.<div>${i>0&&mets[i-1].tem&&prev!==undefined?scDelta(x.v,prev.v,bom):''}</div></td>`;
+  };
+  const celRec=(m,i)=>{const x=m.rec,prev=i>0?mets[i-1].rec:null;return `<td><b title="${fmtR(x.v)}">${scMiT(x.v)}</b> · ${x.n} tít.<div>${prev?scDelta(x.v,prev.v,true):''}</div></td>`;};
+  const linha=(nome,get,bom,extra)=>`<tr><td class="sc-rl">${nome}</td>${mets.map((m,i)=>cel(m,i,get,bom)).join('')}</tr>`;
+  const tabela=`<table class="sc-evo"><thead><tr><th></th>${mets.map(m=>`<th>${lab(m)}${m.tem?'':'<br><small>sem retrato</small>'}</th>`).join('')}</tr></thead><tbody>
+    ${linha('Vencido em aberto',m=>({v:m.v,n:m.n}),false)}
+    ${fx.filter((f,k)=>k>0).map(f=>linha('&nbsp;&nbsp;'+esc(f.l),m=>m.porFaixa?m.porFaixa[f.k]:undefined,false)).join('')}
+    <tr><td class="sc-rl">Recuperado na semana</td>${mets.map((m,i)=>celRec(m,i)).join('')}</tr>
+    ${linha('Novos vencidos',m=>m.novos,false)}
+    ${linha('Rolagem (avançou de faixa)',m=>m.rol,false)}
+    ${linha('Regularizados (saíram do vencido)',m=>m.reg,true)}
+    </tbody></table>`;
+  // visão por cobradora: agora (data de referência) + semana atual contra a anterior dela mesma e contra a meta
+  const base=_scBaseResp.filter(t=>t.dias>0),nomes=[...getCobradoras(),'__sem'];
+  const cur=sem[7],prev=sem[6];
+  const meta=(val,metaV,melhorMaior)=>{if(metaV==null||metaV==='')return '';if(val==null)return '';const ok=melhorMaior?val>=metaV:val<=metaV;return `<span class="sc-meta ${ok?'ok':'x'}" title="meta ${metaV}%">${ok?'✔':'✖'} meta ${metaV}%</span>`;};
+  const linhaC=n=>{
+    const live=base.filter(t=>n==='__sem'?!t.resp:t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),tp=scResumoTipo(live);
+    const dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
+    const Fn=scFiltroLinha({tipo:o.tipo,ano:o.ano,resp:n}),m=scMetSemana(cur,prev,Fn,F0);
+    const ref=m.prevV;
+    const pRec=ref>0?m.rec.v/ref*100:null,pRol=(m.rol&&ref>0)?m.rol.v/ref*100:null;
+    const comp=vv>0?`<span class="sc-mini"><i style="width:${(tp.b/vv*100).toFixed(0)}%;background:#60a5fa"></i><i style="width:${(tp.c/vv*100).toFixed(0)}%;background:#a78bfa"></i></span> <small>boleto ${(tp.b/vv*100).toFixed(0)}% · cheque ${(tp.c/vv*100).toFixed(0)}%</small>`:'<small>—</small>';
+    const fxb=vv>0?`<span class="sc-mini">${dist.map(f=>`<i title="${esc(f.l)}: ${fmtR(f.v)}" style="width:${(f.v/vv*100).toFixed(1)}%;background:${f.bar}"></i>`).join('')}</span>`:'';
+    return{n,vv,nt:live.length,html:`<tr><td class="sc-rl">${n==='__sem'?'Sem responsável':esc(n)}</td>
+      <td><b title="${fmtR(vv)}">${scMiT(vv)}</b> · ${live.length} tít.</td>
+      <td>${m.tem&&m.prevV!=null?`${scDelta(m.v,m.prevV,false)}`:semBase}</td>
+      <td>${m.prevV!=null?`<b>${scMiT(m.rec.v)}</b> · ${pRec!=null?pRec.toFixed(1).replace('.',',')+'% do vencido ant.':''}<div>${meta(pRec,P.metaRecuperacaoPct,true)}</div>`:semBase}</td>
+      <td>${m.rol?`<b>${scMiT(m.rol.v)}</b> · ${pRol!=null?pRol.toFixed(1).replace('.',',')+'%':''}<div>${meta(pRol,P.metaRolagemPct,false)}</div>`:semBase}</td>
+      <td>${m.novos?`${m.novos.n} tít. · ${scMiT(m.novos.v)}`:semBase}</td><td>${m.reg?`${m.reg.n} tít. · ${scMiT(m.reg.v)}`:semBase}</td>
+      <td>${comp}<div>${fxb}</div></td></tr>`};
+  };
+  const lc=nomes.map(linhaC),totV=lc.reduce((s,l)=>s+l.vv,0),totN=lc.reduce((s,l)=>s+l.nt,0),vencTotal=base.reduce((s,t)=>s+t.saldo,0);
+  const confere=Math.abs(totV-vencTotal)<0.005&&totN===base.length;
+  const tabC=`<table class="sc-evo sc-cob"><thead><tr><th>Responsável</th><th>Vencido hoje</th><th>vs semana anterior (dela)</th><th>Recuperado na semana</th><th>Rolagem</th><th>Novos vencidos</th><th>Regularizados</th><th>Composição: tipo e faixa</th></tr></thead><tbody>${lc.map(l=>l.html).join('')}
+    <tr class="sc-tot"><td class="sc-rl">Total (conferência)</td><td><b title="${fmtR(totV)}">${scMiT(totV)}</b> · ${totN} tít.</td><td colspan="6" style="text-align:left">${confere?'✔ soma das cobradoras + sem responsável = total do filtro ('+fmtR(vencTotal)+' · '+base.length+' títulos)':'⚠ a soma não bate com o total do filtro'}</td></tr></tbody></table>`;
+  const metaTxt=(P.metaRecuperacaoPct!=null||P.metaRolagemPct!=null)?'':' As metas semanais (recuperação e rolagem) ainda não foram definidas em ⚙ Parâmetros; sem elas não há comparação com meta.';
+  return `<div class="sc-sec">Evolução semanal${o.resp?' — '+(o.resp==='__sem'?'sem responsável':esc(o.resp)):' — total'}</div><div class="sc-tbl" style="overflow-x:auto">${tabela}
+      <div class="sc-note" style="margin-top:8px">Últimas 8 semanas (segunda-feira de cada semana); em cada semana vale o último retrato. “≈” = retrato reconstruído, aproximado. Variação contra a semana anterior. Recuperado = vencidos pagos com atraso na semana (da carteira); responsável do título é o do retrato na data (o histórico não muda se ele trocar de responsável).</div></div>
+    <div class="sc-sec">Visão por cobradora</div><div class="sc-tbl" style="overflow-x:auto">${tabC}
+      <div class="sc-note" style="margin-top:8px">Cada cobradora é comparada com ela mesma na semana anterior e com a meta, não em ranking: as carteiras têm composições diferentes (boleto/cheque, antigos/recentes) — veja a composição ao lado. “Sem responsável” = títulos de clientes sem acionamento ou de quem saiu da equipe.${metaTxt}</div></div>`;
 }
 
 // ---------- inadimplência com base (pagos em dia) ----------
 function scMesesJanela(ref,n){const out=[];const d=new Date(ref.slice(0,7)+'-01T00:00:00');for(let i=0;i<n;i++){out.push(_isoD(d).slice(0,7));d.setMonth(d.getMonth()-1);}return out;}
 // total que venceu nos meses indicados (até "ate"): abertos + pagos com atraso + pagos em dia (carteira + base, sem duplicar por chave)
-function scVenceuNosMeses(meses,ref,ate,tipoSel){
+function scVenceuNosMeses(meses,ref,ate,tipoSel,ano){
   const set=new Set(meses),base=pdBase(),vistos=new Set();
   let aberto=0,atraso=0,emDia=0;
   ['boleto','cheque'].forEach(t=>{
     if(tipoSel&&tipoSel!==t)return;
     (DB[t]||[]).forEach(r=>{
-      if(!r.venc||!set.has(r.venc.slice(0,7))||r.venc>ate)return;
+      if(!r.venc||!set.has(r.venc.slice(0,7))||r.venc>ate||!scAnoOk(r.venc,ano))return;
       const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag),v=parseFloat(r.valor)||0,ch=tituloChave(t,r);
       if(pago&&dtp&&dtp<=ref){vistos.add(ch);if(pagoEmDia(dOnly(r.venc),dtp))emDia+=v;else atraso+=v;}
       else{const s=Math.max(0,v-(pago?0:(parseFloat(r.vpago)||0)));aberto+=s;vistos.add(ch);}
     });
   });
-  meses.forEach(m=>{const it=base[m];if(!it)return;Object.keys(it).forEach(ch=>{const x=it[ch];if(vistos.has(ch)||x[1]>ate||x[2]>ref)return;if(tipoSel&&x[3]!==tipoSel)return;emDia+=x[0]/100;});});
+  meses.forEach(m=>{const it=base[m];if(!it)return;Object.keys(it).forEach(ch=>{const x=it[ch];if(vistos.has(ch)||x[1]>ate||x[2]>ref||!scAnoOk(x[1],ano))return;if(tipoSel&&x[3]!==tipoSel)return;emDia+=x[0]/100;});});
   return{aberto,atraso,emDia,total:aberto+atraso+emDia};
 }
-function scInadimplencias(ref,per,tipoSel){
+function scInadimplencias(ref,per,tipoSel,ano){
   const base=pdBase();
   const cobertoPer=!!base[per];
-  const r1=scVenceuNosMeses([per],ref,ref,tipoSel);
+  const r1=scVenceuNosMeses([per],ref,ref,tipoSel,ano);
   const fim90=_isoD(new Date(new Date(ref+'T00:00:00').getTime()-90*86400000));
-  const mesesJan=scMesesJanela(fim90,12),faltam=mesesJan.filter(m=>!base[m]);
-  const ini=mesesJan[mesesJan.length-1]+'-01';
-  const r2=scVenceuNosMeses(mesesJan,ref,fim90,tipoSel);
+  const mesesJan=scMesesJanela(fim90,12).filter(m=>scAnoOk(m+'-01',ano)),faltam=mesesJan.filter(m=>!base[m]);
+  const ini=(mesesJan[mesesJan.length-1]||fim90.slice(0,7))+'-01';
+  const r2=scVenceuNosMeses(mesesJan,ref,fim90,tipoSel,ano);
   // numerador 90+: saldo em aberto cujo vencimento está na mesma janela
   const jurMin=(scFaixas().find(f=>f.role==='jur')||{min:90}).min;
-  let n90=0;scAbertosEm(ref,{tipo:tipoSel}).forEach(t=>{if(t.dias>=jurMin&&t.venc>=ini&&t.venc<=fim90)n90+=t.saldo;});
+  let n90=0;scAbertosEm(ref,{tipo:tipoSel}).forEach(t=>{if(t.dias>=jurMin&&t.venc>=ini&&t.venc<=fim90&&scAnoOk(t.venc,ano))n90+=t.saldo;});
   return{per,cobertoPer,aberto:r1.aberto,total:r1.total,
     inad:cobertoPer&&r1.total>0?r1.aberto/r1.total:null,
     janela:{ini,fim:fim90,faltam,coberta:faltam.length===0,n90,total:r2.total,inad90:faltam.length===0&&r2.total>0?n90/r2.total:null}};
@@ -4282,8 +4429,8 @@ async function scGravarRetrato(origem,refISO,aprox,soVencidos){
     await exCarregar('retratos');
     const ref=refISO||hojeISO();_scFx=scFaixas();
     const tit=scAbertosEm(ref).filter(t=>!soVencidos||t.dias>0);
-    const linhas=tit.map(t=>[t.chave,t.cliente,t.tipo,Math.round(t.saldo*100),t.dias,t.faixa,t.r.atrib||'','']);
-    const rec={_uid:'ret_'+ref,ref,geradoEm:new Date().toISOString(),origem,aproximado:!!aprox,colunas:['chave','cliente','tipo','saldo_centavos','dias','faixa','atribuicao','juridico'],titulos:linhas};
+    const linhas=tit.map(t=>[t.chave,t.cliente,t.tipo,Math.round(t.saldo*100),t.dias,t.faixa,t.r.atrib||'',scEhJurR(t.r)?'1':'',getCobradoraAtrib(t.r)||'',t.venc]);
+    const rec={_uid:'ret_'+ref,ref,geradoEm:new Date().toISOString(),origem,aproximado:!!aprox,semana:scSemanaISO(ref),colunas:['chave','cliente','tipo','saldo_centavos','dias','faixa','atribuicao','juridico','resp','venc'],titulos:linhas};
     const ant=EX.retratos.dados.find(x=>x._uid===rec._uid);
     if(ant&&aprox&&!ant.aproximado)return{ok:true,ignorado:true};      // nunca troca um retrato real por reconstruído
     rec.versao=(ant&&ant.versao||0)+1;
@@ -4415,7 +4562,8 @@ function abrirParametros(){
     <div class="form-row">${inp('pm-janela','Janela do histórico (meses)',P.janelaHist,'type="number"')}${inp('pm-filtro','Filtro curto (meses)',P.filtroHist,'type="number"')}${inp('pm-minpag','Mínimo de pagamentos',P.minPagamentos,'type="number"')}</div>
     <div class="form-row">${inp('pm-recat','Atraso recorrente: atrasos',P.recAtrasos,'type="number"')}${inp('pm-recjan','em (meses)',P.recJanela,'type="number"')}${inp('pm-recpct','ou % dos pagos',P.recPct,'type="number"')}</div>
     <div class="rd-sec">Alertas e calendário</div>
-    <div class="form-row">${inp('pm-alerta','Alerta de proximidade da perda (dias)',P.alertaDias,'type="number"')}</div>
+    <div class="form-row">${inp('pm-alerta','Alerta de proximidade da perda (dias)',P.alertaDias,'type="number"')}${inp('pm-corte','Ano de corte “em cobrança” (venc. a partir de)',P.anoCorte,'type="number"')}</div>
+    <div class="form-row">${inp('pm-metarec','Meta semanal de recuperação (% do vencido da semana anterior) — vazio = sem meta',P.metaRecuperacaoPct==null?'':P.metaRecuperacaoPct,'type="number" step="0.1"')}${inp('pm-metarol','Meta de rolagem máxima (% do vencido da semana anterior) — vazio = sem meta',P.metaRolagemPct==null?'':P.metaRolagemPct,'type="number" step="0.1"')}</div>
     <div class="form-row">${inp('pm-feriados','Feriados extras (dd/mm ou dd/mm/aaaa, separados por vírgula)',P.feriadosExtras)}</div>
     <div class="rd-sec">Histórico de alterações</div><div style="max-height:130px;overflow:auto">${hist}</div>
     <div class="modal-actions"><button class="btn btn-danger" onclick="scFecharModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarParametros()">Salvar parâmetros</button></div>`,760);
@@ -4428,8 +4576,9 @@ async function salvarParametros(){
   for(let i=1;i<P.faixas.length;i++){if(!(P.faixas[i].min>P.faixas[i-1].min)||(i===1&&!(P.faixas[1].min>=1))){alert('Os limites das faixas precisam ser crescentes (a primeira faixa de atraso começa em 1 ou mais).');return;}}
   P.faixas.forEach((f,i)=>{const rot=document.getElementById('pm-frot-'+i).value.trim();f.rotulo=(rot&&rot!==oldFx[i].l)?rot:(old.faixas[i].rotulo||'');f.tag=document.getElementById('pm-ftag-'+i).value.trim()||f.tag;});
   P.perfil.forEach((x,i)=>{x.l=document.getElementById('pm-pl-'+i).value.trim()||x.l;if(i<4)x.max=num('pm-pmax-'+i);});P.perfil[4].max=1e9;
-  const campos=[['janelaHist','pm-janela','Janela do histórico'],['filtroHist','pm-filtro','Filtro curto'],['minPagamentos','pm-minpag','Mínimo de pagamentos'],['recAtrasos','pm-recat','Recorrência: atrasos'],['recJanela','pm-recjan','Recorrência: meses'],['recPct','pm-recpct','Recorrência: %'],['alertaDias','pm-alerta','Alerta (dias)']];
+  const campos=[['janelaHist','pm-janela','Janela do histórico'],['filtroHist','pm-filtro','Filtro curto'],['minPagamentos','pm-minpag','Mínimo de pagamentos'],['recAtrasos','pm-recat','Recorrência: atrasos'],['recJanela','pm-recjan','Recorrência: meses'],['recPct','pm-recpct','Recorrência: %'],['alertaDias','pm-alerta','Alerta (dias)'],['anoCorte','pm-corte','Ano de corte em cobrança']];
   campos.forEach(([k,id])=>{const v=num(id);P[k]=isNaN(v)?old[k]:v;});
+  [['metaRecuperacaoPct','pm-metarec','Meta de recuperação (%)'],['metaRolagemPct','pm-metarol','Meta de rolagem (%)']].forEach(([k,id,l])=>{const t=document.getElementById(id).value.trim(),v=t===''?null:parseFloat(t);P[k]=(v==null||isNaN(v))?null:v;if(P[k]!==(old[k]==null?null:old[k]))mud.push(`${l}: ${old[k]==null?'sem meta':old[k]} → ${P[k]==null?'sem meta':P[k]}`);});
   P.feriadosExtras=document.getElementById('pm-feriados').value.trim();
   // lista do que mudou
   P.faixas.forEach((f,i)=>{if(i>0&&f.min!==old.faixas[i].min)mud.push(`Faixa ${oldFx[i].l}: início ${old.faixas[i].min} → ${f.min}`);if((f.rotulo||'')!==(old.faixas[i].rotulo||''))mud.push(`Faixa ${i+1}: rótulo "${oldFx[i].l}" → "${f.rotulo||'(padrão)'}"`);if(f.tag!==old.faixas[i].tag)mud.push(`Faixa ${i+1}: classificação "${old.faixas[i].tag}" → "${f.tag}"`);});
@@ -4448,11 +4597,14 @@ async function salvarParametros(){
 let _scCarregando=false;
 async function renderSaude(){
   const sel=document.getElementById('sc-resp');
-  if(sel&&sel.options.length===1)getCobradoras().forEach(c=>sel.insertAdjacentHTML('beforeend',`<option>${esc(c)}</option>`));
+  if(sel&&sel.options.length===1){getCobradoras().forEach(c=>sel.insertAdjacentHTML('beforeend',`<option>${esc(c)}</option>`));sel.insertAdjacentHTML('beforeend','<option value="__sem">Sem responsável</option>');}
   const refEl=document.getElementById('sc-ref');if(refEl&&refEl.dataset.init!=='1'){refEl.dataset.init='1';}
   if(!_scCarregando){_scCarregando=true;try{await Promise.all(['parametros','pagos_dia','retratos'].map(t=>exCarregar(t)));}finally{_scCarregando=false;}}
   const per=document.getElementById('sc-per');
   if(per&&per.options.length===0){scMesesJanela(hojeISO(),14).forEach(m=>per.insertAdjacentHTML('beforeend',`<option value="${m}">${m.slice(5)}/${m.slice(0,4)}</option>`));}
+  // filtro "ano de vencimento": o ano de corte "em cobrança" vem dos parâmetros; padrão = em cobrança
+  const anoEl=document.getElementById('sc-ano');
+  if(anoEl){const cur=anoEl.dataset.init?anoEl.value:'cobranca';anoEl.innerHTML=scAnoOpcoes().map(([v,l])=>`<option value="${v}"${v===cur?' selected':''}>${l}</option>`).join('');anoEl.dataset.init='1';}
   const tit=scColetar(),el=document.getElementById('sc-conteudo');if(!el)return;
   if(per&&!per.dataset.set){per.value=_scRef.slice(0,7);per.dataset.set='1';}
   const P=scParams(),fx=_scFx,jurF=fx.find(f=>f.role==='jur'),perdaF=fx.find(f=>f.role==='perda');
@@ -4460,7 +4612,8 @@ async function renderSaude(){
   const vencidos=tit.filter(t=>t.dias>0),venc=soma(vencidos),v90=soma(tit.filter(t=>t.dias>=jurF.min)),v180=tit.filter(t=>t.dias>=perdaF.min);
   const pond=venc>0?vencidos.reduce((s,t)=>s+t.saldo*t.dias,0)/venc:0;
   const tipoSel=(document.getElementById('sc-tipo')||{}).value||'';
-  const inad=scInadimplencias(_scRef,(per&&per.value)||_scRef.slice(0,7),tipoSel);
+  const anoSel=(document.getElementById('sc-ano')||{}).value||'';
+  const inad=scInadimplencias(_scRef,(per&&per.value)||_scRef.slice(0,7),tipoSel,anoSel);
   const kpi=(l,v,s,cls)=>`<div class="sc-kpi ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
   const ate89=soma(vencidos.filter(t=>t.dias<jurF.min));
   const kInad=inad.inad!=null
@@ -4478,7 +4631,12 @@ async function renderSaude(){
       <span class="n" title="${fmtR(f.v)}">${scMiT(f.v)}</span><span class="n">${f.n}</span><span class="n">${f.c}</span><span class="n">${f.min<=0?'—':(venc>0?scPct(f.v/venc):'—')}</span>
       <span><span class="sc-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${esc(f.tag)}</span></span></div>`).join('');
   const baseMeses=Object.keys(pdBase()).sort();
-  el.innerHTML=`<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
+  const somaT=a=>a.reduce((s,t)=>s+t.saldo,0),tp=scResumoTipo(tit),tpF=scResumoTipo(_scFora);
+  const anoRot=(scAnoOpcoes().find(x=>x[0]===anoSel)||['','Todos'])[1];
+  const foraHTML=`<div class="sc-fora"><b>🗂 Fora de cobrança (${scCorte()-1} e anteriores):</b> ${fmtR(somaT(_scFora))} · ${_scFora.length} títulos <span>(boleto ${fmtR(tpF.b)} · cheque ${fmtR(tpF.c)})</span>${_scMantidos.length?` · <span title="Títulos antigos no jurídico entram sempre nos cartões">+ ${_scMantidos.length} no jurídico mantidos nos cartões</span>`:''}</div>
+    <div class="sc-fora" style="background:#f1f5f9;color:#334155"><b>Total do filtro (${esc(anoRot)}):</b> ${fmtR(somaT(tit))} · ${tit.length} títulos <span>(boleto ${fmtR(tp.b)} · cheque ${fmtR(tp.c)})</span></div>`;
+  const blocosSem=scBlocosSemanais();
+  el.innerHTML=`${foraHTML}<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
     <div class="sc-kpis">
       ${kpi('Vencido em aberto',scMi(venc),vencidos.length+' títulos vencidos')}
       ${kInad}
@@ -4487,7 +4645,9 @@ async function renderSaude(){
       ${kpi(`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos · perda potencial')}
     </div>
     <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML||'<div class="sc-note" style="padding:14px">Nenhum título em aberto.</div>'}</div>
-    <div class="sc-note">• Classificação por título, pelos dias de atraso na data de referência. Saldo em aberto = valor − pago parcial. Renegociação, chargeback e caderneta ficam fora.<br>
+    ${blocosSem}
+    <div class="sc-note">• Ano de vencimento: o filtro vale para cartões, faixas, evolução e cobradoras; o ano de corte “em cobrança” fica em ⚙ Parâmetros. Título no jurídico aparece sempre.<br>
+    • Classificação por título, pelos dias de atraso na data de referência. Saldo em aberto = valor − pago parcial. Renegociação, chargeback e caderneta ficam fora.<br>
     • Os nomes das faixas (por exemplo "elegível ao jurídico" e "perda potencial") são só classificação por prazo, editável em ⚙ Parâmetros: o sistema não encaminha nem baixa nada sozinho.<br>
     • Base de pagos em dia: ${baseMeses.length?baseMeses.length+' mês(es) importado(s) ('+baseMeses[0].slice(5)+'/'+baseMeses[0].slice(0,4)+' a '+baseMeses[baseMeses.length-1].slice(5)+'/'+baseMeses[baseMeses.length-1].slice(0,4)+')':'nenhuma importada'}${inad.janela.faltam.length&&baseMeses.length?' · faltam para a janela de 12 meses: '+inad.janela.faltam.slice(0,6).map(m=>m.slice(5)+'/'+m.slice(0,4)).join(', ')+(inad.janela.faltam.length>6?' e outros '+(inad.janela.faltam.length-6):''):''}.<br>
     • Armazenamento — pagos em dia: ${exOrigem('pagos_dia')} · retratos: ${exOrigem('retratos')} · parâmetros: ${exOrigem('parametros')}${[exOrigem('pagos_dia'),exOrigem('retratos'),exOrigem('parametros')].some(o=>o==='local')?' <b style="color:#b45309">(“local” = só neste navegador: o servidor ainda não aceita essa tabela)</b>':''}.</div>`;
