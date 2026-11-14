@@ -688,6 +688,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
         <div class="dash-block">
           <div class="dash-block-title-row"><div class="dash-block-title">💰 Carteira Consolidada</div></div>
           <div class="dash-carteira-tipos" id="dash-carteira-tipos"></div>
+          <div id="gs-maqjur" style="margin-top:10px"></div>
         </div>
 
         <!-- 3. SAÚDE DA CARTEIRA -->
@@ -777,7 +778,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
           </select>
           <label>Atribuição</label>
           <select id="fil-boleto-atrib" onchange="renderTable('boleto')">
-            <option value="">Todas</option><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option>
+            <option value="">Todas</option><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option><option>MÁQUINA JURÍDICO</option>
           </select>
           <input type="text" id="fil-boleto-q" oninput="renderTable('boleto')" placeholder="🔍 Buscar cliente, ID...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('boleto')">Limpar</button>
@@ -811,7 +812,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
           </select>
           <label>Atribuição</label>
           <select id="fil-cheque-atrib" onchange="renderTable('cheque')">
-            <option value="">Todas</option><option>JURÍDICO</option><option>SEGURADORA</option><option>RENEGOCIAÇÃO</option>
+            <option value="">Todas</option><option>JURÍDICO</option><option>SEGURADORA</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA JURÍDICO</option>
           </select>
           <input type="text" id="fil-cheque-q" oninput="renderTable('cheque')" placeholder="🔍 Buscar...">
           <button class="btn btn-danger btn-sm" onclick="clearFilters('cheque')">Limpar</button>
@@ -1163,7 +1164,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
     </div>
     <div class="form-row">
       <div class="form-group"><label>Atribuição</label>
-        <select id="b-atrib"><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option></select>
+        <select id="b-atrib"><option>VENDA</option><option>PROTESTADO</option><option>CARTÓRIO</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA</option><option>JURÍDICO</option><option>MÁQUINA JURÍDICO</option></select>
       </div>
       <div class="form-group"><label>Valor Título (R$)</label><input id="b-valor" type="number" step="0.01"></div>
       <div class="form-group"><label>Vencimento</label><input id="b-venc" type="date"></div>
@@ -1205,7 +1206,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
     </div>
     <div class="form-row">
       <div class="form-group"><label>Atribuição</label>
-        <select id="c-atrib"><option></option><option>JURÍDICO</option><option>SEGURADORA</option><option>RENEGOCIAÇÃO</option></select>
+        <select id="c-atrib"><option></option><option>JURÍDICO</option><option>SEGURADORA</option><option>RENEGOCIAÇÃO</option><option>MÁQUINA JURÍDICO</option></select>
       </div>
       <div class="form-group"><label>Limite Envio</label><input id="c-limite" type="number"></div>
     </div>
@@ -2133,7 +2134,7 @@ function meioBadge(m){
   return `<span class="badge ${mp[m]||'bg-gray'}">${m||'—'}</span>`;
 }
 function atribBadge(a){
-  const m={'PROTESTADO':'bg-red','CARTÓRIO':'bg-orange','RENEGOCIAÇÃO':'bg-blue','MÁQUINA':'bg-gray','JURÍDICO':'bg-purple','VENDA':'bg-ok','SEGURADORA':'bg-blue','DEVOLVIDO':'bg-red'};
+  const m={'PROTESTADO':'bg-red','CARTÓRIO':'bg-orange','RENEGOCIAÇÃO':'bg-blue','MÁQUINA':'bg-gray','JURÍDICO':'bg-purple','MÁQUINA JURÍDICO':'bg-purple','VENDA':'bg-ok','SEGURADORA':'bg-blue','DEVOLVIDO':'bg-red'};
   return a?`<span class="badge ${m[a]||'bg-gray'}">${a}</span>`:'—';
 }
 
@@ -2157,8 +2158,8 @@ const STATUS_OPTIONS={
   chargeback:['EM ABERTO','PAGO']
 };
 const ATRIB_OPTIONS={
-  boleto:['VENDA','PROTESTADO','CARTÓRIO','RENEGOCIAÇÃO','MÁQUINA','JURÍDICO'],
-  cheque:['JURÍDICO','SEGURADORA','RENEGOCIAÇÃO']
+  boleto:['VENDA','PROTESTADO','CARTÓRIO','RENEGOCIAÇÃO','MÁQUINA','JURÍDICO','MÁQUINA JURÍDICO'],
+  cheque:['JURÍDICO','SEGURADORA','RENEGOCIAÇÃO','MÁQUINA JURÍDICO']
 };
 let bulkSel={};
 function ensureSel(type){if(!bulkSel[type])bulkSel[type]=new Set();return bulkSel[type];}
@@ -2792,7 +2793,7 @@ function diasAtrasoBruto(venc){if(!venc)return null;const h0=new Date();h0.setHo
 function mapaAtrasoClientes(ano,mes){
   const m={};
   ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
-    if((r.sit||'').toUpperCase()!=='EM ABERTO'||!r.venc)return;
+    if((r.sit||'').toUpperCase()!=='EM ABERTO'||!r.venc||ehMaqJur(r))return;
     if(ano&&String(r.ano||'')!==String(ano))return;
     if(mes&&String(r.mes||'')!==String(mes))return;
     const k=normNome(r.cliente);if(!k)return;
@@ -2849,7 +2850,7 @@ function buscarTitulosPorFiltros(f){
     let rows=DB[t]||[];
     if(f.ano)rows=rows.filter(r=>String(r.ano||'')===String(f.ano));
     if(f.mes)rows=rows.filter(r=>String(r.mes||'')===String(f.mes));
-    rows=rows.filter(r=>(r.sit||r.status||'').toUpperCase()==='EM ABERTO');
+    rows=rows.filter(r=>(r.sit||r.status||'').toUpperCase()==='EM ABERTO'&&!ehMaqJur(r));
     if(f.cli)rows=rows.filter(r=>(r.cliente||'').toLowerCase().includes(f.cli));
     if(f.dtInicio||f.dtFim){
       rows=rows.filter(r=>{
@@ -3334,15 +3335,15 @@ function renderDashboard(){
   // ---- CARTEIRA CONSOLIDADA por tipo (ano do filtro global) ----
   const okAno=r=>gfAnoOk(r.ano,r.venc);
   const aberto=r=>(r.sit||'').toUpperCase()!=='PAGO';
-  const bolAberto=(DB.boleto||[]).filter(r=>okAno(r)&&aberto(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
-  const cheAberto=(DB.cheque||[]).filter(r=>okAno(r)&&aberto(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
+  const bolAberto=(DB.boleto||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
+  const cheAberto=(DB.cheque||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
   const cadAberto=(DB.caderneta||[]).filter(r=>okAno(r)&&aberto(r)).reduce((s,r)=>s+Math.max(0,parseFloat(r.valor||0)-parseFloat(r.vpago||0)),0);
   const renegAberto=(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
   const cbAberto=(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
   const cli=(arr,f)=>new Set(arr.filter(r=>okAno(r)&&f(r)).map(r=>(r.cliente||'').trim().toUpperCase()).filter(Boolean)).size;
   const itens=[
-    ['boleto','📄','Boleto',bolAberto,cli(DB.boleto||[],aberto)],
-    ['cheque','📝','Cheque',cheAberto,cli(DB.cheque||[],aberto)],
+    ['boleto','📄','Boleto',bolAberto,cli(DB.boleto||[],r=>aberto(r)&&!ehMaqJur(r))],
+    ['cheque','📝','Cheque',cheAberto,cli(DB.cheque||[],r=>aberto(r)&&!ehMaqJur(r))],
     ['caderneta','📒','Caderneta',cadAberto,cli(DB.caderneta||[],aberto)],
     ['renegociacao','🤝','Renegociação',renegAberto,cli(DB.renegociacao||[],r=>getRenegAbertoEfetivo(r)>0)],
     ['chargeback','💳','Chargeback',cbAberto,cli(DB.chargeback||[],r=>(r.status||'').toUpperCase()!=='PAGO')]
@@ -3352,6 +3353,9 @@ function renderDashboard(){
     renegociacao:(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegPagoEfetivo(r),0),
     chargeback:(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0)};
   document.getElementById('dash-carteira-tipos').innerHTML=itens.map(x=>`<div class="dct-item"><span class="dct-ico">${x[1]}</span><div class="dct-label">${x[2]}</div><div class="dct-value"><span class="dct-arrow">▼</span>${fmtR(x[3])}</div><div class="dct-meta">${x[4]} cliente${x[4]!==1?'s':''}${pago[x[0]]!==undefined?` · <b style="color:#166534">pago ${fmtR(pago[x[0]])}</b>`:''}</div></div>`).join('')+'<div class="gs-sub" style="grid-column:1/-1;margin:6px 0 0">Caderneta, renegociação e chargeback aparecem só como status (aberto e pago). A saúde da carteira e as faixas de atraso consideram apenas boleto e cheque.</div>';
+  const mj=maqJurResumo(),mjT=mj.boleto.v+mj.cheque.v,mjN=mj.boleto.n+mj.cheque.n;
+  const bm=document.getElementById('gs-maqjur');
+  if(bm)bm.innerHTML=mjN?`<div class="sc-fora" style="background:#f5f3ff;color:#4c1d95;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><b>⚖️ Máquina jurídico (já recuperado, aguardando baixa):</b> ${fmtR(mjT)} · ${mjN} título${mjN>1?'s':''} · ${mj.cli.size} cliente${mj.cli.size!==1?'s':''} <span>(boleto ${fmtR(mj.boleto.v)} · cheque ${fmtR(mj.cheque.v)})</span><button type="button" class="btn btn-outline btn-sm" onclick="verMaqJur('boleto')">Ver boletos</button><button type="button" class="btn btn-outline btn-sm" onclick="verMaqJur('cheque')">Ver cheques</button><span style="font-size:11px">Fora da cobrança, dos Indicadores e das faixas de atraso.</span></div>`:'<div class="gs-sub">Máquina jurídico: nenhum título marcado. Marque em Boleto ou Cheque, em Atribuição, com <b>MÁQUINA JURÍDICO</b>.</div>';
 }
 
 function initRelatorio(){
@@ -3459,7 +3463,7 @@ function fsBars(vals,labels,hl,title){
 function fsFat(m,ano){try{return JSON.parse(localStorage.getItem(`relFat_${m}_${ano}`)||'{}');}catch(e){return {};}}
 function fsMesBC(type,m,ano){
   const fat=fsFat(m,ano);
-  const d=(DB[type]||[]).filter(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano));
+  const d=(DB[type]||[]).filter(r=>(r.mes||'').toUpperCase()===m&&String(r.ano||'')===String(ano)&&!ehMaqJur(r));
   const aberto=d.filter(r=>(r.sit||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.valor||0),0);
   const pago=d.filter(r=>(r.sit||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
   const emDia=parseFloat(fat[type]||0),cart=aberto+pago,rec=cart+emDia;
@@ -3484,6 +3488,7 @@ function fsAtividade(ano,mIdx){
   const wpp=cobs.filter(c=>(c.meio||'').toUpperCase().includes('WHATS')).length;
   const carteira=new Set(),pagtos={};
   ['boleto','cheque','caderneta'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    if(ehMaqJur(r))return;
     if((r.sit||'').toUpperCase()!=='PAGO'){if(r.cliente)carteira.add(nm(r));}
     else if(r.dtpag){(pagtos[nm(r)]=pagtos[nm(r)]||[]).push(dOnly(r.dtpag));}
   }));
@@ -4183,6 +4188,7 @@ function scAbertosEm(ref,opc){
     if(opc.tipo&&opc.tipo!==t)return;
     (DB[t]||[]).forEach(r=>{
       const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag);
+      if(ehMaqJur(r))return;
       if(pago&&(!dtp||dtp<=ref))return;
       const saldo=Math.max(0,(parseFloat(r.valor)||0)-(pago?0:(parseFloat(r.vpago)||0)));
       if(saldo<=0)return;
@@ -4366,6 +4372,7 @@ function scVenceuNosMeses(meses,ref,ate,tipoSel,ano){
     (DB[t]||[]).forEach(r=>{
       if(!r.venc||!set.has(r.venc.slice(0,7))||r.venc>ate||!scAnoOk(r.venc,ano))return;
       const pago=(r.sit||'').toUpperCase()==='PAGO',dtp=dOnly(r.dtpag),v=parseFloat(r.valor)||0,ch=tituloChave(t,r);
+      if(ehMaqJur(r)){vistos.add(ch);return;}
       if(pago&&dtp&&dtp<=ref){vistos.add(ch);if(pagoEmDia(dOnly(r.venc),dtp))emDia+=v;else atraso+=v;}
       else{const s=Math.max(0,v-(pago?0:(parseFloat(r.vpago)||0)));aberto+=s;vistos.add(ch);}
     });
@@ -4935,11 +4942,26 @@ initFilterDrawers();
 // títulos de boleto e cheque já filtrados por tipo e ano do filtro global (usado nos Indicadores)
 function gfTitulosBC(){
   const G=gfGet();
-  return ['boleto','cheque'].filter(t=>!G.tipo||G.tipo===t).flatMap(t=>DB[t]||[]).filter(r=>gfAnoOk(r.ano,r.venc));
+  return ['boleto','cheque'].filter(t=>!G.tipo||G.tipo===t).flatMap(t=>DB[t]||[]).filter(r=>gfAnoOk(r.ano,r.venc)&&!ehMaqJur(r));
 }
 // títulos vencidos pagos com atraso em um mês (Fechamento): sem filtros globais
 function gsPagosAtrasoMes(ano,mIdx){const pref=`${ano}-${String(mIdx+1).padStart(2,'0')}`;return gsPagos({sem:true}).filter(x=>x.dtpag.startsWith(pref));}
 
+// títulos de máquina tomada em ação judicial, processo em andamento: já recuperados, ainda sem baixa.
+// Ficam fora da cobrança (lista do CRM), dos Indicadores, da saúde da carteira e do Fechamento; aparecem num bloco próprio na Gestão.
+const ATRIB_MAQ_JUR='MÁQUINA JURÍDICO';
+const ehMaqJur=r=>normNome((r&&r.atrib)||'')==='maquina juridico';
+function maqJurResumo(){
+  const o={boleto:{v:0,n:0},cheque:{v:0,n:0},cli:new Set()};
+  ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    if(!ehMaqJur(r)||(r.sit||'').toUpperCase()==='PAGO')return;
+    o[t].v+=Math.max(0,(parseFloat(r.valor)||0)-(parseFloat(r.vpago)||0));o[t].n++;if(r.cliente)o.cli.add(normNome(r.cliente));
+  }));
+  return o;
+}
+function verMaqJur(t){
+  showTab(t).then(()=>{const el=document.getElementById('fil-'+t+'-atrib');if(el){el.value=ATRIB_MAQ_JUR;renderTable(t);}});
+}
 // ===== FILTROS GLOBAIS (um único estado para todas as abas, guardado no navegador) =====
 const GF_KEY='leoFiltrosGlobais_v1';
 const GF_PADRAO={ano:'',tipo:'',faixa:'',resp:'',de:'',ate:''};
@@ -5057,6 +5079,7 @@ function gsPagos(o){
   o=o||{};const G=gfGet(),res=gsRespResolver(),out=[],chaves=new Set();
   ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
     chaves.add(tituloChave(t,r));
+    if(ehMaqJur(r))return;
     if(!o.sem&&G.tipo&&G.tipo!==t)return;
     if((r.sit||'').toUpperCase()!=='PAGO')return;
     const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
