@@ -672,7 +672,7 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
       <div id="panel-gestao" class="panel active">
         <div class="page-header">
           <h2>Gestão</h2>
-          <div class="page-sub">Recebido, carteira, saúde da cobrança e recuperado em uma única tela. Os filtros (botão Filtros no topo) valem para todas as abas.</div>
+          <div class="page-sub">Recebido, carteira (todos os anos), saúde da cobrança (boleto e cheque) e recuperado em uma única tela. Os filtros (botão Filtros no topo) valem para todas as abas.</div>
           <div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-size:12px;color:var(--text2)">Recebido no mês de</span>
             <select id="dash-fil-mes" onchange="renderDashboard()" style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb;border-radius:4px;padding:2px 6px;background:#f9fafb"></select>
@@ -697,9 +697,9 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
           <label>Período (inadimplência) <select id="sc-per" onchange="renderSaude()"></select></label>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';document.getElementById('sc-per').dataset.set='';renderSaude()">Hoje</button>
           <button class="btn btn-outline btn-sm" onclick="exportarSaude()">⬇ Exportar Excel</button>
-          <button class="btn btn-primary btn-sm" onclick="abrirPagosDia()">📥 Pagos em dia</button>
-          <button class="btn btn-outline btn-sm" onclick="scMostrarRetratos()">📸 Retratos</button>
-          <button class="btn btn-outline btn-sm" onclick="abrirParametros()">⚙ Parâmetros</button>
+          <button class="btn btn-primary btn-sm gs-so-admin" onclick="abrirPagosDia()">📥 Pagos em dia</button>
+          <button class="btn btn-outline btn-sm gs-so-admin" onclick="scMostrarRetratos()">📸 Retratos</button>
+          <button class="btn btn-outline btn-sm gs-so-admin" onclick="abrirParametros()">⚙ Parâmetros</button>
         </div>
         <div style="display:none"><select id="sc-ano"></select><select id="sc-tipo"><option value="">Boleto + Cheque</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select><select id="sc-resp"><option value="">Todos</option></select></div>
         <div id="sc-conteudo"></div>
@@ -1623,6 +1623,7 @@ async function initApp(){
   const fil=g('fil-crm-cob');if(fil)fil.style.display=isCob?'none':'';
   const btnAc=g('btn-novo-acionamento');if(btnAc)btnAc.style.display=u.role==='editor'?'none':'inline-block';
   const navInd=g('nav-indicadores');if(navInd)navInd.style.display=u.role==='admin'?'flex':'none';
+  const navFec=g('nav-relatorio-menu');if(navFec)navFec.style.display=u.role==='admin'?'flex':'none';
   await loadAll();
   populateFilters();
   gfAplicarDOM();gfRenderTopo();
@@ -1634,6 +1635,7 @@ async function initApp(){
 const TAB_TITLES={gestao:'Gestão',boleto:'Boleto',cheque:'Cheque',caderneta:'Caderneta',renegociacao:'Renegociação',chargeback:'Chargeback',relatorio:'Relatório',crm:'CRM de Cobrança',retorno:'Retornos',indicadores:'Indicadores',sextou:'Campanha Sextou'};
 async function showTab(name,btn){
   if(name==='dashboard'||name==='saude')name='gestao';
+  if((name==='indicadores'||name==='relatorio')&&!(currentUser&&currentUser.role==='admin')){alert('Indicadores e Fechamento são só da administradora.');return;}
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
@@ -3345,7 +3347,11 @@ function renderDashboard(){
     ['renegociacao','🤝','Renegociação',renegAberto,cli(DB.renegociacao||[],r=>getRenegAbertoEfetivo(r)>0)],
     ['chargeback','💳','Chargeback',cbAberto,cli(DB.chargeback||[],r=>(r.status||'').toUpperCase()!=='PAGO')]
   ].filter(x=>!G.tipo||G.tipo===x[0]);
-  document.getElementById('dash-carteira-tipos').innerHTML=itens.map(x=>`<div class="dct-item"><span class="dct-ico">${x[1]}</span><div class="dct-label">${x[2]}</div><div class="dct-value"><span class="dct-arrow">▼</span>${fmtR(x[3])}</div><div class="dct-meta">${x[4]} cliente${x[4]!==1?'s':''}</div></div>`).join('');
+  const pago={
+    caderneta:(DB.caderneta||[]).filter(r=>okAno(r)&&!aberto(r)).reduce((s,r)=>s+(parseFloat(r.vpago||0)||parseFloat(r.valor||0)),0),
+    renegociacao:(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegPagoEfetivo(r),0),
+    chargeback:(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0)};
+  document.getElementById('dash-carteira-tipos').innerHTML=itens.map(x=>`<div class="dct-item"><span class="dct-ico">${x[1]}</span><div class="dct-label">${x[2]}</div><div class="dct-value"><span class="dct-arrow">▼</span>${fmtR(x[3])}</div><div class="dct-meta">${x[4]} cliente${x[4]!==1?'s':''}${pago[x[0]]!==undefined?` · <b style="color:#166534">pago ${fmtR(pago[x[0]])}</b>`:''}</div></div>`).join('')+'<div class="gs-sub" style="grid-column:1/-1;margin:6px 0 0">Caderneta, renegociação e chargeback aparecem só como status (aberto e pago). A saúde da carteira e as faixas de atraso consideram apenas boleto e cheque.</div>';
 }
 
 function initRelatorio(){
@@ -3513,7 +3519,7 @@ function montarFechamentoHTML(mes,ano){
   // resumo geral
   let abAno=0,recAno=0;ms.forEach(m=>{['boleto','cheque'].forEach(t=>{const d=fsMesBC(t,m,ano);abAno+=d.aberto;recAno+=d.rec;});const c=fsMesCad(m,ano);abAno+=c.aberto;recAno+=c.total;});
   const inadGeral=recAno>0?abAno/recAno*100:null;
-  const recS=gsRecSplit(gsPagosAtrasoMes(ano,mIdx)),recuperado=recS.tot.v;
+  const recL=gsPagosAtrasoMes(ano,mIdx),recS=gsRecSplit(recL),recuperado=recS.tot.v;recS.atr=recL.filter(x=>!x.em).reduce((s,x)=>s+x.v,0);recS.dia=recL.filter(x=>x.em).reduce((s,x)=>s+x.v,0);
   const recup=(DB.cobrancas||[]).length?'':'';
   const slides=[];
   // capa
@@ -3523,7 +3529,7 @@ function montarFechamentoHTML(mes,ano){
     fsSec('ONDE ESTAMOS — SITUAÇÃO DA CARTEIRA')+
     `<div class="fs-row4">${fsKpi('cheque','red','Cheque — inadimplência',fsPct(che.inad),fmtR(che.aberto)+' em aberto')}${fsKpi('barcode','green','Boleto — inadimplência',fsPct(bol.inad),fmtR(bol.aberto)+' em aberto',{subneutral:1})}${fsKpi('notebook','red','Caderneta — acerto em aberto',fsPct(cad.pAberto),fmtR(cad.aberto)+' em aberto')}${fsKpi('down','teal','Inadimplência geral da carteira',fsPct(inadGeral),inadGeral==null?'':fmtR(abAno)+' de '+fmtR(recAno))}</div>`+
     `<div style="height:46px"></div>`+fsSec('O QUE FIZEMOS — RESULTADO DA COBRANÇA')+
-    `<div class="fs-row3">${fsKpi('up','teal','Valor recuperado',fmtR(recuperado),'do mês '+fmtR(recS.mes.v)+' + meses anteriores '+fmtR(recS.ant.v)+' ✔')}${fsKpi('usercheck','teal','Clientes recuperados',String(at.recuperados),`de ${at.acionados} clientes acionados (${at.acionados?fsPct1(at.recuperados/at.acionados*100):'—'})`)}${fsKpi('check','green','Promessas cumpridas',at.prom?fsPct1(at.cump/at.prom*100):'—',`${at.cump} de ${at.prom} promessas vencidas`)}</div>`));
+    `<div class="fs-row3">${fsKpi('up','teal','Valor recuperado',fmtR(recuperado),'em atraso '+fmtR(recS.atr)+' + em dia '+fmtR(recS.dia)+' · do mês '+fmtR(recS.mes.v)+' + anteriores '+fmtR(recS.ant.v)+' ✔')}${fsKpi('usercheck','teal','Clientes recuperados',String(at.recuperados),`de ${at.acionados} clientes acionados (${at.acionados?fsPct1(at.recuperados/at.acionados*100):'—'})`)}${fsKpi('check','green','Promessas cumpridas',at.prom?fsPct1(at.cump/at.prom*100):'—',`${at.cump} de ${at.prom} promessas vencidas`)}</div>`));
   // cheque e boleto
   const tr=(l,d)=>`<tr><td>${l}</td><td class="n">${fmtR(d.rec)}</td><td class="n">${fmtR(d.cart)}</td><td class="n">${fmtR(d.pago)}</td><td class="n">${fmtR(d.aberto)}</td></tr>`;
   const tot={rec:bol.rec+che.rec,cart:bol.cart+che.cart,pago:bol.pago+che.pago,aberto:bol.aberto+che.aberto};
@@ -4564,7 +4570,8 @@ async function renderSaude(){
   if(per&&per.options.length===0){scMesesJanela(hojeISO(),14).forEach(m=>per.insertAdjacentHTML('beforeend',`<option value="${m}">${m.slice(5)}/${m.slice(0,4)}</option>`));}
   // filtro "ano de vencimento": o ano de corte "em cobrança" vem dos parâmetros; padrão = em cobrança
   const G=gfGet(),isAdm=!!(currentUser&&currentUser.role==='admin');
-  const adm=document.getElementById('gs-admin-tools');if(adm)adm.style.display=isAdm?'':'none';
+  const adm=document.getElementById('gs-admin-tools');if(adm)adm.style.display='';
+  document.querySelectorAll('.gs-so-admin').forEach(b=>b.style.display=isAdm?'':'none');
   const anoEl=document.getElementById('sc-ano');
   if(anoEl){anoEl.innerHTML=scAnoOpcoes().map(([v,l])=>`<option value="${v}">${l}</option>`).join('');anoEl.value=[...anoEl.options].some(o=>o.value===G.ano)?G.ano:'';}
   const tEl=document.getElementById('sc-tipo');if(tEl)tEl.value=(G.tipo==='boleto'||G.tipo==='cheque')?G.tipo:'';
@@ -4599,16 +4606,16 @@ async function renderSaude(){
   const anoRot=(scAnoOpcoes().find(x=>x[0]===anoSel)||['','Todos'])[1];
   const foraHTML=`<div class="sc-fora"><b>🗂 Fora de cobrança (${scCorte()-1} e anteriores):</b> ${fmtR(somaT(_scFora))} · ${_scFora.length} títulos <span>(boleto ${fmtR(tpF.b)} · cheque ${fmtR(tpF.c)})</span>${_scMantidos.length?` · <span title="Títulos antigos no jurídico entram sempre nos cartões">+ ${_scMantidos.length} no jurídico mantidos nos cartões</span>`:''}</div>
     <div class="sc-fora" style="background:#f1f5f9;color:#334155"><b>Total do filtro (${esc(anoRot)}):</b> ${fmtR(somaT(tit))} · ${tit.length} títulos <span>(boleto ${fmtR(tp.b)} · cheque ${fmtR(tp.c)})</span></div>`;
-  el.innerHTML=`${isAdm?foraHTML:''}<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${(G.tipo&&!['boleto','cheque'].includes(G.tipo))?' · <span style="color:#b45309">a faixa de atraso só tem boleto e cheque (o filtro de tipo não se aplica aqui)</span>':''}${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
+  el.innerHTML=`${G.ano==='cobranca'?foraHTML:foraHTML.slice(foraHTML.indexOf('</div>')+6)}<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${(G.tipo&&!['boleto','cheque'].includes(G.tipo))?' · <span style="color:#b45309">a faixa de atraso só tem boleto e cheque (o filtro de tipo não se aplica aqui)</span>':''}${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
     <div class="sc-kpis">
       ${kpi('Vencido em aberto',scMi(venc),vencidos.length+' títulos vencidos')}
       ${kInad}
       ${k90}
-      ${isAdm?kpi('Atraso médio ponderado',Math.round(pond)+' dias','sobre o vencido, pelo valor'):''}
-      ${isAdm?kpi(`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos · perda potencial'):''}
+      ${kpi('Atraso médio ponderado',Math.round(pond)+' dias','sobre o vencido, pelo valor')}
+      ${kpi(`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos · perda potencial')}
     </div>
     <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML||'<div class="sc-note" style="padding:14px">Nenhum título em aberto.</div>'}</div>
-    <div class="sc-note" style="${isAdm?'':'display:none'}">• Ano de vencimento: o filtro vale para cartões, faixas, evolução e cobradoras; o ano de corte “em cobrança” fica em ⚙ Parâmetros. Título no jurídico aparece sempre.<br>
+    <div class="sc-note">• Ano de vencimento: o filtro vale para cartões, faixas, evolução e cobradoras; o ano de corte “em cobrança” fica em ⚙ Parâmetros. Título no jurídico aparece sempre.<br>
     • Classificação por título, pelos dias de atraso na data de referência. Saldo em aberto = valor − pago parcial. Renegociação, chargeback e caderneta ficam fora.<br>
     • Os nomes das faixas (por exemplo "elegível ao jurídico" e "perda potencial") são só classificação por prazo, editável em ⚙ Parâmetros: o sistema não encaminha nem baixa nada sozinho.<br>
     • Base de pagos em dia: ${baseMeses.length?baseMeses.length+' mês(es) importado(s) ('+baseMeses[0].slice(5)+'/'+baseMeses[0].slice(0,4)+' a '+baseMeses[baseMeses.length-1].slice(5)+'/'+baseMeses[baseMeses.length-1].slice(0,4)+')':'nenhuma importada'}${inad.janela.faltam.length&&baseMeses.length?' · faltam para a janela de 12 meses: '+inad.janela.faltam.slice(0,6).map(m=>m.slice(5)+'/'+m.slice(0,4)).join(', ')+(inad.janela.faltam.length>6?' e outros '+(inad.janela.faltam.length-6):''):''}.<br>
@@ -4783,6 +4790,10 @@ function renderIndicadores(){try{
   let pagosCart=todosBC.filter(r=>(r.sit||'').toUpperCase()==='PAGO'&&r.dtpag);
   pagosCart=pagosCart.filter(r=>noPeriodo(r.dtpag));
   if(filCob)pagosCart=pagosCart.filter(r=>getCobradoraAtrib(r)===filCob);
+  // pagos em dia lançados manualmente (base "Pagos em dia", que não está na carteira) entram no recuperado
+  const _res=gsRespResolver(),GI=gfGet();
+  const baseDia=gsPagos({sem:true}).filter(x=>x.base&&noPeriodo(x.dtpag)&&(!GI.tipo||GI.tipo===x.tipo)&&gfAnoOk('',x.venc)&&(!filCob||x.resp===filCob));
+  pagosCart=[...pagosCart,...baseDia.map(x=>({cliente:x.cliente,venc:x.venc,dtpag:x.dtpag,vpago:x.v,valor:x.v}))];
   const valorRecuperado=pagosCart.reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
   const recS=gsRecSplit(pagosCart),recOk=Math.abs(recS.mes.v+recS.ant.v-valorRecuperado)<0.005;
   // clientes que pagaram (atribuídos a esta cobradora)
@@ -4927,20 +4938,11 @@ function gfTitulosBC(){
   return ['boleto','cheque'].filter(t=>!G.tipo||G.tipo===t).flatMap(t=>DB[t]||[]).filter(r=>gfAnoOk(r.ano,r.venc));
 }
 // títulos vencidos pagos com atraso em um mês (Fechamento): sem filtros globais
-function gsPagosAtrasoMes(ano,mIdx){
-  const pref=`${ano}-${String(mIdx+1).padStart(2,'0')}`,out=[];
-  ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
-    if((r.sit||'').toUpperCase()!=='PAGO')return;
-    const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
-    if(!dtp||!venc||!dtp.startsWith(pref)||pagoEmDia(venc,dtp))return;
-    out.push(r);
-  }));
-  return out;
-}
+function gsPagosAtrasoMes(ano,mIdx){const pref=`${ano}-${String(mIdx+1).padStart(2,'0')}`;return gsPagos({sem:true}).filter(x=>x.dtpag.startsWith(pref));}
 
 // ===== FILTROS GLOBAIS (um único estado para todas as abas, guardado no navegador) =====
 const GF_KEY='leoFiltrosGlobais_v1';
-const GF_PADRAO={ano:'cobranca',tipo:'',faixa:'',resp:'',de:'',ate:''};
+const GF_PADRAO={ano:'',tipo:'',faixa:'',resp:'',de:'',ate:''};
 const GF_TIPOS=[['boleto','Boleto'],['cheque','Cheque'],['caderneta','Caderneta'],['renegociacao','Renegociação'],['chargeback','Chargeback']];
 let _gf=null,_abaAtual='gestao';
 function gfGet(){
@@ -5050,26 +5052,33 @@ function gsRespResolver(){
 // ===== EVOLUÇÃO DO RECUPERADO (semanal e mensal) =====
 let _gsEvoModo=(()=>{try{return localStorage.getItem('gsEvoModo')||'semanal';}catch(e){return 'semanal';}})();
 function gsSetEvo(m){_gsEvoModo=m;try{localStorage.setItem('gsEvoModo',m);}catch(e){}gsRenderBlocos();}
-// recuperado = título vencido pago com atraso (carteira / Recebidos); responsável atual do título
-function gsPagosAtraso(){
-  const G=gfGet(),res=gsRespResolver(),out=[];
-  ['boleto','cheque'].forEach(t=>{
-    if(G.tipo&&G.tipo!==t)return;
-    (DB[t]||[]).forEach(r=>{
-      if((r.sit||'').toUpperCase()!=='PAGO')return;
-      const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
-      if(!dtp||!venc||pagoEmDia(venc,dtp))return;
-      if(!gfAnoOk(r.ano,venc))return;
-      out.push({tipo:t,dtpag:dtp,venc,v:parseFloat(r.vpago||r.valor)||0,resp:res(r)});
-    });
-  });
+// pagos do período = pago em atraso + pago em dia. Em dia vem da carteira (baixas) e da base "Pagos em dia" lançada manualmente (sem duplicar por chave).
+function gsPagos(o){
+  o=o||{};const G=gfGet(),res=gsRespResolver(),out=[],chaves=new Set();
+  ['boleto','cheque'].forEach(t=>(DB[t]||[]).forEach(r=>{
+    chaves.add(tituloChave(t,r));
+    if(!o.sem&&G.tipo&&G.tipo!==t)return;
+    if((r.sit||'').toUpperCase()!=='PAGO')return;
+    const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
+    if(!dtp)return;
+    if(!o.sem&&!gfAnoOk(r.ano,venc))return;
+    out.push({tipo:t,cliente:r.cliente||'',dtpag:dtp,venc,v:parseFloat(r.vpago||r.valor)||0,resp:res(r),em:!!venc&&pagoEmDia(venc,dtp),base:false});
+  }));
+  const base=pdBase();
+  Object.keys(base).forEach(mes=>Object.keys(base[mes]).forEach(ch=>{
+    if(chaves.has(ch))return;
+    const [cents,venc,pag,tipo,,nome]=base[mes][ch];
+    if(!o.sem&&G.tipo&&G.tipo!==tipo)return;
+    if(!o.sem&&!gfAnoOk('',venc))return;
+    out.push({tipo,cliente:nome||'',dtpag:pag,venc,v:cents/100,resp:res({cliente:nome,dtpag:pag,id:''}),em:true,base:true});
+  }));
   return out;
 }
 // separa o que foi pago em: vencimento no mês do pagamento (do mês) × vencimento em meses anteriores
 function gsRecSplit(lista){
   const o={mes:{v:0,n:0},ant:{v:0,n:0},tot:{v:0,n:0}};
   lista.forEach(r=>{
-    const dtp=dOnly(r.dtpag),venc=dOnly(r.venc),v=parseFloat(r.vpago||r.valor)||0;
+    const dtp=dOnly(r.dtpag),venc=dOnly(r.venc),v=r.v!=null?r.v:(parseFloat(r.vpago||r.valor)||0);
     const k=(venc&&dtp&&venc.slice(0,7)<dtp.slice(0,7))?'ant':'mes';
     o[k].v+=v;o[k].n++;o.tot.v+=v;o.tot.n++;
   });
@@ -5081,48 +5090,49 @@ function gsVar(a,b){
   return `<span class="sc-d ${d>0?'bom':'ruim'}">${d>0?'▲':'▼'} ${fmtR(Math.abs(d))}${b>0?' ('+(d>0?'+':'−')+Math.abs(d/b*100).toFixed(0)+'%)':''}</span>`;
 }
 function gsBarras(per,tot){
-  const W=760,H=210,pl=10,pr=10,pt=24,pb=34,n=per.length,max=Math.max(...tot.map(t=>t.v),1),bw=(W-pl-pr)/n;
+  const W=760,H=220,pl=10,pr=10,pt=24,pb=34,n=per.length,max=Math.max(...tot.map(t=>t.v),1),bw=(W-pl-pr)/n,alt=v=>Math.round((H-pt-pb)*v/max);
   const bars=tot.map((t,i)=>{
-    const h=Math.round((H-pt-pb)*t.v/max),x=pl+i*bw+bw*0.18,w=bw*0.64,y=H-pb-h;
-    return `<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${Math.max(h,1)}" rx="3" fill="${i===n-1?'#1a5c24':'#7bb86f'}"><title>${esc(per[i].lab)}: ${fmtR(t.v)} · ${t.n} títulos</title></rect>
-      <text x="${(x+w/2).toFixed(1)}" y="${y-5}" text-anchor="middle" font-size="10" fill="#374151">${t.v>0?scMi(t.v).replace('R$ ',''):''}</text>
+    const hA=alt(t.va),hD=alt(t.vd),x=pl+i*bw+bw*0.18,w=bw*0.64,yD=H-pb-hD,yA=yD-hA;
+    return `<rect x="${x.toFixed(1)}" y="${yD}" width="${w.toFixed(1)}" height="${hD}" fill="#7bb86f"><title>${esc(per[i].lab)}: pago em dia ${fmtR(t.vd)}</title></rect>
+      <rect x="${x.toFixed(1)}" y="${yA}" width="${w.toFixed(1)}" height="${hA}" fill="#1a5c24"><title>${esc(per[i].lab)}: pago em atraso ${fmtR(t.va)}</title></rect>
+      <text x="${(x+w/2).toFixed(1)}" y="${yA-5}" text-anchor="middle" font-size="10" fill="#374151">${t.v>0?scMi(t.v).replace('R$ ',''):''}</text>
       <text x="${(x+w/2).toFixed(1)}" y="${H-pb+15}" text-anchor="middle" font-size="10" fill="#6b7280">${esc(per[i].lab)}</text>`;
   }).join('');
-  return `<svg class="gs-bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Recuperado por período"><line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="#d1d5db"/>${bars}</svg>`;
+  return `<svg class="gs-bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Recuperado por período"><line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="#d1d5db"/>${bars}</svg>
+    <div style="font-size:11px;color:var(--text2);display:flex;gap:14px;margin-top:4px"><span><i style="display:inline-block;width:10px;height:10px;background:#1a5c24;border-radius:2px"></i> pago em atraso</span><span><i style="display:inline-block;width:10px;height:10px;background:#7bb86f;border-radius:2px"></i> pago em dia</span></div>`;
 }
 function gsRenderEvolucao(){
   const el=document.getElementById('gs-evolucao');if(!el)return;
   const G=gfGet(),role=currentUser?currentUser.role:'',isAdm=role==='admin';
-  const itens=gsPagosAtraso().filter(x=>!G.resp||(G.resp==='__sem'?!x.resp:x.resp===G.resp));
+  const itens=gsPagos().filter(x=>!G.resp||(G.resp==='__sem'?!x.resp:x.resp===G.resp));
   const mensal=_gsEvoModo==='mensal',per=[];
   if(!mensal){
     const seg=scSemanaISO(hojeISO());
     for(let i=7;i>=0;i--){const d=new Date(seg+'T00:00:00');d.setDate(d.getDate()-7*i);const ini=_isoD(d);d.setDate(d.getDate()+6);per.push({ini,fim:_isoD(d),lab:ini.slice(8)+'/'+ini.slice(5,7)});}
   }else scMesesJanela(hojeISO(),12).reverse().forEach(m=>per.push({ini:m+'-01',fim:m+'-31',lab:MESES[+m.slice(5)-1]+'/'+m.slice(2,4)}));
-  const acc=f=>per.map(p=>{const a=itens.filter(x=>x.dtpag>=p.ini&&x.dtpag<=p.fim&&f(x));return{v:a.reduce((s,x)=>s+x.v,0),n:a.length};});
+  const acc=f=>per.map(p=>{const a=itens.filter(x=>x.dtpag>=p.ini&&x.dtpag<=p.fim&&f(x)),S=l=>l.reduce((s,x)=>s+x.v,0);return{v:S(a),n:a.length,va:S(a.filter(x=>!x.em)),vd:S(a.filter(x=>x.em))};});
   const tot=acc(()=>true),todos=[...getCobradoras(),'__sem'];
   const linhas=todos.map(n=>({n,d:acc(x=>n==='__sem'?!x.resp:x.resp===n)}));
-  const mostrar=isAdm?linhas:(role==='cobradora'&&currentUser?linhas.filter(l=>l.n===currentUser.nome):[]);
+  const mostrar=linhas;
   const confere=per.map((p,i)=>Math.abs(linhas.reduce((s,l)=>s+l.d[i].v,0)-tot[i].v)<0.005&&linhas.reduce((s,l)=>s+l.d[i].n,0)===tot[i].n);
-  const cel=(d,i)=>`<td><b>${fmtR(d[i].v)}</b><div style="font-size:11px;color:var(--text2)">${d[i].n} tít.</div><div>${gsVar(d[i].v,i>0?d[i-1].v:null)}</div></td>`;
+  const cel=(d,i)=>`<td><b>${fmtR(d[i].v)}</b><div style="font-size:11px;color:var(--text2)">${d[i].n} tít. · atraso ${fmtR(d[i].va)} · em dia ${fmtR(d[i].vd)}</div><div>${gsVar(d[i].v,i>0?d[i-1].v:null)}</div></td>`;
   const lin=(nome,d,cls)=>`<tr${cls?` class="${cls}"`:''}><td class="sc-rl">${nome}</td>${per.map((p,i)=>cel(d,i)).join('')}</tr>`;
   const tabela=`<div style="overflow-x:auto"><table class="sc-evo"><thead><tr><th></th>${per.map(p=>`<th>${mensal?p.lab:'sem '+p.lab}</th>`).join('')}</tr></thead><tbody>
     ${lin('Total',tot,'sc-tot')}${mostrar.map(l=>lin(l.n==='__sem'?'Sem responsável':esc(l.n),l.d)).join('')}
-    ${isAdm?`<tr><td class="sc-rl">Conferência</td>${confere.map(ok=>`<td class="${ok?'gs-ok':'gs-bad'}">${ok?'✔ soma = total':'⚠ não bate'}</td>`).join('')}</tr>`:''}
+    <tr><td class="sc-rl">Conferência</td>${confere.map(ok=>`<td class="${ok?'gs-ok':'gs-bad'}">${ok?'✔ soma = total':'⚠ não bate'}</td>`).join('')}</tr>
     </tbody></table></div>`;
   const nota=(G.tipo&&!['boleto','cheque'].includes(G.tipo))?'<div class="gs-bad" style="margin:6px 0">O recuperado vem de boleto e cheque; o filtro de tipo atual (caderneta, renegociação ou chargeback) não tem títulos aqui.</div>':'';
   el.innerHTML=`<div class="dash-block-title" style="margin:22px 0 4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">📈 Evolução do recuperado
       <span class="gs-seg"><button type="button" class="${mensal?'':'on'}" onclick="gsSetEvo('semanal')">Semanal</button><button type="button" class="${mensal?'on':''}" onclick="gsSetEvo('mensal')">Mensal</button></span></div>
-    <div class="gs-sub">${mensal?'Últimos 12 meses':'Últimas 8 semanas (segunda a domingo)'} · recuperado = títulos vencidos pagos com atraso no período · filtro de ano: ${esc(gfAnoRot(G.ano))}${G.tipo?' · tipo: '+esc(G.tipo):''}${G.resp?' · resp.: '+esc(gfRespRot(G.resp)):''} · variação contra ${mensal?'o mês':'a semana'} anterior</div>${nota}
+    <div class="gs-sub">${mensal?'Últimos 12 meses':'Últimas 8 semanas (segunda a domingo)'} · recuperado = pago em atraso + pago em dia (baixas da carteira e “Pagos em dia” lançados manualmente) · filtro de ano: ${esc(gfAnoRot(G.ano))}${G.tipo?' · tipo: '+esc(G.tipo):''}${G.resp?' · resp.: '+esc(gfRespRot(G.resp)):''} · variação contra ${mensal?'o mês':'a semana'} anterior</div>${nota}
     <div class="tbl-card" style="padding:12px 14px;margin-bottom:12px">${gsBarras(per,tot)}</div>
     <div class="tbl-card" style="padding:8px">${tabela}</div>
-    <div class="sc-note">• Usa o responsável atual do título (último acionamento do cliente até a data do pagamento). Pagamento no vencimento, ou no próximo dia útil quando o vencimento cai em dia sem expediente, não conta como recuperado.<br>• Não depende de retratos: sai direto da carteira e dos Recebidos.${isAdm?'':'<br>• Você vê o total e a sua própria linha.'}</div>`;
+    <div class="sc-note">• Usa o responsável atual do título (último acionamento do cliente até a data do pagamento). Pago em dia = no vencimento, ou no próximo dia útil quando o vencimento cai em dia sem expediente.<br>• Não depende de retratos: sai da carteira e da base de pagos em dia.</div>`;
 }
 // ===== VISÃO POR COBRADORA (só administradora) =====
 function gsRenderCobradoras(){
   const el=document.getElementById('gs-cobradoras');if(!el)return;
-  if(!(currentUser&&currentUser.role==='admin')){el.innerHTML='';return;}
-  const fx=scFaixas(),itens=gsPagosAtraso(),hoje=hojeISO(),seg=scSemanaISO(hoje),fimSem=_isoD(new Date(new Date(seg+'T00:00:00').getTime()+6*86400000)),mes=hoje.slice(0,7);
+  const fx=scFaixas(),itens=gsPagos(),hoje=hojeISO(),seg=scSemanaISO(hoje),fimSem=_isoD(new Date(new Date(seg+'T00:00:00').getTime()+6*86400000)),mes=hoje.slice(0,7);
   const base=(_scBaseResp||[]).filter(t=>t.dias>0),nomes=[...getCobradoras(),'__sem'];
   const lc=nomes.map(n=>{
     const live=base.filter(t=>n==='__sem'?!t.resp:t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),tp=scResumoTipo(live),dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
