@@ -643,6 +643,39 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 .gs-seg button.on{background:#fff;color:#14532d;box-shadow:0 1px 4px rgba(0,0,0,.1)}
 .gs-tools{margin-top:22px;font-size:12px;color:var(--text2)}.gs-tools summary{cursor:pointer;font-weight:600;padding:6px 0}
 .gs-empty{padding:18px;text-align:center;color:#94a3b8;font-size:13px}
+
+.gs-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.gs-top h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
+.gs-top p{margin:2px 0 0;font-size:13px;color:var(--text2)}
+.gs-filters{display:flex;gap:10px}
+.gs-filters label{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e9e5;border-radius:14px;padding:6px 8px 6px 14px;box-shadow:0 4px 14px rgba(16,40,24,.05);font-size:13px;color:var(--text2);font-weight:600}
+.gs-filters select{border:none;background:#f1f6f1;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;color:#14532d;cursor:pointer;outline:none}
+.gs-hero2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
+@media(max-width:900px){.gs-hero2{grid-template-columns:1fr}}
+.gs-total{min-height:210px;display:flex;flex-direction:column;justify-content:space-between}
+.gs-sub2{font-size:13px;opacity:.9;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.gs-pill{background:rgba(255,255,255,.16);border-radius:12px;padding:8px 14px;font-size:12px}.gs-pill b{display:block;font-size:16px;font-weight:800;margin-top:2px}
+.gs-donut{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.gs-donut svg{width:170px;height:170px;flex-shrink:0}
+.gs-dl{flex:1;min-width:190px;display:flex;flex-direction:column;gap:9px}
+.gs-dl div{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text)}
+.gs-dl i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gs-dl b{margin-left:auto;font-weight:700}
+.gs-faixa{grid-template-columns:130px minmax(0,1fr) 90px 150px 170px !important}
+.gs-tag{display:inline-block;text-align:center;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+@media(max-width:900px){.gs-faixa{grid-template-columns:110px 1fr 80px !important}.gs-faixa .gs-tag,.gs-faixa .mt{display:none}}
+.gs-cobs{grid-template-columns:repeat(auto-fit,minmax(360px,1fr)) !important;gap:18px !important}
+.gs-cob{padding:26px 28px !important}
+.gs-cob-h{gap:16px !important;margin-bottom:20px !important}
+.gs-av{width:58px !important;height:58px !important;font-size:22px !important}
+.gs-cob-h b{font-size:19px !important}
+.gs-cob-m{gap:12px !important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important}
+.gs-cob-m div{min-width:0;padding:16px 14px !important;border-radius:16px !important}
+.gs-cob-m small{font-size:12px !important;margin-bottom:6px}
+.gs-cob-m b{font-size:18px !important;letter-spacing:-.5px;color:#14532d;white-space:nowrap}
+.gs-cob-m div.vc b{color:var(--text)}
+.gs-cob-v{margin-top:16px !important;font-size:13px !important}
+.gs-cob .sc-mini{width:100% !important;display:flex !important;height:12px !important;margin-top:10px !important;border-radius:99px;overflow:hidden}
 </style>
 </head>
 <body>
@@ -743,11 +776,12 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 
       <!-- GESTÃO -->
       <div id="panel-gestao" class="panel active gs2">
+        <div class="gs-top"><div><h2>Visão geral</h2><p>Carteira de cobrança</p></div>
+          <div class="gs-filters"><label><span>Ano</span><select id="gs-f-ano" onchange="gsFiltro()"></select></label><label><span>Mês</span><select id="gs-f-mes" onchange="gsFiltro()"></select></label></div></div>
         <div id="gs-hero"></div>
         <div id="gs-kpis" class="gs-sec"></div>
         <div id="gs-tipos" class="gs-sec"></div>
         <div id="gs-faixas" class="gs-sec"></div>
-        <div id="gs-evolucao" class="gs-sec"></div>
         <div id="gs-cobradoras" class="gs-sec"></div>
         <details class="gs-tools"><summary>⚙ Ferramentas</summary>
           <div class="sc-filtros" id="gs-admin-tools" style="margin-top:8px">
@@ -3357,6 +3391,7 @@ function renderSextou(){
 }
 
 // ===== DASHBOARD =====
+const GS_CORB=['#86efac','#4ade80','#facc15','#fb923c','#ef4444','#b91c1c','#7f1d1d'];
 const GS_ICO={
   trend:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
   clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
@@ -3383,13 +3418,14 @@ function renderDashboard(){
   const vp=r=>parseFloat(r.vpago||r.valor||0);
   const recDia=todosBC.filter(r=>dOnly(r.dtpag)===hoje).reduce((s,r)=>s+vp(r),0);
   const recMes=todosBC.filter(r=>dOnly(r.dtpag).startsWith(selMesAtual)).reduce((s,r)=>s+vp(r),0);
-  const okAno=r=>gfAnoOk(r.ano,r.venc),aberto=r=>(r.sit||'').toUpperCase()!=='PAGO';
+  const okAno=r=>gfAnoOk(r.ano,r.venc)&&gfMesOk(r),aberto=r=>(r.sit||'').toUpperCase()!=='PAGO';
   const sumA=(arr,f)=>arr.filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+f(r),0);
   const bol=sumA(DB.boleto||[],r=>parseFloat(r.valor||0)),che=sumA(DB.cheque||[],r=>parseFloat(r.valor||0));
   const cad=sumA(DB.caderneta||[],r=>Math.max(0,parseFloat(r.valor||0)-parseFloat(r.vpago||0)));
   const reneg=(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
   const cb=(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
   const total=bol+che+cad+reneg+cb;
+  const vencBC=['boleto','cheque'].flatMap(t=>DB[t]||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)&&r.venc&&dOnly(r.venc)<hoje).reduce((s,r)=>s+Math.max(0,parseFloat(r.valor||0)-parseFloat(r.vpago||0)),0);
   const cli=(arr,f)=>new Set(arr.filter(r=>okAno(r)&&f(r)).map(r=>(r.cliente||'').trim().toUpperCase()).filter(Boolean)).size;
   const tipos=[
     {k:'boleto',n:'Boleto',v:bol,c:cli(DB.boleto||[],r=>aberto(r)&&!ehMaqJur(r)),cor:'#16a34a',bg:'#dcfce7',ico:'doc'},
@@ -3401,15 +3437,17 @@ function renderDashboard(){
     {k:'chargeback',n:'Chargeback',v:cb,c:cli(DB.chargeback||[],r=>(r.status||'').toUpperCase()!=='PAGO'),cor:'#ef4444',bg:'#fee2e2',ico:'back',
       pago:(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0)}
   ];
-  const mesOpts=MESES.map((m,i)=>`<option value="${i}"${i===_gsMes?' selected':''}>${m}</option>`).join('');
-  const anos=[...new Set([...(DB.boleto||[]),...(DB.cheque||[])].map(r=>dOnly(r.dtpag).slice(0,4)).filter(a=>/^\d{4}$/.test(a)).concat([String(_gsAno),String(new Date().getFullYear())]))].sort();
-  const anoOpts=anos.map(a=>`<option${String(a)===String(_gsAno)?' selected':''}>${a}</option>`).join('');
-  document.getElementById('gs-hero').innerHTML=`<div class="gs-hero">
-    <div class="gs-card gs-total"><div class="gs-lab">Total em aberto</div><div class="gs-big">${fmtR(total)}</div>
-      <div class="gs-stack">${tipos.map(t=>total>0&&t.v>0?`<i title="${t.n}: ${fmtR(t.v)}" style="width:${(t.v/total*100).toFixed(2)}%;background:${t.cor}"></i>`:'').join('')}</div>
-      <div class="gs-leg">${tipos.map(t=>`<span><i style="background:${t.cor}"></i>${t.n} ${scMi(t.v).replace('R$ ','')}</span>`).join('')}</div></div>
-    <div class="gs-card gs-rec"><div class="gs-rec-head"><span>Recebido</span><span><select onchange="_gsMes=+this.value;renderDashboard()">${mesOpts}</select> <select onchange="_gsAno=+this.value;renderDashboard()">${anoOpts}</select></span></div>
-      <div class="gs-rec-grid"><div class="gs-mini"><small>Hoje</small><b>${fmtR(recDia)}</b></div><div class="gs-mini"><small>No mês</small><b>${fmtR(recMes)}</b></div></div></div>
+  const R=62,C=2*Math.PI*R;let off=0;
+  const segs=tipos.filter(t=>t.v>0&&total>0).map(t=>{const len=C*t.v/total,o=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${t.cor}" stroke-width="22" stroke-dasharray="${Math.max(len-1.5,0.5).toFixed(2)} ${(C-len+1.5).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 80 80)"><title>${t.n}: ${fmtR(t.v)}</title></circle>`;off+=len;return o;}).join('');
+  const nCli=new Set([].concat(
+    (DB.boleto||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)),(DB.cheque||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)),(DB.caderneta||[]).filter(r=>okAno(r)&&aberto(r)),
+    (DB.renegociacao||[]).filter(r=>okAno(r)&&getRenegAbertoEfetivo(r)>0),(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()!=='PAGO')
+  ).map(r=>normNome(r.cliente)).filter(Boolean)).size;
+  document.getElementById('gs-hero').innerHTML=`<div class="gs-hero2">
+    <div class="gs-card gs-total"><div><div class="gs-lab">Total em aberto</div><div class="gs-big">${fmtR(total)}</div></div><div class="gs-sub2"><span class="gs-pill">Vencido<b>${scMi(vencBC)}</b></span><span class="gs-pill">A vencer<b>${scMi(Math.max(bol+che-vencBC,0))}</b></span><span class="gs-pill">Clientes<b>${nCli}</b></span></div></div>
+    <div class="gs-card"><div class="gs-h" style="margin-bottom:8px"><h3>Composição da carteira</h3></div><div class="gs-donut">
+      <svg viewBox="0 0 160 160"><circle r="${R}" cx="80" cy="80" fill="none" stroke="#eef2ee" stroke-width="22"/>${segs}<text x="80" y="77" text-anchor="middle" font-size="10" fill="#94a3b8">em aberto</text><text x="80" y="95" text-anchor="middle" font-size="15" font-weight="800" fill="#14532d">${scMi(total).replace('R$ ','')}</text></svg>
+      <div class="gs-dl">${tipos.map(t=>`<div><i style="background:${t.cor}"></i>${t.n}<b>${total>0?(t.v/total*100).toFixed(1).replace('.',','):'0,0'}%</b></div>`).join('')}</div></div></div>
   </div>`;
   const mj=maqJurResumo(),mjV=mj.boleto.v+mj.cheque.v,mjN=mj.boleto.n+mj.cheque.n;
   document.getElementById('gs-tipos').innerHTML=`<div class="gs-tipos">${tipos.map(t=>`<div class="gs-card gs-tipo"><div class="gs-tipo-top">${gsIco(t.ico,t.bg,t.cor)}${t.n}</div><b>${fmtR(t.v)}</b><small>${t.c} cliente${t.c!==1?'s':''}${t.pago!==undefined?` · <span class="pg">pago ${scMi(t.pago).replace('R$ ','R$ ')}</span>`:''}</small></div>`).join('')}
@@ -4286,6 +4324,7 @@ function scColetar(){
   const c=carteiraClassificada({ref,tipo:tipoSel,ano});
   _scSemVenc=c.semVenc;
   const ativas=getCobradoras();
+  const gm=gfGet().mes;if(gm)c.tit=c.tit.filter(t=>t.venc&&dOnly(t.venc).slice(5,7)===gm);
   c.tit.forEach(t=>{const r=getCobradoraAtrib(t.r)||'';t.respOrig=r;t.resp=ativas.includes(r)?r:'';});   // sem responsável = ninguém ativo
   _scBaseResp=c.tit;
   let tit=c.tit;
@@ -4666,10 +4705,13 @@ async function renderSaude(){
   </div>`;
   const porF=fx.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:soma(a),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});
   const maxV=Math.max(...porF.map(f=>f.v),1);
-  const linhasF=porF.filter(f=>!(f.min<=0&&f.n===0)&&(!G.faixa||String(f.k)===String(G.faixa))).map(f=>`<div class="gs-faixa gs-click" style="cursor:pointer" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa · ${esc(f.tag)}">
-      <span class="nm"><i style="background:${f.bar}"></i>${esc(f.l)}${f.min>0?' dias':''}</span>
-      <span class="bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${f.bar}"></i></span>
-      <span class="vl">${scMi(f.v)}</span><span class="mt">${f.n} tít. · ${f.c} cli.${f.min>0&&venc>0?' · '+scPct(f.v/venc):''}</span></div>`).join('');
+  const CORB=['#86efac','#4ade80','#facc15','#fb923c','#ef4444','#b91c1c','#7f1d1d'];
+  const linhasF=porF.filter(f=>!(f.min<=0&&f.n===0)&&(!G.faixa||String(f.k)===String(G.faixa))).map(f=>{const i=fx.findIndex(x=>x.k===f.k),cor=CORB[i]||f.bar;return `<div class="gs-faixa gs-click" style="cursor:pointer" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa">
+      <span class="nm"><i style="background:${cor}"></i>${esc(f.l)}${f.min>0?' dias':''}</span>
+      <span class="bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${cor}"></i></span>
+      <span class="vl">${scMi(f.v)}</span>
+      <span style="text-align:center"><span class="gs-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${esc(f.tag)}</span></span>
+      <span class="mt">${f.n} tít. · ${f.c} cli.${f.min>0&&venc>0?' · '+scPct(f.v/venc):''}</span></div>`;}).join('');
   document.getElementById('gs-faixas').innerHTML=`<div class="gs-card"><div class="gs-h"><h3>Faixas de atraso</h3><span style="font-size:12px;color:#94a3b8">boleto e cheque · ${fmtDate(_scRef)}</span></div>${linhasF||'<div class="gs-empty">Nenhum título em aberto.</div>'}</div>`;
   gsRenderBlocos();
 }
@@ -5008,7 +5050,7 @@ function verMaqJur(t){
 }
 // ===== FILTROS GLOBAIS (um único estado para todas as abas, guardado no navegador) =====
 const GF_KEY='leoFiltrosGlobais_v1';
-const GF_PADRAO={ano:'',tipo:'',faixa:'',resp:'',de:'',ate:''};
+const GF_PADRAO={ano:'',mes:'',tipo:'',faixa:'',resp:'',de:'',ate:''};
 const GF_TIPOS=[['boleto','Boleto'],['cheque','Cheque'],['caderneta','Caderneta'],['renegociacao','Renegociação'],['chargeback','Chargeback']];
 let _gf=null,_abaAtual='gestao';
 function gfGet(){if(!_gf){_gf={...GF_PADRAO};try{localStorage.removeItem(GF_KEY);}catch(e){}}return _gf;}
@@ -5021,6 +5063,21 @@ function gfAnoOk(ano,venc){
   if(G==='cobranca')return y>=scCorte();
   if(G==='fora')return y<scCorte();
   return y===parseInt(G);
+}
+// mês (01..12) do filtro contra o vencimento do título (ou o campo mês, p.ex. caderneta); sem mês no título = não filtra
+function gfMesOk(r){
+  const m=gfGet().mes;if(!m)return true;
+  if(r.venc)return dOnly(r.venc).slice(5,7)===m;
+  if(r.mes){const i=MESES.indexOf(String(r.mes).toUpperCase());return i<0?true:String(i+1).padStart(2,'0')===m;}
+  return true;
+}
+// período do recuperado (data do pagamento): ano+mês, só ano, só mês (ano atual) ou, sem nada, o mês atual
+function gsPeriodo(){
+  const G=gfGet(),hoje=hojeISO(),ano=/^\d{4}$/.test(G.ano)?G.ano:null,mes=G.mes||null;
+  if(ano&&mes)return{ini:`${ano}-${mes}-01`,fim:`${ano}-${mes}-31`,rot:`${MESES[+mes-1]}/${ano}`};
+  if(ano)return{ini:`${ano}-01-01`,fim:`${ano}-12-31`,rot:ano};
+  const a=hoje.slice(0,4),m=mes||hoje.slice(5,7);
+  return{ini:`${a}-${m}-01`,fim:`${a}-${m}-31`,rot:`${MESES[+m-1]}/${a}`};
 }
 function gfFaixaObj(){const k=gfGet().faixa;return k?scFaixas().find(f=>String(f.k)===String(k)):null;}
 function gfFaixaOk(venc){
@@ -5125,7 +5182,7 @@ function gsPagos(o){
     if((r.sit||'').toUpperCase()!=='PAGO')return;
     const dtp=dOnly(r.dtpag),venc=dOnly(r.venc);
     if(!dtp)return;
-    if(!o.sem&&!gfAnoOk(r.ano,venc))return;
+    if(!o.sem&&!o.semAno&&!gfAnoOk(r.ano,venc))return;
     out.push({tipo:t,cliente:r.cliente||'',dtpag:dtp,venc,v:parseFloat(r.vpago||r.valor)||0,resp:res(r),em:!!venc&&pagoEmDia(venc,dtp),base:false});
   }));
   const base=pdBase();
@@ -5133,7 +5190,7 @@ function gsPagos(o){
     if(chaves.has(ch))return;
     const [cents,venc,pag,tipo,,nome]=base[mes][ch];
     if(!o.sem&&G.tipo&&G.tipo!==tipo)return;
-    if(!o.sem&&!gfAnoOk('',venc))return;
+    if(!o.sem&&!o.semAno&&!gfAnoOk('',venc))return;
     out.push({tipo,cliente:nome||'',dtpag:pag,venc,v:cents/100,resp:res({cliente:nome,dtpag:pag,id:''}),em:true,base:true});
   }));
   return out;
@@ -5187,25 +5244,31 @@ function gsRenderEvolucao(){
 // ===== POR COBRADORA =====
 function gsRenderCobradoras(){
   const el=document.getElementById('gs-cobradoras');if(!el)return;
-  const fx=scFaixas(),itens=gsPagos(),hoje=hojeISO(),seg=scSemanaISO(hoje),fimSem=_isoD(new Date(new Date(seg+'T00:00:00').getTime()+6*86400000)),mes=hoje.slice(0,7);
-  const base=(_scBaseResp||[]).filter(t=>t.dias>0),nomes=[...getCobradoras(),'__sem'],S=a=>a.reduce((s,x)=>s+x.v,0);
-  const do_=n=>x=>n==='__sem'?!x.resp:x.resp===n;
-  const lc=nomes.map(n=>{
-    const live=base.filter(t=>n==='__sem'?!t.resp:t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
-    const rs=S(itens.filter(x=>do_(n)(x)&&x.dtpag>=seg&&x.dtpag<=fimSem)),rm=S(itens.filter(x=>do_(n)(x)&&x.dtpag.slice(0,7)===mes));
-    return{n,vv,nt:live.length,rs,rm,dist};
+  const fx=scFaixas(),pe=gsPeriodo(),itens=gsPagos({semAno:true}).filter(x=>x.dtpag>=pe.ini&&x.dtpag<=pe.fim);
+  const base=(_scBaseResp||[]).filter(t=>t.dias>0),S=a=>a.reduce((s,x)=>s+x.v,0);
+  const lc=getCobradoras().map(n=>{
+    const live=base.filter(t=>t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
+    const rec=itens.filter(x=>x.resp===n);
+    return{n,vv,nt:live.length,rec:S(rec),nrec:rec.length,dist};
   });
-  const totV=lc.reduce((s,l)=>s+l.vv,0),totN=lc.reduce((s,l)=>s+l.nt,0),baseV=base.reduce((s,t)=>s+t.saldo,0);
-  const totS=S(itens.filter(x=>x.dtpag>=seg&&x.dtpag<=fimSem)),totM=S(itens.filter(x=>x.dtpag.slice(0,7)===mes));
-  const ok=Math.abs(totV-baseV)<0.005&&totN===base.length&&Math.abs(lc.reduce((s,l)=>s+l.rs,0)-totS)<0.005&&Math.abs(lc.reduce((s,l)=>s+l.rm,0)-totM)<0.005;
-  const cards=lc.filter(l=>l.n!=='__sem'||l.vv>0||l.rs>0||l.rm>0).map(l=>`<div class="gs-card gs-cob"><div class="gs-cob-h"><span class="gs-av">${l.n==='__sem'?'?':esc(l.n[0])}</span><div><b>${l.n==='__sem'?'Sem responsável':esc(l.n)}</b></div></div>
-    <div class="gs-cob-m"><div><small>Recuperado na semana</small><b>${fmtR(l.rs)}</b></div><div><small>Recuperado no mês</small><b>${fmtR(l.rm)}</b></div></div>
-    <div class="gs-cob-v">Vencido com ela: <b>${fmtR(l.vv)}</b> · ${l.nt} tít.</div>
-    ${l.vv>0?`<div class="sc-mini" style="margin-top:6px">${l.dist.map(f=>`<i title="${esc(f.l)}: ${fmtR(f.v)}" style="width:${(f.v/l.vv*100).toFixed(1)}%;background:${f.bar}"></i>`).join('')}</div>`:''}</div>`).join('');
-  el.innerHTML=`<div class="gs-h" style="margin-bottom:12px"><h3>Por cobradora</h3><span class="${ok?'gs-ok':'gs-bad'}" style="font-size:12px">${ok?'✔ a soma confere com o total':'⚠ a soma não confere com o total'}</span></div><div class="gs-cobs">${cards}</div>`;
+  const cards=lc.map(l=>`<div class="gs-card gs-cob"><div class="gs-cob-h"><span class="gs-av">${esc(l.n[0])}</span><div><b>${esc(l.n)}</b></div></div>
+    <div class="gs-cob-m"><div><small>Recuperado em ${esc(pe.rot)}</small><b>${fmtR(l.rec)}</b></div><div class="vc"><small>Vencido em aberto</small><b>${fmtR(l.vv)}</b></div></div>
+    <div class="gs-cob-v">${l.nrec} título${l.nrec!==1?'s':''} recuperado${l.nrec!==1?'s':''} · ${l.nt} vencido${l.nt!==1?'s':''} com ela</div>
+    ${l.vv>0?`<div class="sc-mini">${l.dist.map(f=>`<i title="${esc(f.l)}: ${fmtR(f.v)}" style="width:${(f.v/l.vv*100).toFixed(1)}%;background:${GS_CORB[fx.findIndex(x=>x.k===f.k)]||f.bar}"></i>`).join('')}</div>`:''}</div>`).join('');
+  el.innerHTML=`<div class="gs-h" style="margin-bottom:14px"><h3 style="font-size:17px">Por cobradora</h3></div><div class="gs-cobs">${cards}</div>`;
 }
 function gsRenderBlocos(){try{gsRenderEvolucao();gsRenderCobradoras();}catch(e){console.error('Gestão: evolução',e);const el=document.getElementById('gs-evolucao');if(el)el.innerHTML='<div class="gs-bad">Erro ao montar a evolução: '+esc(e.message)+'</div>';}}
-async function renderGestao(){renderDashboard();await renderSaude();renderDashboard();}
+function gsFiltro(){
+  gfSet({ano:(document.getElementById('gs-f-ano')||{}).value||'',mes:(document.getElementById('gs-f-mes')||{}).value||''});
+  renderGestao();
+}
+function gsPrepFiltro(){
+  const G=gfGet(),a=document.getElementById('gs-f-ano'),m=document.getElementById('gs-f-mes');
+  if(a){const anos=[...new Set(['boleto','cheque','caderneta','renegociacao','chargeback'].flatMap(t=>(DB[t]||[]).map(r=>String(r.ano||(r.venc||'').slice(0,4))).filter(x=>/^\d{4}$/.test(x))).concat([String(new Date().getFullYear())]))].sort().reverse();
+    a.innerHTML='<option value="">Todos</option>'+anos.map(x=>`<option${x===G.ano?' selected':''}>${x}</option>`).join('');a.value=G.ano;}
+  if(m){m.innerHTML='<option value="">Todos</option>'+MESES.map((x,i)=>{const v=String(i+1).padStart(2,'0');return `<option value="${v}">${x}</option>`;}).join('');m.value=G.mes;}
+}
+async function renderGestao(){gsPrepFiltro();renderDashboard();await renderSaude();renderDashboard();}
 
 function renderAba(name){
   if(name==='dashboard'||name==='saude')name='gestao';
