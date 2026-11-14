@@ -569,6 +569,80 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
 .gs-seg button.on{background:var(--sidebar);color:#fff}
 .gs-sub{font-size:12px;color:var(--text2);margin:2px 0 10px}
 .gs-ok{color:#166534;font-weight:600}.gs-bad{color:#b45309;font-weight:600}
+
+/* ===== Gestão v2: painel limpo ===== */
+.gs2{max-width:1320px}
+.gs-card{background:#fff;border-radius:20px;box-shadow:0 8px 30px rgba(16,40,24,.07);border:1px solid #eef2ee;padding:22px 24px}
+.gs-sec{margin-top:18px}
+.gs-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.gs-h h3{margin:0;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.1px}
+.gs-hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}
+@media(max-width:900px){.gs-hero{grid-template-columns:1fr}}
+.gs-total{background:linear-gradient(135deg,#0f3d1a 0%,#1f7a2e 60%,#4aa43a 100%);color:#fff;border:none;position:relative;overflow:hidden}
+.gs-total:after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07)}
+.gs-lab{font-size:13px;opacity:.85;font-weight:500}
+.gs-big{font-size:42px;font-weight:800;letter-spacing:-1px;margin:4px 0 16px;line-height:1.1}
+.gs-stack{display:flex;height:10px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18)}
+.gs-stack i{display:block;height:100%}
+.gs-leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:12px}
+.gs-leg span{display:inline-flex;align-items:center;gap:6px;opacity:.95}
+.gs-leg i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.gs-rec{display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.gs-rec-head{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text2);font-weight:600}
+.gs-rec-head select{font-size:11px;border:1px solid #e5e7eb;border-radius:8px;padding:3px 6px;background:#f9fafb;color:#6b7280}
+.gs-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gs-mini{background:#f4faf4;border-radius:14px;padding:14px 16px}
+.gs-mini small{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+.gs-mini b{font-size:22px;font-weight:800;color:#14532d;letter-spacing:-.4px}
+.gs-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.gs-kpi{display:flex;align-items:center;gap:14px;padding:16px 18px}
+.gs-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gs-ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gs-kpi small{display:block;font-size:12px;color:var(--text2)}
+.gs-kpi b{display:block;font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.4px;line-height:1.25}
+.gs-kpi em{font-style:normal;font-size:11px;color:#94a3b8}
+.gs-tipos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+@media(max-width:1250px){.gs-tipos{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.gs-tipos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gs-tipo{padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.gs-tipo-top{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--text2)}
+.gs-tipo-top .gs-ico{width:34px;height:34px;border-radius:10px}.gs-tipo-top .gs-ico svg{width:17px;height:17px}
+.gs-tipo b{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.gs-tipo small{font-size:12px;color:#94a3b8}
+.gs-tipo small .pg{color:#15803d;font-weight:600}
+.gs-click{cursor:pointer;transition:transform .12s,box-shadow .12s}.gs-click:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(16,40,24,.12)}
+.gs-faixa{display:grid;grid-template-columns:150px minmax(0,1fr) 90px 190px;gap:14px;align-items:center;padding:11px 8px;border-radius:12px}
+.gs-faixa:hover{background:#f6faf6}
+.gs-faixa .nm{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text)}
+.gs-faixa .nm i{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.gs-faixa .bar{height:10px;background:#eef2ee;border-radius:99px;overflow:hidden}
+.gs-faixa .bar i{display:block;height:100%;border-radius:99px}
+.gs-faixa .vl{text-align:right;font-weight:700;font-size:14px}
+.gs-faixa .mt{text-align:right;font-size:12px;color:#94a3b8;white-space:nowrap}
+@media(max-width:700px){.gs-faixa{grid-template-columns:110px 1fr 90px}.gs-faixa .mt{display:none}}
+.gs-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
+.gs-chip.up{background:#dcfce7;color:#166534}.gs-chip.down{background:#fee2e2;color:#b91c1c}.gs-chip.eq{background:#f1f5f9;color:#64748b}
+.gs-evo-top{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.gs-evo-top b{font-size:30px;font-weight:800;letter-spacing:-.8px;color:#14532d;line-height:1}
+.gs-evo-top small{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px}
+.gs-lg{display:flex;gap:16px;font-size:12px;color:var(--text2);margin-top:6px}
+.gs-lg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+.gs-cobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.gs-cob{padding:18px 20px}
+.gs-cob-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.gs-av{width:40px;height:40px;border-radius:50%;background:#e7f4e4;color:#166534;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px}
+.gs-cob-h b{font-size:15px}
+.gs-cob-m{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gs-cob-m div{background:#f8faf8;border-radius:12px;padding:10px 12px}
+.gs-cob-m small{display:block;font-size:11px;color:#94a3b8}
+.gs-cob-m b{font-size:15px;font-weight:700}
+.gs-cob-v{margin-top:10px;font-size:12px;color:var(--text2)}
+.gs-ok{color:#166534;font-weight:600}.gs-bad{color:#b45309;font-weight:600}
+.gs-seg{display:inline-flex;background:#f1f5f1;border-radius:10px;padding:3px}
+.gs-seg button{border:none;background:transparent;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);border-radius:8px}
+.gs-seg button.on{background:#fff;color:#14532d;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.gs-tools{margin-top:22px;font-size:12px;color:var(--text2)}.gs-tools summary{cursor:pointer;font-weight:600;padding:6px 0}
+.gs-empty{padding:18px;text-align:center;color:#94a3b8;font-size:13px}
 </style>
 </head>
 <body>
@@ -662,52 +736,31 @@ tbody tr.row-click:hover{background:#f0fdf4;box-shadow:inset 3px 0 0 #27ae60}
   <div class="main">
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Gestão</div>
-      <div class="gf-wrap" id="gf-wrap"></div>
       <div class="topbar-date" id="hdrDate"></div>
     </div>
 
     <div class="content">
 
-      <!-- GESTÃO (une Painel + Saúde da Carteira) -->
-      <div id="panel-gestao" class="panel active">
-        <div class="page-header">
-          <h2>Gestão</h2>
-          <div class="page-sub">Recebido, carteira (todos os anos), saúde da cobrança (boleto e cheque) e recuperado em uma única tela. Os filtros (botão Filtros no topo) valem para todas as abas.</div>
-          <div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:12px;color:var(--text2)">Recebido no mês de</span>
-            <select id="dash-fil-mes" onchange="renderDashboard()" style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb;border-radius:4px;padding:2px 6px;background:#f9fafb"></select>
-            <select id="dash-fil-ano" onchange="renderDashboard()" style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb;border-radius:4px;padding:2px 6px;background:#f9fafb"></select>
+      <!-- GESTÃO -->
+      <div id="panel-gestao" class="panel active gs2">
+        <div id="gs-hero"></div>
+        <div id="gs-kpis" class="gs-sec"></div>
+        <div id="gs-tipos" class="gs-sec"></div>
+        <div id="gs-faixas" class="gs-sec"></div>
+        <div id="gs-evolucao" class="gs-sec"></div>
+        <div id="gs-cobradoras" class="gs-sec"></div>
+        <details class="gs-tools"><summary>⚙ Ferramentas</summary>
+          <div class="sc-filtros" id="gs-admin-tools" style="margin-top:8px">
+            <label>Data de referência <input type="text" id="sc-ref" placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" oninput="scMascaraData(this)" style="width:120px"></label>
+            <label>Período (inadimplência) <select id="sc-per" onchange="renderSaude()"></select></label>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';document.getElementById('sc-per').dataset.set='';renderSaude()">Hoje</button>
+            <button class="btn btn-outline btn-sm" onclick="exportarSaude()">⬇ Exportar Excel</button>
+            <button class="btn btn-primary btn-sm gs-so-admin" onclick="abrirPagosDia()">📥 Pagos em dia</button>
+            <button class="btn btn-outline btn-sm gs-so-admin" onclick="scMostrarRetratos()">📸 Retratos</button>
+            <button class="btn btn-outline btn-sm gs-so-admin" onclick="abrirParametros()">⚙ Parâmetros</button>
           </div>
-        </div>
-        <div class="page-divider"></div>
-
-        <!-- 1. TOPO: recebido hoje e no mês (sem meta) -->
-        <div class="dash-hero-row" id="dash-resultado"></div>
-
-        <!-- 2. CARTEIRA CONSOLIDADA POR TIPO -->
-        <div class="dash-block">
-          <div class="dash-block-title-row"><div class="dash-block-title">💰 Carteira Consolidada</div></div>
-          <div class="dash-carteira-tipos" id="dash-carteira-tipos"></div>
-          <div id="gs-maqjur" style="margin-top:10px"></div>
-        </div>
-
-        <!-- 3. SAÚDE DA CARTEIRA -->
-        <div class="dash-block-title" style="margin:18px 0 8px">🩺 Saúde da Carteira</div>
-        <div class="sc-filtros" id="gs-admin-tools" style="display:none">
-          <label>Data de referência <input type="text" id="sc-ref" placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" oninput="scMascaraData(this)" style="width:120px"></label>
-          <label>Período (inadimplência) <select id="sc-per" onchange="renderSaude()"></select></label>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('sc-ref').value='';document.getElementById('sc-per').dataset.set='';renderSaude()">Hoje</button>
-          <button class="btn btn-outline btn-sm" onclick="exportarSaude()">⬇ Exportar Excel</button>
-          <button class="btn btn-primary btn-sm gs-so-admin" onclick="abrirPagosDia()">📥 Pagos em dia</button>
-          <button class="btn btn-outline btn-sm gs-so-admin" onclick="scMostrarRetratos()">📸 Retratos</button>
-          <button class="btn btn-outline btn-sm gs-so-admin" onclick="abrirParametros()">⚙ Parâmetros</button>
-        </div>
+        </details>
         <div style="display:none"><select id="sc-ano"></select><select id="sc-tipo"><option value="">Boleto + Cheque</option><option value="boleto">Boleto</option><option value="cheque">Cheque</option></select><select id="sc-resp"><option value="">Todos</option></select></div>
-        <div id="sc-conteudo"></div>
-
-        <!-- 4. EVOLUÇÃO DO RECUPERADO e 5. VISÃO POR COBRADORA -->
-        <div id="gs-evolucao"></div>
-        <div id="gs-cobradoras"></div>
       </div>
 
       <!-- VISÃO 360° -->
@@ -3304,58 +3357,63 @@ function renderSextou(){
 }
 
 // ===== DASHBOARD =====
+const GS_ICO={
+  trend:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  percent:'<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>',
+  card:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  handshake:'<path d="M11 17l2 2a1 1 0 0 0 3-3"/><path d="M14 14l2.5 2.5a1 1 0 0 0 3-3L15 9"/><path d="M2 8l5-3 4 1 3-1 6 4"/><path d="M2 8v7l6 5"/>',
+  back:'<polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>',
+  scale:'<line x1="12" y1="3" x2="12" y2="21"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/>',
+  wallet:'<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>'
+};
+const gsIco=(k,bg,fg)=>`<span class="gs-ico" style="background:${bg};color:${fg}"><svg viewBox="0 0 24 24">${GS_ICO[k]||''}</svg></span>`;
+let _gsMes=new Date().getMonth(),_gsAno=new Date().getFullYear();
 function renderDashboard(){
   populateFilters();
   const G=gfGet(),hoje=hojeISO();
-  const now=new Date();now.setHours(0,0,0,0);
-  const nowMesIdx=now.getMonth(),nowAno=now.getFullYear();
-  const dmEl=document.getElementById('dash-fil-mes'),daEl=document.getElementById('dash-fil-ano');
-  if(dmEl&&!dmEl.dataset.init){dmEl.innerHTML=MESES.map((m,i)=>`<option value="${i}"${i===nowMesIdx?' selected':''}>${m}</option>`).join('');dmEl.dataset.init='1';}
-  if(daEl&&!daEl.dataset.init){
-    const anos=[...new Set([...DB.boleto,...DB.cheque].map(r=>r.ano).filter(Boolean))].sort();
-    if(!anos.length)anos.push(String(nowAno));
-    daEl.innerHTML=anos.map(a=>`<option${String(a)===String(nowAno)?' selected':''}>${a}</option>`).join('');daEl.dataset.init='1';
-  }
-  const selMesIdx=dmEl?parseInt(dmEl.value):nowMesIdx,selAno=daEl?parseInt(daEl.value):nowAno;
-  const selMesAtual=`${String(selAno)}-${String(selMesIdx+1).padStart(2,'0')}`;
-
-  // ---- TOPO: recebido hoje e no mês (sem meta). Respeita tipo (boleto/cheque) e responsável do filtro global ----
-  const tipos=(G.tipo==='boleto'||G.tipo==='cheque')?[G.tipo]:['boleto','cheque'];
+  const selMesAtual=`${String(_gsAno)}-${String(_gsMes+1).padStart(2,'0')}`;
   const resolver=G.resp?gsRespResolver():null;
   const okResp=r=>!G.resp||(G.resp==='__sem'?!resolver(r):resolver(r)===G.resp);
-  const todosBC=tipos.flatMap(t=>DB[t]||[]).filter(okResp);
-  const pagos=todosBC.filter(r=>(r.sit||'').toUpperCase()==='PAGO');
-  const recDia=pagos.filter(r=>dOnly(r.dtpag)===hoje).reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-  const recMes=pagos.filter(r=>dOnly(r.dtpag).startsWith(selMesAtual)).reduce((s,r)=>s+parseFloat(r.vpago||r.valor||0),0);
-  const subTipo=tipos.length===2?'boleto e cheque':tipos[0];
-  document.getElementById('dash-resultado').innerHTML=`
-    <div class="dash-hero-card"><div class="dhc-label">Recebido Hoje</div><div class="dhc-value"><span class="dhc-arrow">▲</span>${fmtR(recDia)}</div><div class="dhc-sub">${subTipo} · ${fmtDate(hoje)}</div></div>
-    <div class="dash-hero-card"><div class="dhc-label">Recebido no Mês</div><div class="dhc-value"><span class="dhc-arrow">▲</span>${fmtR(recMes)}</div><div class="dhc-sub">${subTipo} · ${MESES[selMesIdx]}/${selAno}</div></div>`;
-
-  // ---- CARTEIRA CONSOLIDADA por tipo (ano do filtro global) ----
-  const okAno=r=>gfAnoOk(r.ano,r.venc);
-  const aberto=r=>(r.sit||'').toUpperCase()!=='PAGO';
-  const bolAberto=(DB.boleto||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
-  const cheAberto=(DB.cheque||[]).filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+parseFloat(r.valor||0),0);
-  const cadAberto=(DB.caderneta||[]).filter(r=>okAno(r)&&aberto(r)).reduce((s,r)=>s+Math.max(0,parseFloat(r.valor||0)-parseFloat(r.vpago||0)),0);
-  const renegAberto=(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
-  const cbAberto=(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
+  const todosBC=['boleto','cheque'].flatMap(t=>DB[t]||[]).filter(okResp).filter(r=>(r.sit||'').toUpperCase()==='PAGO');
+  const vp=r=>parseFloat(r.vpago||r.valor||0);
+  const recDia=todosBC.filter(r=>dOnly(r.dtpag)===hoje).reduce((s,r)=>s+vp(r),0);
+  const recMes=todosBC.filter(r=>dOnly(r.dtpag).startsWith(selMesAtual)).reduce((s,r)=>s+vp(r),0);
+  const okAno=r=>gfAnoOk(r.ano,r.venc),aberto=r=>(r.sit||'').toUpperCase()!=='PAGO';
+  const sumA=(arr,f)=>arr.filter(r=>okAno(r)&&aberto(r)&&!ehMaqJur(r)).reduce((s,r)=>s+f(r),0);
+  const bol=sumA(DB.boleto||[],r=>parseFloat(r.valor||0)),che=sumA(DB.cheque||[],r=>parseFloat(r.valor||0));
+  const cad=sumA(DB.caderneta||[],r=>Math.max(0,parseFloat(r.valor||0)-parseFloat(r.vpago||0)));
+  const reneg=(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegAbertoEfetivo(r),0);
+  const cb=(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()!=='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0);
+  const total=bol+che+cad+reneg+cb;
   const cli=(arr,f)=>new Set(arr.filter(r=>okAno(r)&&f(r)).map(r=>(r.cliente||'').trim().toUpperCase()).filter(Boolean)).size;
-  const itens=[
-    ['boleto','📄','Boleto',bolAberto,cli(DB.boleto||[],r=>aberto(r)&&!ehMaqJur(r))],
-    ['cheque','📝','Cheque',cheAberto,cli(DB.cheque||[],r=>aberto(r)&&!ehMaqJur(r))],
-    ['caderneta','📒','Caderneta',cadAberto,cli(DB.caderneta||[],aberto)],
-    ['renegociacao','🤝','Renegociação',renegAberto,cli(DB.renegociacao||[],r=>getRenegAbertoEfetivo(r)>0)],
-    ['chargeback','💳','Chargeback',cbAberto,cli(DB.chargeback||[],r=>(r.status||'').toUpperCase()!=='PAGO')]
-  ].filter(x=>!G.tipo||G.tipo===x[0]);
-  const pago={
-    caderneta:(DB.caderneta||[]).filter(r=>okAno(r)&&!aberto(r)).reduce((s,r)=>s+(parseFloat(r.vpago||0)||parseFloat(r.valor||0)),0),
-    renegociacao:(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegPagoEfetivo(r),0),
-    chargeback:(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0)};
-  document.getElementById('dash-carteira-tipos').innerHTML=itens.map(x=>`<div class="dct-item"><span class="dct-ico">${x[1]}</span><div class="dct-label">${x[2]}</div><div class="dct-value"><span class="dct-arrow">▼</span>${fmtR(x[3])}</div><div class="dct-meta">${x[4]} cliente${x[4]!==1?'s':''}${pago[x[0]]!==undefined?` · <b style="color:#166534">pago ${fmtR(pago[x[0]])}</b>`:''}</div></div>`).join('')+((!G.tipo||G.tipo==='boleto'||G.tipo==='cheque')?(()=>{const m=maqJurResumo(),v=(G.tipo==='boleto'?m.boleto.v:G.tipo==='cheque'?m.cheque.v:m.boleto.v+m.cheque.v),n=(G.tipo==='boleto'?m.boleto.n:G.tipo==='cheque'?m.cheque.n:m.boleto.n+m.cheque.n);return `<div class="dct-item" style="border-color:#c4b5fd;background:#faf8ff" title="Já recuperado na ação judicial, aguardando baixa. Fora da cobrança e dos indicadores."><span class="dct-ico">⚖️</span><div class="dct-label">Máquina Jurídico</div><div class="dct-value" style="color:#4c1d95">${fmtR(v)}</div><div class="dct-meta">${n} título${n!==1?'s':''} · aguardando baixa</div></div>`;})():'')+'<div class="gs-sub" style="grid-column:1/-1;margin:6px 0 0">Caderneta, renegociação e chargeback aparecem só como status (aberto e pago). A saúde da carteira e as faixas de atraso consideram apenas boleto e cheque.</div>';
-  const mj=maqJurResumo(),mjT=mj.boleto.v+mj.cheque.v,mjN=mj.boleto.n+mj.cheque.n;
-  const bm=document.getElementById('gs-maqjur');
-  if(bm)bm.innerHTML=mjN?`<div class="sc-fora" style="background:#f5f3ff;color:#4c1d95;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><b>⚖️ Máquina jurídico (já recuperado, aguardando baixa):</b> ${fmtR(mjT)} · ${mjN} título${mjN>1?'s':''} · ${mj.cli.size} cliente${mj.cli.size!==1?'s':''} <span>(boleto ${fmtR(mj.boleto.v)} · cheque ${fmtR(mj.cheque.v)})</span><button type="button" class="btn btn-outline btn-sm" onclick="verMaqJur('boleto')">Ver boletos</button><button type="button" class="btn btn-outline btn-sm" onclick="verMaqJur('cheque')">Ver cheques</button><span style="font-size:11px">Fora da cobrança, dos Indicadores e das faixas de atraso.</span></div>`:'<div class="gs-sub">Máquina jurídico: nenhum título marcado. Marque em Boleto ou Cheque, em Atribuição, com <b>MÁQUINA JURÍDICO</b>.</div>';
+  const tipos=[
+    {k:'boleto',n:'Boleto',v:bol,c:cli(DB.boleto||[],r=>aberto(r)&&!ehMaqJur(r)),cor:'#16a34a',bg:'#dcfce7',ico:'doc'},
+    {k:'cheque',n:'Cheque',v:che,c:cli(DB.cheque||[],r=>aberto(r)&&!ehMaqJur(r)),cor:'#0ea5e9',bg:'#e0f2fe',ico:'card'},
+    {k:'caderneta',n:'Caderneta',v:cad,c:cli(DB.caderneta||[],aberto),cor:'#f59e0b',bg:'#fef3c7',ico:'book',
+      pago:(DB.caderneta||[]).filter(r=>okAno(r)&&!aberto(r)).reduce((s,r)=>s+(parseFloat(r.vpago||0)||parseFloat(r.valor||0)),0)},
+    {k:'renegociacao',n:'Renegociação',v:reneg,c:cli(DB.renegociacao||[],r=>getRenegAbertoEfetivo(r)>0),cor:'#8b5cf6',bg:'#ede9fe',ico:'handshake',
+      pago:(DB.renegociacao||[]).filter(okAno).reduce((s,r)=>s+getRenegPagoEfetivo(r),0)},
+    {k:'chargeback',n:'Chargeback',v:cb,c:cli(DB.chargeback||[],r=>(r.status||'').toUpperCase()!=='PAGO'),cor:'#ef4444',bg:'#fee2e2',ico:'back',
+      pago:(DB.chargeback||[]).filter(r=>okAno(r)&&(r.status||'').toUpperCase()==='PAGO').reduce((s,r)=>s+parseFloat(r.taberto||0),0)}
+  ];
+  const mesOpts=MESES.map((m,i)=>`<option value="${i}"${i===_gsMes?' selected':''}>${m}</option>`).join('');
+  const anos=[...new Set([...(DB.boleto||[]),...(DB.cheque||[])].map(r=>dOnly(r.dtpag).slice(0,4)).filter(a=>/^\d{4}$/.test(a)).concat([String(_gsAno),String(new Date().getFullYear())]))].sort();
+  const anoOpts=anos.map(a=>`<option${String(a)===String(_gsAno)?' selected':''}>${a}</option>`).join('');
+  document.getElementById('gs-hero').innerHTML=`<div class="gs-hero">
+    <div class="gs-card gs-total"><div class="gs-lab">Total em aberto</div><div class="gs-big">${fmtR(total)}</div>
+      <div class="gs-stack">${tipos.map(t=>total>0&&t.v>0?`<i title="${t.n}: ${fmtR(t.v)}" style="width:${(t.v/total*100).toFixed(2)}%;background:${t.cor}"></i>`:'').join('')}</div>
+      <div class="gs-leg">${tipos.map(t=>`<span><i style="background:${t.cor}"></i>${t.n} ${scMi(t.v).replace('R$ ','')}</span>`).join('')}</div></div>
+    <div class="gs-card gs-rec"><div class="gs-rec-head"><span>Recebido</span><span><select onchange="_gsMes=+this.value;renderDashboard()">${mesOpts}</select> <select onchange="_gsAno=+this.value;renderDashboard()">${anoOpts}</select></span></div>
+      <div class="gs-rec-grid"><div class="gs-mini"><small>Hoje</small><b>${fmtR(recDia)}</b></div><div class="gs-mini"><small>No mês</small><b>${fmtR(recMes)}</b></div></div></div>
+  </div>`;
+  const mj=maqJurResumo(),mjV=mj.boleto.v+mj.cheque.v,mjN=mj.boleto.n+mj.cheque.n;
+  document.getElementById('gs-tipos').innerHTML=`<div class="gs-tipos">${tipos.map(t=>`<div class="gs-card gs-tipo"><div class="gs-tipo-top">${gsIco(t.ico,t.bg,t.cor)}${t.n}</div><b>${fmtR(t.v)}</b><small>${t.c} cliente${t.c!==1?'s':''}${t.pago!==undefined?` · <span class="pg">pago ${scMi(t.pago).replace('R$ ','R$ ')}</span>`:''}</small></div>`).join('')}
+    <div class="gs-card gs-tipo gs-click" onclick="verMaqJur(${mj.boleto.n>=mj.cheque.n?"'boleto'":"'cheque'"})" title="Já recuperado na ação judicial, aguardando baixa. Fora da cobrança e dos indicadores."><div class="gs-tipo-top">${gsIco('scale','#f3e8ff','#7e22ce')}Máquina Jurídico</div><b>${fmtR(mjV)}</b><small>${mjN} título${mjN!==1?'s':''} · aguardando baixa</small></div></div>`;
 }
 
 function initRelatorio(){
@@ -4583,7 +4641,7 @@ async function renderSaude(){
   if(anoEl){anoEl.innerHTML=scAnoOpcoes().map(([v,l])=>`<option value="${v}">${l}</option>`).join('');anoEl.value=[...anoEl.options].some(o=>o.value===G.ano)?G.ano:'';}
   const tEl=document.getElementById('sc-tipo');if(tEl)tEl.value=(G.tipo==='boleto'||G.tipo==='cheque')?G.tipo:'';
   const rEl=document.getElementById('sc-resp');if(rEl)rEl.value=[...rEl.options].some(o=>o.value===G.resp)?G.resp:'';
-  const tit=scColetar(),el=document.getElementById('sc-conteudo');if(!el)return;
+  const tit=scColetar();
   if(per&&!per.dataset.set){per.value=_scRef.slice(0,7);per.dataset.set='1';}
   const P=scParams(),fx=_scFx,jurF=fx.find(f=>f.role==='jur'),perdaF=fx.find(f=>f.role==='perda');
   const soma=a=>a.reduce((s,t)=>s+t.saldo,0);
@@ -4592,41 +4650,27 @@ async function renderSaude(){
   const tipoSel=(document.getElementById('sc-tipo')||{}).value||'';
   const anoSel=(document.getElementById('sc-ano')||{}).value||'';
   const inad=scInadimplencias(_scRef,(per&&per.value)||_scRef.slice(0,7),tipoSel,anoSel);
-  const kpi=(l,v,s,cls)=>`<div class="sc-kpi ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
   const ate89=soma(vencidos.filter(t=>t.dias<jurF.min));
-  const kInad=inad.inad!=null
-    ?kpi(`Inadimplência do período (${inad.per.slice(5)}/${inad.per.slice(0,4)})`,scPct(inad.inad),`${scMi(inad.aberto)} em aberto ÷ ${scMi(inad.total)} que venceu`)
-    :kpi(`Vencido até ${jurF.min-1} dias · % do vencido`,venc>0?scPct(ate89/venc):'—',`${scMi(ate89)} · base de pagos em dia pendente`);
-  const k90=inad.janela.inad90!=null
-    ?kpi('Inadimplência 90+ (janela de 12 meses)',scPct(inad.janela.inad90),`${scMi(inad.janela.n90)} ÷ ${scMi(inad.janela.total)} que venceu até 90 dias antes`)
-    :kpi(`Vencido ${jurF.min}+ dias · % do vencido`,venc>0?scPct(v90/venc):'—',`${scMi(v90)} · base de pagos em dia ${inad.janela.faltam.length?'incompleta ('+inad.janela.faltam.length+' meses sem dados)':'pendente'}`);
+  const tile=(ico,bg,fg,l,v,sub,tt)=>`<div class="gs-card gs-kpi" title="${esc(tt||'')}">${gsIco(ico,bg,fg)}<div><small>${l}</small><b>${v}</b>${sub?`<em>${sub}</em>`:''}</div></div>`;
+  const tInad=inad.inad!=null
+    ?tile('percent','#e0f2fe','#0369a1',`Inadimplência ${inad.per.slice(5)}/${inad.per.slice(0,4)}`,scPct(inad.inad),scMi(inad.aberto)+' em aberto',`${scMi(inad.aberto)} em aberto ÷ ${scMi(inad.total)} que venceu no período`)
+    :tile('percent','#e0f2fe','#0369a1',`Vencido até ${jurF.min-1} dias`,venc>0?scPct(ate89/venc):'—',scMi(ate89),'% do vencido. Base de pagos em dia pendente.');
+  const t90=inad.janela.inad90!=null
+    ?tile('alert','#ffedd5','#c2410c','Inadimplência 90+',scPct(inad.janela.inad90),'janela de 12 meses',`${scMi(inad.janela.n90)} ÷ ${scMi(inad.janela.total)} que venceu até 90 dias antes`)
+    :tile('alert','#ffedd5','#c2410c',`Vencido ${jurF.min}+ dias`,venc>0?scPct(v90/venc):'—',scMi(v90),'% do vencido. Base de pagos em dia '+(inad.janela.faltam.length?'incompleta':'pendente')+'.');
+  document.getElementById('gs-kpis').innerHTML=`<div class="gs-kpis">
+    ${tile('trend','#fee2e2','#b91c1c','Vencido em aberto',scMi(venc),vencidos.length+' títulos','Boleto e cheque vencidos em aberto, na data de referência '+fmtDate(_scRef))}
+    ${tInad}${t90}
+    ${tile('clock','#ede9fe','#6d28d9','Atraso médio',Math.round(pond)+' dias','ponderado pelo valor','Média de dias de atraso do vencido, ponderada pelo valor')}
+    ${tile('shield','#fef3c7','#b45309',`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos','Perda potencial: títulos com '+perdaF.min+' dias ou mais de atraso')}
+  </div>`;
   const porF=fx.map(f=>{const a=tit.filter(t=>t.faixa===f.k);return{...f,v:soma(a),n:a.length,c:new Set(a.map(t=>normNome(t.cliente))).size};});
   const maxV=Math.max(...porF.map(f=>f.v),1);
-  const faixasHTML=`<div class="sc-row head"><span>Faixa (dias)</span><span></span><span class="n">Montante</span><span class="n">Títulos</span><span class="n">Clientes</span><span class="n">% do vencido</span><span></span></div>`+
-    porF.filter(f=>!(f.min<=0&&f.n===0)&&(!G.faixa||String(f.k)===String(G.faixa))).map(f=>`<div class="sc-row" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa">
-      <span class="lab">${esc(f.l)}${f.sub?`<small>${f.sub}</small>`:''}</span>
-      <span class="sc-bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${f.bar}"></i></span>
-      <span class="n" title="${fmtR(f.v)}">${scMiT(f.v)}</span><span class="n">${f.n}</span><span class="n">${f.c}</span><span class="n">${f.min<=0?'—':(venc>0?scPct(f.v/venc):'—')}</span>
-      <span><span class="sc-tag" style="background:${f.tb};color:${f.tc};${f.outline?'border:1.5px solid #cbd5e1':''}">${esc(f.tag)}</span></span></div>`).join('');
-  const baseMeses=Object.keys(pdBase()).sort();
-  const somaT=a=>a.reduce((s,t)=>s+t.saldo,0),tp=scResumoTipo(tit),tpF=scResumoTipo(_scFora);
-  const anoRot=(scAnoOpcoes().find(x=>x[0]===anoSel)||['','Todos'])[1];
-  const foraHTML=`<div class="sc-fora"><b>🗂 Fora de cobrança (${scCorte()-1} e anteriores):</b> ${fmtR(somaT(_scFora))} · ${_scFora.length} títulos <span>(boleto ${fmtR(tpF.b)} · cheque ${fmtR(tpF.c)})</span>${_scMantidos.length?` · <span title="Títulos antigos no jurídico entram sempre nos cartões">+ ${_scMantidos.length} no jurídico mantidos nos cartões</span>`:''}</div>
-    <div class="sc-fora" style="background:#f1f5f9;color:#334155"><b>Total do filtro (${esc(anoRot)}):</b> ${fmtR(somaT(tit))} · ${tit.length} títulos <span>(boleto ${fmtR(tp.b)} · cheque ${fmtR(tp.c)})</span></div>`;
-  el.innerHTML=`${G.ano==='cobranca'?foraHTML:foraHTML.slice(foraHTML.indexOf('</div>')+6)}<div class="sc-ref">Data de referência: <b>${fmtDate(_scRef)}</b> · ${tit.length} títulos em aberto (boleto e cheque)${(G.tipo&&!['boleto','cheque'].includes(G.tipo))?' · <span style="color:#b45309">a faixa de atraso só tem boleto e cheque (o filtro de tipo não se aplica aqui)</span>':''}${_scSemVenc?` · <span style="color:#b45309">${_scSemVenc} título(s) sem vencimento ficaram de fora</span>`:''}</div>
-    <div class="sc-kpis">
-      ${kpi('Vencido em aberto',scMi(venc),vencidos.length+' títulos vencidos')}
-      ${kInad}
-      ${k90}
-      ${kpi('Atraso médio ponderado',Math.round(pond)+' dias','sobre o vencido, pelo valor')}
-      ${kpi(`Exposição ${perdaF.min}+`,scMi(soma(v180)),v180.length+' títulos · perda potencial')}
-    </div>
-    <div class="sc-sec">Carteira por faixa de atraso</div><div class="sc-tbl">${faixasHTML||'<div class="sc-note" style="padding:14px">Nenhum título em aberto.</div>'}</div>
-    <div class="sc-note">• Ano de vencimento: o filtro vale para cartões, faixas, evolução e cobradoras; o ano de corte “em cobrança” fica em ⚙ Parâmetros. Título no jurídico aparece sempre.<br>
-    • Classificação por título, pelos dias de atraso na data de referência. Saldo em aberto = valor − pago parcial. Renegociação, chargeback e caderneta ficam fora.<br>
-    • Os nomes das faixas (por exemplo "elegível ao jurídico" e "perda potencial") são só classificação por prazo, editável em ⚙ Parâmetros: o sistema não encaminha nem baixa nada sozinho.<br>
-    • Base de pagos em dia: ${baseMeses.length?baseMeses.length+' mês(es) importado(s) ('+baseMeses[0].slice(5)+'/'+baseMeses[0].slice(0,4)+' a '+baseMeses[baseMeses.length-1].slice(5)+'/'+baseMeses[baseMeses.length-1].slice(0,4)+')':'nenhuma importada'}${inad.janela.faltam.length&&baseMeses.length?' · faltam para a janela de 12 meses: '+inad.janela.faltam.slice(0,6).map(m=>m.slice(5)+'/'+m.slice(0,4)).join(', ')+(inad.janela.faltam.length>6?' e outros '+(inad.janela.faltam.length-6):''):''}.<br>
-    • Armazenamento — pagos em dia: ${exOrigem('pagos_dia')} · retratos: ${exOrigem('retratos')} · parâmetros: ${exOrigem('parametros')}${[exOrigem('pagos_dia'),exOrigem('retratos'),exOrigem('parametros')].some(o=>o==='local')?' <b style="color:#b45309">(“local” = só neste navegador: o servidor ainda não aceita essa tabela)</b>':''}.</div>`;
+  const linhasF=porF.filter(f=>!(f.min<=0&&f.n===0)&&(!G.faixa||String(f.k)===String(G.faixa))).map(f=>`<div class="gs-faixa gs-click" style="cursor:pointer" onclick="scAbrirLista('faixa','${f.k}')" title="Ver títulos e clientes desta faixa · ${esc(f.tag)}">
+      <span class="nm"><i style="background:${f.bar}"></i>${esc(f.l)}${f.min>0?' dias':''}</span>
+      <span class="bar"><i style="width:${(f.v/maxV*100).toFixed(1)}%;background:${f.bar}"></i></span>
+      <span class="vl">${scMi(f.v)}</span><span class="mt">${f.n} tít. · ${f.c} cli.${f.min>0&&venc>0?' · '+scPct(f.v/venc):''}</span></div>`).join('');
+  document.getElementById('gs-faixas').innerHTML=`<div class="gs-card"><div class="gs-h"><h3>Faixas de atraso</h3><span style="font-size:12px;color:#94a3b8">boleto e cheque · ${fmtDate(_scRef)}</span></div>${linhasF||'<div class="gs-empty">Nenhum título em aberto.</div>'}</div>`;
   gsRenderBlocos();
 }
 function fecharSc(){const d=document.getElementById('sc-bg');if(d)d.classList.remove('open');}
@@ -4967,11 +5011,8 @@ const GF_KEY='leoFiltrosGlobais_v1';
 const GF_PADRAO={ano:'',tipo:'',faixa:'',resp:'',de:'',ate:''};
 const GF_TIPOS=[['boleto','Boleto'],['cheque','Cheque'],['caderneta','Caderneta'],['renegociacao','Renegociação'],['chargeback','Chargeback']];
 let _gf=null,_abaAtual='gestao';
-function gfGet(){
-  if(!_gf){try{_gf={...GF_PADRAO,...JSON.parse(localStorage.getItem(GF_KEY)||'{}')};}catch(e){_gf={...GF_PADRAO};}}
-  return _gf;
-}
-function gfSet(p){_gf={...gfGet(),...p};try{localStorage.setItem(GF_KEY,JSON.stringify(_gf));}catch(e){}}
+function gfGet(){if(!_gf){_gf={...GF_PADRAO};try{localStorage.removeItem(GF_KEY);}catch(e){}}return _gf;}
+function gfSet(p){_gf={...gfGet(),...p};}
 // ano do título (campo ano ou ano do vencimento) contra o filtro: '' = todos · cobranca = a partir do ano de corte · fora = antes do corte · 2024… = ano exato
 function gfAnoOk(ano,venc){
   const G=gfGet().ano;if(!G)return true;
@@ -5113,65 +5154,55 @@ function gsVar(a,b){
   return `<span class="sc-d ${d>0?'bom':'ruim'}">${d>0?'▲':'▼'} ${fmtR(Math.abs(d))}${b>0?' ('+(d>0?'+':'−')+Math.abs(d/b*100).toFixed(0)+'%)':''}</span>`;
 }
 function gsBarras(per,tot){
-  const W=760,H=220,pl=10,pr=10,pt=24,pb=34,n=per.length,max=Math.max(...tot.map(t=>t.v),1),bw=(W-pl-pr)/n,alt=v=>Math.round((H-pt-pb)*v/max);
+  const W=760,H=240,pl=44,pr=8,pt=22,pb=30,n=per.length,max=Math.max(...tot.map(t=>t.v),1),bw=(W-pl-pr)/n,alt=v=>(H-pt-pb)*v/max;
+  const grade=[0,.25,.5,.75,1].map(f=>{const y=H-pb-(H-pt-pb)*f;return `<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="#eef2ee"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="#9ca3af">${f?scMi(max*f).replace('R$ ',''):'0'}</text>`;}).join('');
   const bars=tot.map((t,i)=>{
-    const hA=alt(t.va),hD=alt(t.vd),x=pl+i*bw+bw*0.18,w=bw*0.64,yD=H-pb-hD,yA=yD-hA;
-    return `<rect x="${x.toFixed(1)}" y="${yD}" width="${w.toFixed(1)}" height="${hD}" fill="#7bb86f"><title>${esc(per[i].lab)}: pago em dia ${fmtR(t.vd)}</title></rect>
-      <rect x="${x.toFixed(1)}" y="${yA}" width="${w.toFixed(1)}" height="${hA}" fill="#1a5c24"><title>${esc(per[i].lab)}: pago em atraso ${fmtR(t.va)}</title></rect>
-      <text x="${(x+w/2).toFixed(1)}" y="${yA-5}" text-anchor="middle" font-size="10" fill="#374151">${t.v>0?scMi(t.v).replace('R$ ',''):''}</text>
-      <text x="${(x+w/2).toFixed(1)}" y="${H-pb+15}" text-anchor="middle" font-size="10" fill="#6b7280">${esc(per[i].lab)}</text>`;
+    const hA=alt(t.va),hD=alt(t.vd),x=pl+i*bw+bw*0.22,w=bw*0.56,yD=H-pb-hD,yA=yD-hA,last=i===n-1;
+    return `<g opacity="${last?1:.92}"><rect x="${x.toFixed(1)}" y="${yD.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(hD,0).toFixed(1)}" fill="#bbf7d0"><title>${esc(per[i].lab)} · em dia ${fmtR(t.vd)}</title></rect>
+      <rect x="${x.toFixed(1)}" y="${yA.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(hA,0).toFixed(1)}" rx="${hD<1?5:0}" fill="#15803d"><title>${esc(per[i].lab)} · em atraso ${fmtR(t.va)}</title></rect></g>
+      <text x="${(x+w/2).toFixed(1)}" y="${(yA-6).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="#374151">${t.v>0?scMi(t.v).replace('R$ ',''):''}</text>
+      <text x="${(x+w/2).toFixed(1)}" y="${H-pb+16}" text-anchor="middle" font-size="10" fill="${last?'#14532d':'#9ca3af'}" font-weight="${last?700:400}">${esc(per[i].lab)}</text>`;
   }).join('');
-  return `<svg class="gs-bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Recuperado por período"><line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="#d1d5db"/>${bars}</svg>
-    <div style="font-size:11px;color:var(--text2);display:flex;gap:14px;margin-top:4px"><span><i style="display:inline-block;width:10px;height:10px;background:#1a5c24;border-radius:2px"></i> pago em atraso</span><span><i style="display:inline-block;width:10px;height:10px;background:#7bb86f;border-radius:2px"></i> pago em dia</span></div>`;
+  return `<svg class="gs-bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Recuperado por período">${grade}${bars}</svg>`;
 }
 function gsRenderEvolucao(){
   const el=document.getElementById('gs-evolucao');if(!el)return;
-  const G=gfGet(),role=currentUser?currentUser.role:'',isAdm=role==='admin';
+  const G=gfGet();
   const itens=gsPagos().filter(x=>!G.resp||(G.resp==='__sem'?!x.resp:x.resp===G.resp));
   const mensal=_gsEvoModo==='mensal',per=[];
   if(!mensal){
     const seg=scSemanaISO(hojeISO());
     for(let i=7;i>=0;i--){const d=new Date(seg+'T00:00:00');d.setDate(d.getDate()-7*i);const ini=_isoD(d);d.setDate(d.getDate()+6);per.push({ini,fim:_isoD(d),lab:ini.slice(8)+'/'+ini.slice(5,7)});}
-  }else scMesesJanela(hojeISO(),12).reverse().forEach(m=>per.push({ini:m+'-01',fim:m+'-31',lab:MESES[+m.slice(5)-1]+'/'+m.slice(2,4)}));
-  const acc=f=>per.map(p=>{const a=itens.filter(x=>x.dtpag>=p.ini&&x.dtpag<=p.fim&&f(x)),S=l=>l.reduce((s,x)=>s+x.v,0);return{v:S(a),n:a.length,va:S(a.filter(x=>!x.em)),vd:S(a.filter(x=>x.em))};});
-  const tot=acc(()=>true),todos=[...getCobradoras(),'__sem'];
-  const linhas=todos.map(n=>({n,d:acc(x=>n==='__sem'?!x.resp:x.resp===n)}));
-  const mostrar=linhas;
-  const confere=per.map((p,i)=>Math.abs(linhas.reduce((s,l)=>s+l.d[i].v,0)-tot[i].v)<0.005&&linhas.reduce((s,l)=>s+l.d[i].n,0)===tot[i].n);
-  const cel=(d,i)=>`<td><b>${fmtR(d[i].v)}</b><div style="font-size:11px;color:var(--text2)">${d[i].n} tít. · atraso ${fmtR(d[i].va)} · em dia ${fmtR(d[i].vd)}</div><div>${gsVar(d[i].v,i>0?d[i-1].v:null)}</div></td>`;
-  const lin=(nome,d,cls)=>`<tr${cls?` class="${cls}"`:''}><td class="sc-rl">${nome}</td>${per.map((p,i)=>cel(d,i)).join('')}</tr>`;
-  const tabela=`<div style="overflow-x:auto"><table class="sc-evo"><thead><tr><th></th>${per.map(p=>`<th>${mensal?p.lab:'sem '+p.lab}</th>`).join('')}</tr></thead><tbody>
-    ${lin('Total',tot,'sc-tot')}${mostrar.map(l=>lin(l.n==='__sem'?'Sem responsável':esc(l.n),l.d)).join('')}
-    <tr><td class="sc-rl">Conferência</td>${confere.map(ok=>`<td class="${ok?'gs-ok':'gs-bad'}">${ok?'✔ soma = total':'⚠ não bate'}</td>`).join('')}</tr>
-    </tbody></table></div>`;
-  const nota=(G.tipo&&!['boleto','cheque'].includes(G.tipo))?'<div class="gs-bad" style="margin:6px 0">O recuperado vem de boleto e cheque; o filtro de tipo atual (caderneta, renegociação ou chargeback) não tem títulos aqui.</div>':'';
-  el.innerHTML=`<div class="dash-block-title" style="margin:22px 0 4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">📈 Evolução do recuperado
-      <span class="gs-seg"><button type="button" class="${mensal?'':'on'}" onclick="gsSetEvo('semanal')">Semanal</button><button type="button" class="${mensal?'on':''}" onclick="gsSetEvo('mensal')">Mensal</button></span></div>
-    <div class="gs-sub">${mensal?'Últimos 12 meses':'Últimas 8 semanas (segunda a domingo)'} · recuperado = pago em atraso + pago em dia (baixas da carteira e “Pagos em dia” lançados manualmente) · filtro de ano: ${esc(gfAnoRot(G.ano))}${G.tipo?' · tipo: '+esc(G.tipo):''}${G.resp?' · resp.: '+esc(gfRespRot(G.resp)):''} · variação contra ${mensal?'o mês':'a semana'} anterior</div>${nota}
-    <div class="tbl-card" style="padding:12px 14px;margin-bottom:12px">${gsBarras(per,tot)}</div>
-    <div class="tbl-card" style="padding:8px">${tabela}</div>
-    <div class="sc-note">• Usa o responsável atual do título (último acionamento do cliente até a data do pagamento). Pago em dia = no vencimento, ou no próximo dia útil quando o vencimento cai em dia sem expediente.<br>• Não depende de retratos: sai da carteira e da base de pagos em dia.</div>`;
+  }else scMesesJanela(hojeISO(),12).reverse().forEach(m=>per.push({ini:m+'-01',fim:m+'-31',lab:MESES[+m.slice(5)-1].toLowerCase()}));
+  const S=l=>l.reduce((s,x)=>s+x.v,0);
+  const tot=per.map(p=>{const a=itens.filter(x=>x.dtpag>=p.ini&&x.dtpag<=p.fim);return{v:S(a),n:a.length,va:S(a.filter(x=>!x.em)),vd:S(a.filter(x=>x.em))};});
+  const last=tot[tot.length-1],prev=tot[tot.length-2];
+  let chip='';
+  if(prev&&prev.v>0){const d=(last.v-prev.v)/prev.v*100;chip=`<span class="gs-chip ${d>0.5?'up':d<-0.5?'down':'eq'}">${d>0.5?'▲':d<-0.5?'▼':'='} ${Math.abs(d).toFixed(0)}%</span>`;}
+  el.innerHTML=`<div class="gs-card"><div class="gs-h"><h3>Recuperado</h3><span class="gs-seg"><button type="button" class="${mensal?'':'on'}" onclick="gsSetEvo('semanal')">Semanal</button><button type="button" class="${mensal?'on':''}" onclick="gsSetEvo('mensal')">Mensal</button></span></div>
+    <div class="gs-evo-top"><div><small>${mensal?'Mês atual':'Semana atual'}</small><b>${fmtR(last.v)}</b></div>${chip}</div>
+    ${gsBarras(per,tot)}
+    <div class="gs-lg"><span><i style="background:#15803d"></i>pago em atraso</span><span><i style="background:#bbf7d0"></i>pago em dia</span></div></div>`;
 }
-// ===== VISÃO POR COBRADORA (só administradora) =====
+// ===== POR COBRADORA =====
 function gsRenderCobradoras(){
   const el=document.getElementById('gs-cobradoras');if(!el)return;
   const fx=scFaixas(),itens=gsPagos(),hoje=hojeISO(),seg=scSemanaISO(hoje),fimSem=_isoD(new Date(new Date(seg+'T00:00:00').getTime()+6*86400000)),mes=hoje.slice(0,7);
-  const base=(_scBaseResp||[]).filter(t=>t.dias>0),nomes=[...getCobradoras(),'__sem'];
+  const base=(_scBaseResp||[]).filter(t=>t.dias>0),nomes=[...getCobradoras(),'__sem'],S=a=>a.reduce((s,x)=>s+x.v,0);
+  const do_=n=>x=>n==='__sem'?!x.resp:x.resp===n;
   const lc=nomes.map(n=>{
-    const live=base.filter(t=>n==='__sem'?!t.resp:t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),tp=scResumoTipo(live),dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
-    const rs=itens.filter(x=>(n==='__sem'?!x.resp:x.resp===n)&&x.dtpag>=seg&&x.dtpag<=fimSem),rm=itens.filter(x=>(n==='__sem'?!x.resp:x.resp===n)&&x.dtpag.slice(0,7)===mes);
-    const S=a=>a.reduce((s,x)=>s+x.v,0);
-    const comp=vv>0?`<span class="sc-mini"><i style="width:${(tp.b/vv*100).toFixed(0)}%;background:#60a5fa"></i><i style="width:${(tp.c/vv*100).toFixed(0)}%;background:#a78bfa"></i></span> <small>boleto ${(tp.b/vv*100).toFixed(0)}% · cheque ${(tp.c/vv*100).toFixed(0)}%</small><div><span class="sc-mini">${dist.map(f=>`<i title="${esc(f.l)}: ${fmtR(f.v)}" style="width:${(f.v/vv*100).toFixed(1)}%;background:${f.bar}"></i>`).join('')}</span></div>`:'<small>—</small>';
-    return{n,vv,nt:live.length,rs:S(rs),nrs:rs.length,rm:S(rm),nrm:rm.length,html:`<tr><td class="sc-rl">${n==='__sem'?'Sem responsável':esc(n)}</td><td><b>${fmtR(vv)}</b> · ${live.length} tít.</td><td><b>${fmtR(S(rs))}</b> · ${rs.length} tít.</td><td><b>${fmtR(S(rm))}</b> · ${rm.length} tít.</td><td>${comp}</td></tr>`};
+    const live=base.filter(t=>n==='__sem'?!t.resp:t.resp===n),vv=live.reduce((s,t)=>s+t.saldo,0),dist=distribuicaoFaixas(live,fx).filter(f=>f.min>0);
+    const rs=S(itens.filter(x=>do_(n)(x)&&x.dtpag>=seg&&x.dtpag<=fimSem)),rm=S(itens.filter(x=>do_(n)(x)&&x.dtpag.slice(0,7)===mes));
+    return{n,vv,nt:live.length,rs,rm,dist};
   });
   const totV=lc.reduce((s,l)=>s+l.vv,0),totN=lc.reduce((s,l)=>s+l.nt,0),baseV=base.reduce((s,t)=>s+t.saldo,0);
-  const totS=itens.filter(x=>x.dtpag>=seg&&x.dtpag<=fimSem).reduce((s,x)=>s+x.v,0),totM=itens.filter(x=>x.dtpag.slice(0,7)===mes).reduce((s,x)=>s+x.v,0);
-  const okV=Math.abs(totV-baseV)<0.005&&totN===base.length,okS=Math.abs(lc.reduce((s,l)=>s+l.rs,0)-totS)<0.005,okM=Math.abs(lc.reduce((s,l)=>s+l.rm,0)-totM)<0.005;
-  el.innerHTML=`<div class="dash-block-title" style="margin:22px 0 4px">👥 Visão por cobradora</div>
-    <div class="gs-sub">Recuperado de cada uma (semana atual e mês atual) e a carteira vencida que está com ela hoje. Não é ranking: as carteiras têm composições diferentes.</div>
-    <div class="tbl-card" style="padding:8px"><div style="overflow-x:auto"><table class="sc-evo sc-cob"><thead><tr><th>Responsável</th><th>Vencido em aberto hoje</th><th>Recuperado na semana</th><th>Recuperado no mês</th><th>Composição: tipo e faixa</th></tr></thead><tbody>${lc.map(l=>l.html).join('')}
-    <tr class="sc-tot"><td class="sc-rl">Total (conferência)</td><td><b>${fmtR(totV)}</b> · ${totN} tít.</td><td><b>${fmtR(totS)}</b></td><td><b>${fmtR(totM)}</b></td><td class="${okV&&okS&&okM?'gs-ok':'gs-bad'}">${okV&&okS&&okM?'✔ soma das cobradoras + sem responsável = total':'⚠ a soma não bate com o total'}</td></tr></tbody></table></div></div>
-    <div class="gs-sub" style="margin-top:6px">“Sem responsável” = clientes sem acionamento ou de quem saiu da equipe.</div>`;
+  const totS=S(itens.filter(x=>x.dtpag>=seg&&x.dtpag<=fimSem)),totM=S(itens.filter(x=>x.dtpag.slice(0,7)===mes));
+  const ok=Math.abs(totV-baseV)<0.005&&totN===base.length&&Math.abs(lc.reduce((s,l)=>s+l.rs,0)-totS)<0.005&&Math.abs(lc.reduce((s,l)=>s+l.rm,0)-totM)<0.005;
+  const cards=lc.filter(l=>l.n!=='__sem'||l.vv>0||l.rs>0||l.rm>0).map(l=>`<div class="gs-card gs-cob"><div class="gs-cob-h"><span class="gs-av">${l.n==='__sem'?'?':esc(l.n[0])}</span><div><b>${l.n==='__sem'?'Sem responsável':esc(l.n)}</b></div></div>
+    <div class="gs-cob-m"><div><small>Recuperado na semana</small><b>${fmtR(l.rs)}</b></div><div><small>Recuperado no mês</small><b>${fmtR(l.rm)}</b></div></div>
+    <div class="gs-cob-v">Vencido com ela: <b>${fmtR(l.vv)}</b> · ${l.nt} tít.</div>
+    ${l.vv>0?`<div class="sc-mini" style="margin-top:6px">${l.dist.map(f=>`<i title="${esc(f.l)}: ${fmtR(f.v)}" style="width:${(f.v/l.vv*100).toFixed(1)}%;background:${f.bar}"></i>`).join('')}</div>`:''}</div>`).join('');
+  el.innerHTML=`<div class="gs-h" style="margin-bottom:12px"><h3>Por cobradora</h3><span class="${ok?'gs-ok':'gs-bad'}" style="font-size:12px">${ok?'✔ a soma confere com o total':'⚠ a soma não confere com o total'}</span></div><div class="gs-cobs">${cards}</div>`;
 }
 function gsRenderBlocos(){try{gsRenderEvolucao();gsRenderCobradoras();}catch(e){console.error('Gestão: evolução',e);const el=document.getElementById('gs-evolucao');if(el)el.innerHTML='<div class="gs-bad">Erro ao montar a evolução: '+esc(e.message)+'</div>';}}
 async function renderGestao(){renderDashboard();await renderSaude();renderDashboard();}
